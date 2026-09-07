@@ -1,5 +1,6 @@
 package com.saas.report.domain.entities;
 
+import com.saas.report.auth.domain.user.Usuario;
 import com.saas.report.domain.exceptions.InvalidIntegerValue;
 import com.saas.report.domain.valueObjects.ConsultaHistorialUUID;
 import com.saas.report.domain.valueObjects.TenantDbConnectionUUID;

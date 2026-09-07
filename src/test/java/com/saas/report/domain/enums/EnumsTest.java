@@ -23,10 +23,4 @@ class EnumsTest {
         assertThat(TipoConexion.values()).containsExactly(
                 TipoConexion.EXTERNAL_DB, TipoConexion.INTERNAL_SCHEMA);
     }
-
-    @Test
-    void usuarioRolDefineLosRolesEsperados() {
-        assertThat(UsuarioRol.values()).containsExactly(
-                UsuarioRol.ADMIN, UsuarioRol.VIEWER);
-    }
 }

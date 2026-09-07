@@ -1,7 +1,7 @@
-package com.saas.report.domain.entities;
+package com.saas.report.auth.domain.user;
 
-import com.saas.report.domain.enums.UsuarioRol;
-import com.saas.report.domain.valueObjects.UsuarioUUID;
+import com.saas.report.auth.domain.valueobject.UsuarioUUID;
+import com.saas.report.domain.entities.Tenant;
 
 public class Usuario {
 
@@ -9,10 +9,12 @@ public class Usuario {
     private final Tenant tenant;
     private final String nombre;
     private final String email;
+    private final String password;
     private UsuarioRol rol;
     private Boolean activo;
 
-    public Usuario(UsuarioUUID usuarioId, Tenant tenant, String nombre, String email, UsuarioRol rol, Boolean activo) {
+    public Usuario(UsuarioUUID usuarioId, Tenant tenant, String nombre, String email, String password,
+                   UsuarioRol rol, Boolean activo) {
         if (usuarioId == null) {
             throw new IllegalArgumentException("El ID del usuario no puede ser nulo");
         }
@@ -25,6 +27,9 @@ public class Usuario {
         if (email == null || email.isBlank()) {
             throw new IllegalArgumentException("El email no puede estar vacío");
         }
+        if (password == null || password.isBlank()) {
+            throw new IllegalArgumentException("La contraseña no puede estar vacía");
+        }
         if (rol == null) {
             throw new IllegalArgumentException("El rol no puede ser nulo");
         }
@@ -32,6 +37,7 @@ public class Usuario {
         this.tenant = tenant;
         this.nombre = nombre;
         this.email = email;
+        this.password = password;
         this.rol = rol;
         this.activo = activo;
     }
@@ -50,6 +56,10 @@ public class Usuario {
 
     public String getEmail() {
         return email;
+    }
+
+    public String getPassword() {
+        return password;
     }
 
     public UsuarioRol getRol() {

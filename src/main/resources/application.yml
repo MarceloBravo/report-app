@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: report
+  profiles:
+    active: dev
+  config:
+    import: optional:file:.env[.properties]
+  jpa:
+    open-in-view: false
+
+jwt:
+  secret: ${JWT_SECRET:c2VjcmV0b19zdXBlcl9zZWd1cm9fZGVfcmVwb3J0X3Nhc18yMDI2X2NsYXZlXzMyYnl0ZQ==}
+  access-token-expiration: ${JWT_ACCESS_TOKEN_EXPIRATION:900000}
+  refresh-token-expiration: ${JWT_REFRESH_TOKEN_EXPIRATION:604800000}
+
+app:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:8080}

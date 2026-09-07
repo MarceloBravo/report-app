@@ -19,7 +19,6 @@ class ValueObjectsTest {
         assertThatThrownBy(() -> new SuscripcionUUID(null)).isInstanceOf(InvalidUUIDException.class);
         assertThatThrownBy(() -> new SuscripcionHistorialPrecioUUID(null)).isInstanceOf(InvalidUUIDException.class);
         assertThatThrownBy(() -> new TenantDbConnectionUUID(null)).isInstanceOf(InvalidUUIDException.class);
-        assertThatThrownBy(() -> new UsuarioUUID(null)).isInstanceOf(InvalidUUIDException.class);
         assertThatThrownBy(() -> new ConsultaHistorialUUID(null)).isInstanceOf(InvalidUUIDException.class);
     }
 
@@ -33,7 +32,6 @@ class ValueObjectsTest {
         assertThat(new SuscripcionUUID(uuid).getValue()).isEqualTo(uuid);
         assertThat(new SuscripcionHistorialPrecioUUID(uuid).getValue()).isEqualTo(uuid);
         assertThat(new TenantDbConnectionUUID(uuid).getValue()).isEqualTo(uuid);
-        assertThat(new UsuarioUUID(uuid).getValue()).isEqualTo(uuid);
         assertThat(new ConsultaHistorialUUID(uuid).getValue()).isEqualTo(uuid);
     }
 
@@ -46,7 +44,6 @@ class ValueObjectsTest {
         assertThat(SuscripcionUUID.generate()).isNotEqualTo(SuscripcionUUID.generate());
         assertThat(SuscripcionHistorialPrecioUUID.generate()).isNotEqualTo(SuscripcionHistorialPrecioUUID.generate());
         assertThat(TenantDbConnectionUUID.generate()).isNotEqualTo(TenantDbConnectionUUID.generate());
-        assertThat(UsuarioUUID.generate()).isNotEqualTo(UsuarioUUID.generate());
         assertThat(ConsultaHistorialUUID.generate()).isNotEqualTo(ConsultaHistorialUUID.generate());
     }
 

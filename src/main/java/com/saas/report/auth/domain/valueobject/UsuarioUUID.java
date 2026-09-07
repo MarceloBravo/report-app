@@ -1,4 +1,4 @@
-package com.saas.report.domain.valueObjects;
+package com.saas.report.auth.domain.valueobject;
 
 import com.saas.report.domain.exceptions.InvalidUUIDException;
 

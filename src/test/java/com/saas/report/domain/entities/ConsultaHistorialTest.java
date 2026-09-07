@@ -1,12 +1,13 @@
 package com.saas.report.domain.entities;
 
+import com.saas.report.auth.domain.user.Usuario;
+import com.saas.report.auth.domain.user.UsuarioRol;
+import com.saas.report.auth.domain.valueobject.UsuarioUUID;
 import com.saas.report.domain.enums.TenantEstado;
-import com.saas.report.domain.enums.UsuarioRol;
 import com.saas.report.domain.exceptions.InvalidIntegerValue;
 import com.saas.report.domain.valueObjects.ConsultaHistorialUUID;
 import com.saas.report.domain.valueObjects.TenantDbConnectionUUID;
 import com.saas.report.domain.valueObjects.TenantUUID;
-import com.saas.report.domain.valueObjects.UsuarioUUID;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
@@ -21,7 +22,7 @@ class ConsultaHistorialTest {
     }
 
     private Usuario usuario() {
-        return new Usuario(UsuarioUUID.generate(), tenant(), "Ana", "ana@empresa.com", UsuarioRol.VIEWER, true);
+        return new Usuario(UsuarioUUID.generate(), tenant(), "Ana", "ana@empresa.com", "hash", UsuarioRol.VIEWER, true);
     }
 
     private ConsultaHistorial consulta(Boolean exitosa, Integer consultasEnPeriodo) {

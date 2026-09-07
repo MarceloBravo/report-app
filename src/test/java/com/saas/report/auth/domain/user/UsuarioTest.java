@@ -1,9 +1,9 @@
-package com.saas.report.domain.entities;
+package com.saas.report.auth.domain.user;
 
+import com.saas.report.auth.domain.valueobject.UsuarioUUID;
+import com.saas.report.domain.entities.Tenant;
 import com.saas.report.domain.enums.TenantEstado;
-import com.saas.report.domain.enums.UsuarioRol;
 import com.saas.report.domain.valueObjects.TenantUUID;
-import com.saas.report.domain.valueObjects.UsuarioUUID;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -13,19 +13,20 @@ class UsuarioTest {
 
     private Usuario usuario(UsuarioRol rol, Boolean activo) {
         return new Usuario(UsuarioUUID.generate(), new Tenant(TenantUUID.generate(), "Empresa", "empresa",
-                TenantEstado.ACTIVE), "Ana", "ana@empresa.com", rol, activo);
+                TenantEstado.ACTIVE), "Ana", "ana@empresa.com", "password-hash", rol, activo);
     }
 
     @Test
     void construyeUsuarioYExponeDatos() {
         Tenant tenant = new Tenant(TenantUUID.generate(), "Empresa", "empresa", TenantEstado.ACTIVE);
         UsuarioUUID id = UsuarioUUID.generate();
-        Usuario usuario = new Usuario(id, tenant, "Ana", "ana@empresa.com", UsuarioRol.ADMIN, true);
+        Usuario usuario = new Usuario(id, tenant, "Ana", "ana@empresa.com", "password-hash", UsuarioRol.ADMIN, true);
 
         assertThat(usuario.getUsuarioId()).isEqualTo(id);
         assertThat(usuario.getTenant()).isEqualTo(tenant);
         assertThat(usuario.getNombre()).isEqualTo("Ana");
         assertThat(usuario.getEmail()).isEqualTo("ana@empresa.com");
+        assertThat(usuario.getPassword()).isEqualTo("password-hash");
         assertThat(usuario.getRol()).isEqualTo(UsuarioRol.ADMIN);
         assertThat(usuario.getActivo()).isTrue();
     }
@@ -35,19 +36,23 @@ class UsuarioTest {
         Tenant tenant = new Tenant(TenantUUID.generate(), "Empresa", "empresa", TenantEstado.ACTIVE);
         UsuarioUUID id = UsuarioUUID.generate();
 
-        assertThatThrownBy(() -> new Usuario(null, tenant, "Ana", "ana@e.com", UsuarioRol.ADMIN, true))
+        assertThatThrownBy(() -> new Usuario(null, tenant, "Ana", "ana@e.com", "pw", UsuarioRol.ADMIN, true))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> new Usuario(id, null, "Ana", "ana@e.com", UsuarioRol.ADMIN, true))
+        assertThatThrownBy(() -> new Usuario(id, null, "Ana", "ana@e.com", "pw", UsuarioRol.ADMIN, true))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> new Usuario(id, tenant, null, "ana@e.com", UsuarioRol.ADMIN, true))
+        assertThatThrownBy(() -> new Usuario(id, tenant, null, "ana@e.com", "pw", UsuarioRol.ADMIN, true))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> new Usuario(id, tenant, "  ", "ana@e.com", UsuarioRol.ADMIN, true))
+        assertThatThrownBy(() -> new Usuario(id, tenant, "  ", "ana@e.com", "pw", UsuarioRol.ADMIN, true))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> new Usuario(id, tenant, "Ana", null, UsuarioRol.ADMIN, true))
+        assertThatThrownBy(() -> new Usuario(id, tenant, "Ana", null, "pw", UsuarioRol.ADMIN, true))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> new Usuario(id, tenant, "Ana", "  ", UsuarioRol.ADMIN, true))
+        assertThatThrownBy(() -> new Usuario(id, tenant, "Ana", "  ", "pw", UsuarioRol.ADMIN, true))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> new Usuario(id, tenant, "Ana", "ana@e.com", null, true))
+        assertThatThrownBy(() -> new Usuario(id, tenant, "Ana", "ana@e.com", null, UsuarioRol.ADMIN, true))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new Usuario(id, tenant, "Ana", "ana@e.com", "  ", UsuarioRol.ADMIN, true))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new Usuario(id, tenant, "Ana", "ana@e.com", "pw", null, true))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 

@@ -12,6 +12,7 @@ class ExceptionsTest {
         assertThat(InvalidStatusException.class).isAssignableTo(DomainException.class);
         assertThat(InvalidIntegerValue.class).isAssignableTo(DomainException.class);
         assertThat(InvalidAmountException.class).isAssignableTo(DomainException.class);
+        assertThat(ResourceNotFoundException.class).isAssignableTo(DomainException.class);
         assertThat(DomainException.class).isAssignableTo(RuntimeException.class);
     }
 
@@ -21,5 +22,6 @@ class ExceptionsTest {
         assertThat(new InvalidUUIDException("uuid inválido").getMessage()).isEqualTo("uuid inválido");
         assertThat(new InvalidIntegerValue("entero inválido").getMessage()).isEqualTo("entero inválido");
         assertThat(new InvalidAmountException("monto inválido").getMessage()).isEqualTo("monto inválido");
+        assertThat(new ResourceNotFoundException("no encontrado").getMessage()).isEqualTo("no encontrado");
     }
 }
