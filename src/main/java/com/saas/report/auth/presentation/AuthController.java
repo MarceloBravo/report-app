@@ -1,11 +1,15 @@
 package com.saas.report.auth.presentation;
 
 import com.saas.report.auth.application.AuthPrincipal;
-import com.saas.report.auth.application.AuthService;
-import com.saas.report.auth.presentation.dto.LoginRequest;
-import com.saas.report.auth.presentation.dto.RefreshTokenRequest;
-import com.saas.report.auth.presentation.dto.RegisterRequest;
-import com.saas.report.auth.presentation.dto.TokenResponse;
+import com.saas.report.auth.application.dto.LoginRequest;
+import com.saas.report.auth.application.dto.RefreshTokenRequest;
+import com.saas.report.auth.application.dto.RegisterRequest;
+import com.saas.report.auth.application.dto.TokenResponse;
+import com.saas.report.auth.application.usecase.LoginUseCase;
+import com.saas.report.auth.application.usecase.LogoutUseCase;
+import com.saas.report.auth.application.usecase.RefreshTokenUseCase;
+import com.saas.report.auth.application.usecase.RegisterUseCase;
+import com.saas.report.auth.domain.user.UsuarioRol;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -24,33 +28,43 @@ import java.util.Map;
 @RequestMapping("/auth")
 public class AuthController {
 
-    private final AuthService authService;
+    private final LoginUseCase loginUseCase;
+    private final RegisterUseCase registerUseCase;
+    private final RefreshTokenUseCase refreshTokenUseCase;
+    private final LogoutUseCase logoutUseCase;
 
-    public AuthController(AuthService authService) {
-        this.authService = authService;
+    public AuthController(LoginUseCase loginUseCase,
+                          RegisterUseCase registerUseCase,
+                          RefreshTokenUseCase refreshTokenUseCase,
+                          LogoutUseCase logoutUseCase) {
+        this.loginUseCase = loginUseCase;
+        this.registerUseCase = registerUseCase;
+        this.refreshTokenUseCase = refreshTokenUseCase;
+        this.logoutUseCase = logoutUseCase;
     }
 
     @PostMapping("/login")
     public ResponseEntity<TokenResponse> login(@Valid @RequestBody LoginRequest request) {
-        TokenResponse response = authService.login(request.email(), request.password());
+        TokenResponse response = loginUseCase.login(request);
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/register")
     public ResponseEntity<Void> register(@Valid @RequestBody RegisterRequest request) {
-        authService.registrarUsuarioPublico(request);
+        registerUseCase.registrar(request, UsuarioRol.VIEWER);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @PostMapping("/admin/register")
     public ResponseEntity<Void> adminRegister(@Valid @RequestBody RegisterRequest request) {
-        authService.registrarUsuarioAdmin(request);
+        UsuarioRol rol = request.rol() != null ? request.rol() : UsuarioRol.VIEWER;
+        registerUseCase.registrar(request, rol);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @PostMapping("/refresh")
     public ResponseEntity<TokenResponse> refresh(@Valid @RequestBody RefreshTokenRequest request) {
-        TokenResponse response = authService.refrescarToken(request.refreshToken());
+        TokenResponse response = refreshTokenUseCase.refrescar(request.refreshToken());
         return ResponseEntity.ok(response);
     }
 
@@ -58,7 +72,8 @@ public class AuthController {
     public ResponseEntity<Void> logout(
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
         String accessToken = extractBearer(authorization);
-        authService.cerrarSesion(accessToken);
+        logoutUseCase.cerrarSesion(accessToken);
+        SecurityContextHolder.clearContext();
         return ResponseEntity.noContent().build();
     }
 

@@ -1,4 +1,4 @@
-package com.saas.report.auth.presentation.dto;
+package com.saas.report.auth.application.dto;
 
 import com.saas.report.auth.domain.user.UsuarioRol;
 import jakarta.validation.constraints.Email;
