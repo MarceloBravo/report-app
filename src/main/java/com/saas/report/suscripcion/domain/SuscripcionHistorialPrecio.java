@@ -1,8 +1,8 @@
-package com.saas.report.domain.entities;
+package com.saas.report.suscripcion.domain;
 
 import com.saas.report.shared.exception.InvalidAmountException;
-import com.saas.report.domain.valueObjects.SuscripcionHistorialPrecioUUID;
-import com.saas.report.plan.domain.PlanPrecio;
+import com.saas.report.plan.domain.valueobject.PlanPrecioUUID;
+import com.saas.report.suscripcion.domain.valueobject.SuscripcionHistorialPrecioUUID;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -16,11 +16,11 @@ public class SuscripcionHistorialPrecio {
     private final LocalDate periodoInicio;
     private final LocalDate periodoFin;
     private final BigDecimal precioAplicado;
-    private final PlanPrecio planPrecio;
+    private final PlanPrecioUUID planPrecioId;
 
     public SuscripcionHistorialPrecio(SuscripcionHistorialPrecioUUID historialId, Suscripcion suscripcion,
                                       LocalDate periodoInicio, LocalDate periodoFin,
-                                      BigDecimal precioAplicado, PlanPrecio planPrecio) {
+                                      BigDecimal precioAplicado, PlanPrecioUUID planPrecioId) {
         if (historialId == null) {
             throw new IllegalArgumentException("El ID del historial de precios no puede ser nulo");
         }
@@ -36,12 +36,15 @@ public class SuscripcionHistorialPrecio {
         if (precioAplicado == null || precioAplicado.signum() < 0) {
             throw new InvalidAmountException("El precio aplicado no puede ser nulo ni negativo");
         }
+        if (planPrecioId == null) {
+            throw new IllegalArgumentException("El tramo de precio no puede ser nulo");
+        }
         this.historialId = historialId;
         this.suscripcion = suscripcion;
         this.periodoInicio = periodoInicio;
         this.periodoFin = periodoFin;
         this.precioAplicado = precioAplicado;
-        this.planPrecio = planPrecio;
+        this.planPrecioId = planPrecioId;
     }
 
     public SuscripcionHistorialPrecioUUID getHistorialId() {
@@ -64,8 +67,8 @@ public class SuscripcionHistorialPrecio {
         return precioAplicado;
     }
 
-    public PlanPrecio getPlanPrecio() {
-        return planPrecio;
+    public PlanPrecioUUID getPlanPrecioId() {
+        return planPrecioId;
     }
 
     public boolean estaVigente() {

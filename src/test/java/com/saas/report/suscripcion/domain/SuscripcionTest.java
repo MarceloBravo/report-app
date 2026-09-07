@@ -1,15 +1,14 @@
-package com.saas.report.domain.entities;
+package com.saas.report.suscripcion.domain;
 
-import com.saas.report.domain.enums.SuscripcionEstado;
-import com.saas.report.shared.exception.InvalidStatusException;
-import com.saas.report.domain.valueObjects.SuscripcionHistorialPrecioUUID;
-import com.saas.report.domain.valueObjects.SuscripcionUUID;
 import com.saas.report.plan.domain.Plan;
 import com.saas.report.plan.domain.PlanPrecio;
 import com.saas.report.plan.domain.valueobject.PlanLimiteConsultasMensuales;
 import com.saas.report.plan.domain.valueobject.PlanMaxUsuarios;
 import com.saas.report.plan.domain.valueobject.PlanPrecioUUID;
 import com.saas.report.plan.domain.valueobject.PlanUUID;
+import com.saas.report.shared.exception.InvalidStatusException;
+import com.saas.report.suscripcion.domain.valueobject.SuscripcionHistorialPrecioUUID;
+import com.saas.report.suscripcion.domain.valueobject.SuscripcionUUID;
 import com.saas.report.tenant.domain.valueobject.TenantUUID;
 import org.junit.jupiter.api.Test;
 
@@ -34,7 +33,7 @@ class SuscripcionTest {
     }
 
     private Suscripcion suscripcionActiva() {
-        return new Suscripcion(SuscripcionUUID.generate(), tenant(), planConTramoFijo(), LocalDate.now(),
+        return new Suscripcion(SuscripcionUUID.generate(), tenant(), planConTramoFijo().getPlanId(), LocalDate.now(),
                 SuscripcionEstado.ACTIVE, LocalDate.now().plusMonths(1));
     }
 
@@ -45,11 +44,11 @@ class SuscripcionTest {
         SuscripcionUUID id = SuscripcionUUID.generate();
         LocalDate inicio = LocalDate.now();
         LocalDate proximaFacturacion = inicio.plusMonths(1);
-        Suscripcion suscripcion = new Suscripcion(id, tenant, plan, inicio, SuscripcionEstado.ACTIVE, proximaFacturacion);
+        Suscripcion suscripcion = new Suscripcion(id, tenant, plan.getPlanId(), inicio, SuscripcionEstado.ACTIVE, proximaFacturacion);
 
         assertThat(suscripcion.getSuscripcionId()).isEqualTo(id);
         assertThat(suscripcion.getTenantId()).isEqualTo(tenant);
-        assertThat(suscripcion.getPlan()).isEqualTo(plan);
+        assertThat(suscripcion.getPlanId()).isEqualTo(plan.getPlanId());
         assertThat(suscripcion.getFechaInicio()).isEqualTo(inicio);
         assertThat(suscripcion.getEstado()).isEqualTo(SuscripcionEstado.ACTIVE);
         assertThat(suscripcion.getProximaFacturacion()).isEqualTo(proximaFacturacion);
@@ -61,23 +60,23 @@ class SuscripcionTest {
         Plan plan = planConTramoFijo();
         LocalDate hoy = LocalDate.now();
 
-        assertThatThrownBy(() -> new Suscripcion(null, tenant, plan, hoy, SuscripcionEstado.ACTIVE, hoy))
+        assertThatThrownBy(() -> new Suscripcion(null, tenant, plan.getPlanId(), hoy, SuscripcionEstado.ACTIVE, hoy))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> new Suscripcion(SuscripcionUUID.generate(), null, plan, hoy, SuscripcionEstado.ACTIVE, hoy))
+        assertThatThrownBy(() -> new Suscripcion(SuscripcionUUID.generate(), null, plan.getPlanId(), hoy, SuscripcionEstado.ACTIVE, hoy))
                 .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> new Suscripcion(SuscripcionUUID.generate(), tenant, null, hoy, SuscripcionEstado.ACTIVE, hoy))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> new Suscripcion(SuscripcionUUID.generate(), tenant, plan, null, SuscripcionEstado.ACTIVE, hoy))
+        assertThatThrownBy(() -> new Suscripcion(SuscripcionUUID.generate(), tenant, plan.getPlanId(), null, SuscripcionEstado.ACTIVE, hoy))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> new Suscripcion(SuscripcionUUID.generate(), tenant, plan, hoy, null, hoy))
+        assertThatThrownBy(() -> new Suscripcion(SuscripcionUUID.generate(), tenant, plan.getPlanId(), hoy, null, hoy))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void cuentaLosMesesContratadosDesdeElInicio() {
-        Suscripcion deTresMeses = new Suscripcion(SuscripcionUUID.generate(), tenant(), planConTramoFijo(),
+        Suscripcion deTresMeses = new Suscripcion(SuscripcionUUID.generate(), tenant(), planConTramoFijo().getPlanId(),
                 LocalDate.now().minusMonths(3), SuscripcionEstado.ACTIVE, LocalDate.now().plusMonths(1));
-        Suscripcion recienCreada = new Suscripcion(SuscripcionUUID.generate(), tenant(), planConTramoFijo(),
+        Suscripcion recienCreada = new Suscripcion(SuscripcionUUID.generate(), tenant(), planConTramoFijo().getPlanId(),
                 LocalDate.now(), SuscripcionEstado.ACTIVE, LocalDate.now().plusMonths(1));
 
         assertThat(deTresMeses.getMesesContratados()).isEqualTo(3);
@@ -95,10 +94,11 @@ class SuscripcionTest {
 
     @Test
     void noRequiereCambioDeTramoConPrecioFijo() {
-        Suscripcion suscripcion = new Suscripcion(SuscripcionUUID.generate(), tenant(), planConTramoFijo(),
+        Plan plan = planConTramoFijo();
+        Suscripcion suscripcion = new Suscripcion(SuscripcionUUID.generate(), tenant(), plan.getPlanId(),
                 LocalDate.now().minusMonths(2), SuscripcionEstado.ACTIVE, LocalDate.now().plusMonths(1));
 
-        assertThat(suscripcion.requiereCambioDeTramo()).isFalse();
+        assertThat(suscripcion.requiereCambioDeTramo(plan)).isFalse();
     }
 
     @Test
@@ -109,10 +109,10 @@ class SuscripcionTest {
         Plan plan = new Plan(planId, "G", "d", new PlanMaxUsuarios(5),
                 new PlanLimiteConsultasMensuales(100), true, List.of(primerTramo, tramoFinal));
 
-        Suscripcion suscripcion = new Suscripcion(SuscripcionUUID.generate(), tenant(), plan,
+        Suscripcion suscripcion = new Suscripcion(SuscripcionUUID.generate(), tenant(), plan.getPlanId(),
                 LocalDate.now().minusMonths(2), SuscripcionEstado.ACTIVE, LocalDate.now().plusMonths(1));
 
-        assertThat(suscripcion.requiereCambioDeTramo()).isTrue();
+        assertThat(suscripcion.requiereCambioDeTramo(plan)).isTrue();
     }
 
     @Test
@@ -120,7 +120,15 @@ class SuscripcionTest {
         Suscripcion suspendida = suscripcionActiva();
         suspendida.suspender();
 
-        assertThat(suspendida.requiereCambioDeTramo()).isFalse();
+        assertThat(suspendida.requiereCambioDeTramo(planConTramoFijo())).isFalse();
+    }
+
+    @Test
+    void rechazaPlanNoCorrespondienteAlEvaluarTramo() {
+        Suscripcion suscripcion = suscripcionActiva();
+
+        assertThatThrownBy(() -> suscripcion.requiereCambioDeTramo(planConTramoFijo()))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -166,7 +174,7 @@ class SuscripcionTest {
 
         suscripcion.actualizarPlan(nuevoPlan);
 
-        assertThat(suscripcion.getPlan()).isEqualTo(nuevoPlan);
+        assertThat(suscripcion.getPlanId()).isEqualTo(nuevoPlan.getPlanId());
     }
 
     @Test
@@ -191,11 +199,13 @@ class SuscripcionTest {
 
     @Test
     void guardaHistorialDePreciosInmutable() {
-        Suscripcion suscripcion = suscripcionActiva();
-        PlanPrecio tramo = suscripcion.getPlan().getPrecios().get(0);
+        Plan plan = planConTramoFijo();
+        Suscripcion suscripcion = new Suscripcion(SuscripcionUUID.generate(), tenant(), plan.getPlanId(),
+                LocalDate.now(), SuscripcionEstado.ACTIVE, LocalDate.now().plusMonths(1));
+        PlanPrecio tramo = plan.getPrecios().get(0);
         SuscripcionHistorialPrecio historial = new SuscripcionHistorialPrecio(
                 SuscripcionHistorialPrecioUUID.generate(), suscripcion, LocalDate.now(), null,
-                new BigDecimal("9.90"), tramo);
+                new BigDecimal("9.90"), tramo.getPlanPrecioId());
 
         suscripcion.addHistorialPrecio(historial);
 

@@ -1,10 +1,10 @@
-package com.saas.report.domain.entities;
+package com.saas.report.suscripcion.domain;
 
-import com.saas.report.domain.enums.SuscripcionEstado;
-import com.saas.report.shared.exception.InvalidStatusException;
-import com.saas.report.domain.valueObjects.SuscripcionUUID;
+import com.saas.report.suscripcion.domain.valueobject.SuscripcionUUID;
 import com.saas.report.plan.domain.Plan;
 import com.saas.report.plan.domain.PlanPrecio;
+import com.saas.report.plan.domain.valueobject.PlanUUID;
+import com.saas.report.shared.exception.InvalidStatusException;
 import com.saas.report.tenant.domain.valueobject.TenantUUID;
 
 import java.time.LocalDate;
@@ -17,13 +17,13 @@ public class Suscripcion {
 
     private final SuscripcionUUID suscripcionId;
     private final TenantUUID tenantId;
-    private Plan plan;
+    private PlanUUID planId;
     private final LocalDate fechaInicio;
     private SuscripcionEstado estado;
     private LocalDate proximaFacturacion;
     private final List<SuscripcionHistorialPrecio> historialPrecios = new ArrayList<>();
 
-    public Suscripcion(SuscripcionUUID suscripcionId, TenantUUID tenantId, Plan plan, LocalDate fechaInicio,
+    public Suscripcion(SuscripcionUUID suscripcionId, TenantUUID tenantId, PlanUUID planId, LocalDate fechaInicio,
                        SuscripcionEstado estado, LocalDate proximaFacturacion) {
         if (suscripcionId == null) {
             throw new IllegalArgumentException("El ID de la suscripción no puede ser nulo");
@@ -31,7 +31,7 @@ public class Suscripcion {
         if (tenantId == null) {
             throw new IllegalArgumentException("El tenant no puede ser nulo");
         }
-        if (plan == null) {
+        if (planId == null) {
             throw new IllegalArgumentException("El plan no puede ser nulo");
         }
         if (fechaInicio == null) {
@@ -42,7 +42,7 @@ public class Suscripcion {
         }
         this.suscripcionId = suscripcionId;
         this.tenantId = tenantId;
-        this.plan = plan;
+        this.planId = planId;
         this.fechaInicio = fechaInicio;
         this.estado = estado;
         this.proximaFacturacion = proximaFacturacion;
@@ -56,8 +56,8 @@ public class Suscripcion {
         return tenantId;
     }
 
-    public Plan getPlan() {
-        return plan;
+    public PlanUUID getPlanId() {
+        return planId;
     }
 
     public LocalDate getFechaInicio() {
@@ -80,12 +80,15 @@ public class Suscripcion {
         return this.estado == SuscripcionEstado.ACTIVE;
     }
 
-    public boolean requiereCambioDeTramo() {
+    public boolean requiereCambioDeTramo(Plan plan) {
         if (!estaVigente()) {
             return false;
         }
-        PlanPrecio tramoActual = this.plan.getPrecioParaMes(getMesesContratados());
-        PlanPrecio tramoProximo = this.plan.getPrecioParaMes(getMesesContratados() + 1);
+        if (plan == null || !this.planId.equals(plan.getPlanId())) {
+            throw new IllegalArgumentException("El plan no corresponde a la suscripción");
+        }
+        PlanPrecio tramoActual = plan.getPrecioParaMes(getMesesContratados());
+        PlanPrecio tramoProximo = plan.getPrecioParaMes(getMesesContratados() + 1);
         return !tramoActual.equals(tramoProximo);
     }
 
@@ -113,7 +116,7 @@ public class Suscripcion {
         if (nuevoPlan.isActivo() == null || !nuevoPlan.isActivo()) {
             throw new InvalidStatusException("El plan de destino no está activo.");
         }
-        this.plan = nuevoPlan;
+        this.planId = nuevoPlan.getPlanId();
     }
 
     public List<SuscripcionHistorialPrecio> getHistorialPrecios() {

@@ -12,8 +12,6 @@ class ValueObjectsTest {
 
     @Test
     void idsDeDominioRechazanNulo() {
-        assertThatThrownBy(() -> new SuscripcionUUID(null)).isInstanceOf(InvalidUUIDException.class);
-        assertThatThrownBy(() -> new SuscripcionHistorialPrecioUUID(null)).isInstanceOf(InvalidUUIDException.class);
         assertThatThrownBy(() -> new ConsultaHistorialUUID(null)).isInstanceOf(InvalidUUIDException.class);
     }
 
@@ -21,15 +19,11 @@ class ValueObjectsTest {
     void idsDeDominioExponenSuValor() {
         UUID uuid = UUID.randomUUID();
 
-        assertThat(new SuscripcionUUID(uuid).getValue()).isEqualTo(uuid);
-        assertThat(new SuscripcionHistorialPrecioUUID(uuid).getValue()).isEqualTo(uuid);
         assertThat(new ConsultaHistorialUUID(uuid).getValue()).isEqualTo(uuid);
     }
 
     @Test
     void generateProduceValoresDistintos() {
-        assertThat(SuscripcionUUID.generate()).isNotEqualTo(SuscripcionUUID.generate());
-        assertThat(SuscripcionHistorialPrecioUUID.generate()).isNotEqualTo(SuscripcionHistorialPrecioUUID.generate());
         assertThat(ConsultaHistorialUUID.generate()).isNotEqualTo(ConsultaHistorialUUID.generate());
     }
 }

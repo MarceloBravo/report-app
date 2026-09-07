@@ -1,10 +1,10 @@
-package com.saas.report.domain.enums;
+package com.saas.report.suscripcion.domain;
 
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class EnumsTest {
+class SuscripcionEstadoTest {
 
     @Test
     void suscripcionEstadoDefineLosEstadosEsperados() {
