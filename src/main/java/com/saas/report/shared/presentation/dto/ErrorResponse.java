@@ -1,4 +1,4 @@
-package com.saas.report.auth.presentation.dto;
+package com.saas.report.shared.presentation.dto;
 
 import java.time.LocalDateTime;
 
