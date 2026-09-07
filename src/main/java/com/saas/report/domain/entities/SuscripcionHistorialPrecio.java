@@ -1,7 +1,8 @@
 package com.saas.report.domain.entities;
 
-import com.saas.report.domain.exceptions.InvalidAmountException;
+import com.saas.report.shared.exception.InvalidAmountException;
 import com.saas.report.domain.valueObjects.SuscripcionHistorialPrecioUUID;
+import com.saas.report.plan.domain.PlanPrecio;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;

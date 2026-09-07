@@ -4,9 +4,7 @@ import com.saas.report.auth.domain.user.Usuario;
 import com.saas.report.auth.domain.user.UsuarioRol;
 import com.saas.report.auth.domain.valueobject.UsuarioTokenUUID;
 import com.saas.report.auth.domain.valueobject.UsuarioUUID;
-import com.saas.report.domain.entities.Tenant;
-import com.saas.report.domain.enums.TenantEstado;
-import com.saas.report.domain.valueObjects.TenantUUID;
+import com.saas.report.tenant.domain.valueobject.TenantUUID;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
@@ -17,8 +15,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class UsuarioTokenTest {
 
     private Usuario usuario() {
-        return new Usuario(UsuarioUUID.generate(), new Tenant(TenantUUID.generate(), "Empresa", "empresa",
-                TenantEstado.ACTIVE), "Ana", "ana@empresa.com", "hash", UsuarioRol.VIEWER, true);
+        return new Usuario(UsuarioUUID.generate(), TenantUUID.generate(), "Ana", "ana@empresa.com",
+                "hash", UsuarioRol.VIEWER, true);
     }
 
     private UsuarioToken token(boolean activo, String accessToken, LocalDateTime fechaCreacion,

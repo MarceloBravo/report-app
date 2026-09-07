@@ -1,24 +1,24 @@
 package com.saas.report.auth.domain.user;
 
 import com.saas.report.auth.domain.valueobject.UsuarioUUID;
-import com.saas.report.domain.entities.Tenant;
+import com.saas.report.tenant.domain.valueobject.TenantUUID;
 
 public class Usuario {
 
     private final UsuarioUUID usuarioId;
-    private final Tenant tenant;
+    private final TenantUUID tenantId;
     private final String nombre;
     private final String email;
     private final String password;
     private UsuarioRol rol;
     private Boolean activo;
 
-    public Usuario(UsuarioUUID usuarioId, Tenant tenant, String nombre, String email, String password,
+    public Usuario(UsuarioUUID usuarioId, TenantUUID tenantId, String nombre, String email, String password,
                    UsuarioRol rol, Boolean activo) {
         if (usuarioId == null) {
             throw new IllegalArgumentException("El ID del usuario no puede ser nulo");
         }
-        if (tenant == null) {
+        if (tenantId == null) {
             throw new IllegalArgumentException("El tenant no puede ser nulo");
         }
         if (nombre == null || nombre.isBlank()) {
@@ -34,7 +34,7 @@ public class Usuario {
             throw new IllegalArgumentException("El rol no puede ser nulo");
         }
         this.usuarioId = usuarioId;
-        this.tenant = tenant;
+        this.tenantId = tenantId;
         this.nombre = nombre;
         this.email = email;
         this.password = password;
@@ -46,8 +46,8 @@ public class Usuario {
         return usuarioId;
     }
 
-    public Tenant getTenant() {
-        return tenant;
+    public TenantUUID getTenantId() {
+        return tenantId;
     }
 
     public String getNombre() {

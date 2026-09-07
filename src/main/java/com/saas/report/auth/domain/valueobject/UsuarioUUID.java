@@ -1,6 +1,6 @@
 package com.saas.report.auth.domain.valueobject;
 
-import com.saas.report.domain.exceptions.InvalidUUIDException;
+import com.saas.report.shared.exception.InvalidUUIDException;
 
 import java.util.UUID;
 

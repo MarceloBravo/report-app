@@ -12,11 +12,11 @@ import com.saas.report.auth.domain.valueobject.UsuarioTokenUUID;
 import com.saas.report.auth.domain.valueobject.UsuarioUUID;
 import com.saas.report.auth.presentation.dto.RegisterRequest;
 import com.saas.report.auth.presentation.dto.TokenResponse;
-import com.saas.report.domain.entities.Tenant;
-import com.saas.report.domain.exceptions.InvalidStatusException;
-import com.saas.report.domain.exceptions.ResourceNotFoundException;
-import com.saas.report.domain.repositories.TenantRepository;
-import com.saas.report.domain.valueObjects.TenantUUID;
+import com.saas.report.shared.exception.InvalidStatusException;
+import com.saas.report.shared.exception.ResourceNotFoundException;
+import com.saas.report.tenant.domain.Tenant;
+import com.saas.report.tenant.domain.TenantRepository;
+import com.saas.report.tenant.domain.valueobject.TenantUUID;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -152,7 +152,7 @@ public class AuthService {
 
         Usuario usuario = new Usuario(
                 UsuarioUUID.generate(),
-                tenant,
+                tenant.getTenantId(),
                 request.nombre(),
                 request.email(),
                 passwordEncoder.encode(request.password()),

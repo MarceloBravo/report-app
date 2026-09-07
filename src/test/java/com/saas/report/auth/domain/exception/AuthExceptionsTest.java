@@ -1,6 +1,6 @@
 package com.saas.report.auth.domain.exception;
 
-import com.saas.report.domain.exceptions.DomainException;
+import com.saas.report.shared.exception.DomainException;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;

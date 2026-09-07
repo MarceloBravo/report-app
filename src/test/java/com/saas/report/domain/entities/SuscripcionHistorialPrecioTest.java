@@ -1,15 +1,16 @@
 package com.saas.report.domain.entities;
 
 import com.saas.report.domain.enums.SuscripcionEstado;
-import com.saas.report.domain.enums.TenantEstado;
-import com.saas.report.domain.exceptions.InvalidAmountException;
-import com.saas.report.domain.valueObjects.PlanLimiteConsultasMensuales;
-import com.saas.report.domain.valueObjects.PlanMaxUsuarios;
-import com.saas.report.domain.valueObjects.PlanPrecioUUID;
-import com.saas.report.domain.valueObjects.PlanUUID;
+import com.saas.report.shared.exception.InvalidAmountException;
 import com.saas.report.domain.valueObjects.SuscripcionHistorialPrecioUUID;
 import com.saas.report.domain.valueObjects.SuscripcionUUID;
-import com.saas.report.domain.valueObjects.TenantUUID;
+import com.saas.report.plan.domain.Plan;
+import com.saas.report.plan.domain.PlanPrecio;
+import com.saas.report.plan.domain.valueobject.PlanLimiteConsultasMensuales;
+import com.saas.report.plan.domain.valueobject.PlanMaxUsuarios;
+import com.saas.report.plan.domain.valueobject.PlanPrecioUUID;
+import com.saas.report.plan.domain.valueobject.PlanUUID;
+import com.saas.report.tenant.domain.valueobject.TenantUUID;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -22,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class SuscripcionHistorialPrecioTest {
 
     private Suscripcion suscripcion() {
-        Tenant tenant = new Tenant(TenantUUID.generate(), "Empresa", "empresa", TenantEstado.ACTIVE);
+        TenantUUID tenant = TenantUUID.generate();
         PlanUUID planId = PlanUUID.generate();
         PlanPrecio tramo = new PlanPrecio(PlanPrecioUUID.generate(), planId, 1, null, new BigDecimal("9.90"));
         Plan plan = new Plan(planId, "STARTER", "Plan starter", new PlanMaxUsuarios(5),

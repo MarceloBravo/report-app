@@ -3,11 +3,10 @@ package com.saas.report.domain.entities;
 import com.saas.report.auth.domain.user.Usuario;
 import com.saas.report.auth.domain.user.UsuarioRol;
 import com.saas.report.auth.domain.valueobject.UsuarioUUID;
-import com.saas.report.domain.enums.TenantEstado;
-import com.saas.report.domain.exceptions.InvalidIntegerValue;
+import com.saas.report.shared.exception.InvalidIntegerValue;
 import com.saas.report.domain.valueObjects.ConsultaHistorialUUID;
-import com.saas.report.domain.valueObjects.TenantDbConnectionUUID;
-import com.saas.report.domain.valueObjects.TenantUUID;
+import com.saas.report.tenant.domain.valueobject.TenantDbConnectionUUID;
+import com.saas.report.tenant.domain.valueobject.TenantUUID;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
@@ -17,8 +16,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class ConsultaHistorialTest {
 
-    private Tenant tenant() {
-        return new Tenant(TenantUUID.generate(), "Empresa", "empresa", TenantEstado.ACTIVE);
+    private TenantUUID tenant() {
+        return TenantUUID.generate();
     }
 
     private Usuario usuario() {
@@ -33,7 +32,7 @@ class ConsultaHistorialTest {
 
     @Test
     void construyeConsultaYExponeDatos() {
-        Tenant tenant = tenant();
+        TenantUUID tenant = tenant();
         Usuario usuario = usuario();
         ConsultaHistorialUUID id = ConsultaHistorialUUID.generate();
         LocalDateTime fecha = LocalDateTime.now();
@@ -42,7 +41,7 @@ class ConsultaHistorialTest {
                 "SELECT 1;", fecha, true, 10, conexionId, 3);
 
         assertThat(consulta.getConsultaId()).isEqualTo(id);
-        assertThat(consulta.getTenant()).isEqualTo(tenant);
+        assertThat(consulta.getTenantId()).isEqualTo(tenant);
         assertThat(consulta.getUsuario()).isEqualTo(usuario);
         assertThat(consulta.getPreguntaUsuario()).isEqualTo("¿Cuántas ventas?");
         assertThat(consulta.getQuerySqlGenerada()).isEqualTo("SELECT 1;");
@@ -56,7 +55,7 @@ class ConsultaHistorialTest {
     @Test
     void rechazaDatosInvalidos() {
         ConsultaHistorialUUID id = ConsultaHistorialUUID.generate();
-        Tenant tenant = tenant();
+        TenantUUID tenant = tenant();
         Usuario usuario = usuario();
 
         assertThatThrownBy(() -> new ConsultaHistorial(null, tenant, usuario, "p", "q", LocalDateTime.now(),

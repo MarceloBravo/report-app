@@ -3,9 +3,7 @@ package com.saas.report.auth.infrastructure.security;
 import com.saas.report.auth.domain.user.Usuario;
 import com.saas.report.auth.domain.user.UsuarioRol;
 import com.saas.report.auth.domain.valueobject.UsuarioUUID;
-import com.saas.report.domain.entities.Tenant;
-import com.saas.report.domain.enums.TenantEstado;
-import com.saas.report.domain.valueObjects.TenantUUID;
+import com.saas.report.tenant.domain.valueobject.TenantUUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -26,8 +24,8 @@ class JwtTokenProviderTest {
     }
 
     private Usuario usuario() {
-        return new Usuario(UsuarioUUID.generate(), new Tenant(TenantUUID.generate(), "Empresa", "empresa",
-                TenantEstado.ACTIVE), "Ana", "ana@empresa.com", "hash", UsuarioRol.ADMIN, true);
+        return new Usuario(UsuarioUUID.generate(), TenantUUID.generate(), "Ana", "ana@empresa.com",
+                "hash", UsuarioRol.ADMIN, true);
     }
 
     @Test
@@ -40,7 +38,7 @@ class JwtTokenProviderTest {
         assertThat(provider.esRefreshToken(token)).isFalse();
         assertThat(provider.extraerEmail(token)).isEqualTo(u.getEmail());
         assertThat(provider.extraerUsuarioId(token)).isEqualTo(u.getUsuarioId().getValue().toString());
-        assertThat(provider.extraerTenantId(token)).isEqualTo(u.getTenant().getTenantId().getValue().toString());
+        assertThat(provider.extraerTenantId(token)).isEqualTo(u.getTenantId().getValue().toString());
         assertThat(provider.extraerRol(token)).isEqualTo(UsuarioRol.ADMIN.name());
     }
 

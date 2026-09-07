@@ -1,8 +1,11 @@
 package com.saas.report.domain.entities;
 
 import com.saas.report.domain.enums.SuscripcionEstado;
-import com.saas.report.domain.exceptions.InvalidStatusException;
+import com.saas.report.shared.exception.InvalidStatusException;
 import com.saas.report.domain.valueObjects.SuscripcionUUID;
+import com.saas.report.plan.domain.Plan;
+import com.saas.report.plan.domain.PlanPrecio;
+import com.saas.report.tenant.domain.valueobject.TenantUUID;
 
 import java.time.LocalDate;
 import java.time.Period;
@@ -13,19 +16,19 @@ import java.util.List;
 public class Suscripcion {
 
     private final SuscripcionUUID suscripcionId;
-    private final Tenant tenant;
+    private final TenantUUID tenantId;
     private Plan plan;
     private final LocalDate fechaInicio;
     private SuscripcionEstado estado;
     private LocalDate proximaFacturacion;
     private final List<SuscripcionHistorialPrecio> historialPrecios = new ArrayList<>();
 
-    public Suscripcion(SuscripcionUUID suscripcionId, Tenant tenant, Plan plan, LocalDate fechaInicio,
+    public Suscripcion(SuscripcionUUID suscripcionId, TenantUUID tenantId, Plan plan, LocalDate fechaInicio,
                        SuscripcionEstado estado, LocalDate proximaFacturacion) {
         if (suscripcionId == null) {
             throw new IllegalArgumentException("El ID de la suscripción no puede ser nulo");
         }
-        if (tenant == null) {
+        if (tenantId == null) {
             throw new IllegalArgumentException("El tenant no puede ser nulo");
         }
         if (plan == null) {
@@ -38,7 +41,7 @@ public class Suscripcion {
             throw new IllegalArgumentException("El estado no puede ser nulo");
         }
         this.suscripcionId = suscripcionId;
-        this.tenant = tenant;
+        this.tenantId = tenantId;
         this.plan = plan;
         this.fechaInicio = fechaInicio;
         this.estado = estado;
@@ -49,8 +52,8 @@ public class Suscripcion {
         return suscripcionId;
     }
 
-    public Tenant getTenant() {
-        return tenant;
+    public TenantUUID getTenantId() {
+        return tenantId;
     }
 
     public Plan getPlan() {

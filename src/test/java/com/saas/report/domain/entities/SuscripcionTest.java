@@ -1,15 +1,16 @@
 package com.saas.report.domain.entities;
 
 import com.saas.report.domain.enums.SuscripcionEstado;
-import com.saas.report.domain.enums.TenantEstado;
-import com.saas.report.domain.exceptions.InvalidStatusException;
-import com.saas.report.domain.valueObjects.PlanLimiteConsultasMensuales;
-import com.saas.report.domain.valueObjects.PlanMaxUsuarios;
-import com.saas.report.domain.valueObjects.PlanPrecioUUID;
-import com.saas.report.domain.valueObjects.PlanUUID;
+import com.saas.report.shared.exception.InvalidStatusException;
 import com.saas.report.domain.valueObjects.SuscripcionHistorialPrecioUUID;
 import com.saas.report.domain.valueObjects.SuscripcionUUID;
-import com.saas.report.domain.valueObjects.TenantUUID;
+import com.saas.report.plan.domain.Plan;
+import com.saas.report.plan.domain.PlanPrecio;
+import com.saas.report.plan.domain.valueobject.PlanLimiteConsultasMensuales;
+import com.saas.report.plan.domain.valueobject.PlanMaxUsuarios;
+import com.saas.report.plan.domain.valueobject.PlanPrecioUUID;
+import com.saas.report.plan.domain.valueobject.PlanUUID;
+import com.saas.report.tenant.domain.valueobject.TenantUUID;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -21,8 +22,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class SuscripcionTest {
 
-    private Tenant tenant() {
-        return new Tenant(TenantUUID.generate(), "Empresa", "empresa", TenantEstado.ACTIVE);
+    private TenantUUID tenant() {
+        return TenantUUID.generate();
     }
 
     private Plan planConTramoFijo() {
@@ -39,7 +40,7 @@ class SuscripcionTest {
 
     @Test
     void construyeSuscripcionYExponeDatos() {
-        Tenant tenant = tenant();
+        TenantUUID tenant = tenant();
         Plan plan = planConTramoFijo();
         SuscripcionUUID id = SuscripcionUUID.generate();
         LocalDate inicio = LocalDate.now();
@@ -47,7 +48,7 @@ class SuscripcionTest {
         Suscripcion suscripcion = new Suscripcion(id, tenant, plan, inicio, SuscripcionEstado.ACTIVE, proximaFacturacion);
 
         assertThat(suscripcion.getSuscripcionId()).isEqualTo(id);
-        assertThat(suscripcion.getTenant()).isEqualTo(tenant);
+        assertThat(suscripcion.getTenantId()).isEqualTo(tenant);
         assertThat(suscripcion.getPlan()).isEqualTo(plan);
         assertThat(suscripcion.getFechaInicio()).isEqualTo(inicio);
         assertThat(suscripcion.getEstado()).isEqualTo(SuscripcionEstado.ACTIVE);
@@ -56,7 +57,7 @@ class SuscripcionTest {
 
     @Test
     void rechazaAtributosNulos() {
-        Tenant tenant = tenant();
+        TenantUUID tenant = tenant();
         Plan plan = planConTramoFijo();
         LocalDate hoy = LocalDate.now();
 

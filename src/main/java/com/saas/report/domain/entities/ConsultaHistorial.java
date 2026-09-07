@@ -1,16 +1,17 @@
 package com.saas.report.domain.entities;
 
 import com.saas.report.auth.domain.user.Usuario;
-import com.saas.report.domain.exceptions.InvalidIntegerValue;
+import com.saas.report.shared.exception.InvalidIntegerValue;
 import com.saas.report.domain.valueObjects.ConsultaHistorialUUID;
-import com.saas.report.domain.valueObjects.TenantDbConnectionUUID;
+import com.saas.report.tenant.domain.valueobject.TenantDbConnectionUUID;
+import com.saas.report.tenant.domain.valueobject.TenantUUID;
 
 import java.time.LocalDateTime;
 
 public class ConsultaHistorial {
 
     private final ConsultaHistorialUUID consultaId;
-    private final Tenant tenant;
+    private final TenantUUID tenantId;
     private final Usuario usuario;
     private final String preguntaUsuario;
     private final String querySqlGenerada;
@@ -20,14 +21,14 @@ public class ConsultaHistorial {
     private final TenantDbConnectionUUID dbConnectionId;
     private final Integer consultasEnPeriodo;
 
-    public ConsultaHistorial(ConsultaHistorialUUID consultaId, Tenant tenant, Usuario usuario,
+    public ConsultaHistorial(ConsultaHistorialUUID consultaId, TenantUUID tenantId, Usuario usuario,
                              String preguntaUsuario, String querySqlGenerada, LocalDateTime fechaConsulta,
                              Boolean exitosa, Integer registrosCount, TenantDbConnectionUUID dbConnectionId,
                              Integer consultasEnPeriodo) {
         if (consultaId == null) {
             throw new IllegalArgumentException("El ID de la consulta no puede ser nulo");
         }
-        if (tenant == null) {
+        if (tenantId == null) {
             throw new IllegalArgumentException("El tenant no puede ser nulo");
         }
         if (usuario == null) {
@@ -43,7 +44,7 @@ public class ConsultaHistorial {
             throw new InvalidIntegerValue("Las consultas del período deben ser >= 1 (incluyen la consulta actual)");
         }
         this.consultaId = consultaId;
-        this.tenant = tenant;
+        this.tenantId = tenantId;
         this.usuario = usuario;
         this.preguntaUsuario = preguntaUsuario;
         this.querySqlGenerada = querySqlGenerada;
@@ -58,8 +59,8 @@ public class ConsultaHistorial {
         return consultaId;
     }
 
-    public Tenant getTenant() {
-        return tenant;
+    public TenantUUID getTenantId() {
+        return tenantId;
     }
 
     public Usuario getUsuario() {

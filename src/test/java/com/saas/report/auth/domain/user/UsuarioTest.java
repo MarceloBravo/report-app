@@ -1,9 +1,7 @@
 package com.saas.report.auth.domain.user;
 
 import com.saas.report.auth.domain.valueobject.UsuarioUUID;
-import com.saas.report.domain.entities.Tenant;
-import com.saas.report.domain.enums.TenantEstado;
-import com.saas.report.domain.valueObjects.TenantUUID;
+import com.saas.report.tenant.domain.valueobject.TenantUUID;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -12,18 +10,18 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class UsuarioTest {
 
     private Usuario usuario(UsuarioRol rol, Boolean activo) {
-        return new Usuario(UsuarioUUID.generate(), new Tenant(TenantUUID.generate(), "Empresa", "empresa",
-                TenantEstado.ACTIVE), "Ana", "ana@empresa.com", "password-hash", rol, activo);
+        return new Usuario(UsuarioUUID.generate(), TenantUUID.generate(), "Ana", "ana@empresa.com",
+                "password-hash", rol, activo);
     }
 
     @Test
     void construyeUsuarioYExponeDatos() {
-        Tenant tenant = new Tenant(TenantUUID.generate(), "Empresa", "empresa", TenantEstado.ACTIVE);
+        TenantUUID tenant = TenantUUID.generate();
         UsuarioUUID id = UsuarioUUID.generate();
         Usuario usuario = new Usuario(id, tenant, "Ana", "ana@empresa.com", "password-hash", UsuarioRol.ADMIN, true);
 
         assertThat(usuario.getUsuarioId()).isEqualTo(id);
-        assertThat(usuario.getTenant()).isEqualTo(tenant);
+        assertThat(usuario.getTenantId()).isEqualTo(tenant);
         assertThat(usuario.getNombre()).isEqualTo("Ana");
         assertThat(usuario.getEmail()).isEqualTo("ana@empresa.com");
         assertThat(usuario.getPassword()).isEqualTo("password-hash");
@@ -33,7 +31,7 @@ class UsuarioTest {
 
     @Test
     void rechazaDatosInvalidos() {
-        Tenant tenant = new Tenant(TenantUUID.generate(), "Empresa", "empresa", TenantEstado.ACTIVE);
+        TenantUUID tenant = TenantUUID.generate();
         UsuarioUUID id = UsuarioUUID.generate();
 
         assertThatThrownBy(() -> new Usuario(null, tenant, "Ana", "ana@e.com", "pw", UsuarioRol.ADMIN, true))

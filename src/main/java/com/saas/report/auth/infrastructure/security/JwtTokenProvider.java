@@ -60,7 +60,7 @@ public class JwtTokenProvider implements TokenService {
                 .id(UUID.randomUUID().toString())
                 .subject(usuario.getEmail())
                 .claim("userId", usuario.getUsuarioId().getValue().toString())
-                .claim("tenantId", usuario.getTenant().getTenantId().getValue().toString())
+                .claim("tenantId", usuario.getTenantId().getValue().toString())
                 .claim("rol", usuario.getRol().name())
                 .claim("typ", "access")
                 .issuedAt(Date.from(now))

@@ -3,8 +3,8 @@ package com.saas.report.auth.infrastructure.persistence.mapper;
 import com.saas.report.auth.domain.user.Usuario;
 import com.saas.report.auth.domain.valueobject.UsuarioUUID;
 import com.saas.report.auth.infrastructure.persistence.UsuarioJpaEntity;
-import com.saas.report.infrastructure.persistence.TenantJpaEntity;
-import com.saas.report.infrastructure.persistence.mapper.TenantMapper;
+import com.saas.report.tenant.infrastructure.persistence.TenantJpaEntity;
+import com.saas.report.tenant.infrastructure.persistence.mapper.TenantMapper;
 
 public final class UsuarioMapper {
 
@@ -25,7 +25,7 @@ public final class UsuarioMapper {
 
     public static Usuario toDomain(UsuarioJpaEntity entity) {
         return new Usuario(new UsuarioUUID(entity.getUsuarioId()),
-                TenantMapper.toDomain(entity.getTenant()),
+                TenantMapper.toDomain(entity.getTenant()).getTenantId(),
                 entity.getNombre(), entity.getEmail(), entity.getPasswordHash(),
                 entity.getRol(), entity.getActivo());
     }
