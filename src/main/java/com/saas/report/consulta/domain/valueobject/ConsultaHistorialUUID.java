@@ -1,4 +1,4 @@
-package com.saas.report.domain.valueObjects;
+package com.saas.report.consulta.domain.valueobject;
 
 import com.saas.report.shared.exception.InvalidUUIDException;
 

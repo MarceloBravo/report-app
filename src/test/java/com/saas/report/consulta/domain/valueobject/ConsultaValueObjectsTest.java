@@ -1,4 +1,4 @@
-package com.saas.report.domain.valueObjects;
+package com.saas.report.consulta.domain.valueobject;
 
 import com.saas.report.shared.exception.InvalidUUIDException;
 import org.junit.jupiter.api.Test;
@@ -8,7 +8,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-class ValueObjectsTest {
+class ConsultaValueObjectsTest {
 
     @Test
     void idsDeDominioRechazanNulo() {
