@@ -9,11 +9,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
-public class ConsultarHistorialUseCase {
+public class ListConsultasUseCase {
 
     private final ConsultaHistorialRepository consultaRepository;
 
-    public ConsultarHistorialUseCase(ConsultaHistorialRepository consultaRepository) {
+    public ListConsultasUseCase(ConsultaHistorialRepository consultaRepository) {
         this.consultaRepository = consultaRepository;
     }
 

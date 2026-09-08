@@ -33,7 +33,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class ActualizarPlanUseCaseTest {
+class UpdateSuscripcionPlanUseCaseTest {
 
     @Mock
     private SuscripcionRepository suscripcionRepository;
@@ -41,11 +41,11 @@ class ActualizarPlanUseCaseTest {
     @Mock
     private PlanRepository planRepository;
 
-    private ActualizarPlanUseCase actualizarPlanUseCase;
+    private UpdateSuscripcionPlanUseCase updateSuscripcionPlanUseCase;
 
     @BeforeEach
     void setUp() {
-        actualizarPlanUseCase = new ActualizarPlanUseCase(suscripcionRepository, planRepository);
+        updateSuscripcionPlanUseCase = new UpdateSuscripcionPlanUseCase(suscripcionRepository, planRepository);
     }
 
     private Plan planActivo(BigDecimal precio) {
@@ -70,7 +70,7 @@ class ActualizarPlanUseCaseTest {
         when(suscripcionRepository.save(any(Suscripcion.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        SuscripcionResponse response = actualizarPlanUseCase.actualizarPlan(
+        SuscripcionResponse response = updateSuscripcionPlanUseCase.actualizarPlan(
                 suscripcion.getSuscripcionId(), new ActualizarPlanRequest(nuevoPlan.getPlanId().getValue()));
 
         assertThat(suscripcion.getPlanId()).isEqualTo(nuevoPlan.getPlanId());
@@ -81,7 +81,7 @@ class ActualizarPlanUseCaseTest {
     void lanzaExcepcionSiLaSuscripcionNoExiste() {
         when(suscripcionRepository.findById(any(SuscripcionUUID.class))).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> actualizarPlanUseCase.actualizarPlan(
+        assertThatThrownBy(() -> updateSuscripcionPlanUseCase.actualizarPlan(
                 SuscripcionUUID.generate(), new ActualizarPlanRequest(UUID.randomUUID())))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
@@ -94,7 +94,7 @@ class ActualizarPlanUseCaseTest {
         when(suscripcionRepository.findById(any(SuscripcionUUID.class))).thenReturn(Optional.of(suscripcion));
         when(planRepository.findById(new PlanUUID(planId))).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> actualizarPlanUseCase.actualizarPlan(
+        assertThatThrownBy(() -> updateSuscripcionPlanUseCase.actualizarPlan(
                 suscripcion.getSuscripcionId(), new ActualizarPlanRequest(planId)))
                 .isInstanceOf(ResourceNotFoundException.class);
     }

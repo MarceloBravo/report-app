@@ -37,7 +37,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class CrearSuscripcionUseCaseTest {
+class CreateSuscripcionUseCaseTest {
 
     @Mock
     private SuscripcionRepository suscripcionRepository;
@@ -45,11 +45,11 @@ class CrearSuscripcionUseCaseTest {
     @Mock
     private PlanRepository planRepository;
 
-    private CrearSuscripcionUseCase crearSuscripcionUseCase;
+    private CreateSuscripcionUseCase createSuscripcionUseCase;
 
     @BeforeEach
     void setUp() {
-        crearSuscripcionUseCase = new CrearSuscripcionUseCase(suscripcionRepository, planRepository);
+        createSuscripcionUseCase = new CreateSuscripcionUseCase(suscripcionRepository, planRepository);
     }
 
     private Plan planActivo(BigDecimal precio) {
@@ -73,7 +73,7 @@ class CrearSuscripcionUseCaseTest {
         when(suscripcionRepository.save(any(Suscripcion.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        SuscripcionResponse response = crearSuscripcionUseCase.crear(request);
+        SuscripcionResponse response = createSuscripcionUseCase.crear(request);
 
         ArgumentCaptor<Suscripcion> captor = ArgumentCaptor.forClass(Suscripcion.class);
         verify(suscripcionRepository).save(captor.capture());
@@ -101,7 +101,7 @@ class CrearSuscripcionUseCaseTest {
         when(suscripcionRepository.findByTenantIdAndEstado(any(), any()))
                 .thenReturn(Optional.of(activa));
 
-        assertThatThrownBy(() -> crearSuscripcionUseCase.crear(request))
+        assertThatThrownBy(() -> createSuscripcionUseCase.crear(request))
                 .isInstanceOf(SuscripcionAlreadyActiveException.class);
     }
 
@@ -113,7 +113,7 @@ class CrearSuscripcionUseCaseTest {
         when(suscripcionRepository.findByTenantIdAndEstado(any(), any())).thenReturn(Optional.empty());
         when(planRepository.findById(new PlanUUID(planId))).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> crearSuscripcionUseCase.crear(request))
+        assertThatThrownBy(() -> createSuscripcionUseCase.crear(request))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
@@ -128,7 +128,7 @@ class CrearSuscripcionUseCaseTest {
         when(suscripcionRepository.findByTenantIdAndEstado(any(), any())).thenReturn(Optional.empty());
         when(planRepository.findById(planId)).thenReturn(Optional.of(planInactivo));
 
-        assertThatThrownBy(() -> crearSuscripcionUseCase.crear(request))
+        assertThatThrownBy(() -> createSuscripcionUseCase.crear(request))
                 .isInstanceOf(InvalidStatusException.class);
     }
 }

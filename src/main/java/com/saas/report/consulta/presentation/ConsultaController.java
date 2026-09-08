@@ -2,9 +2,9 @@ package com.saas.report.consulta.presentation;
 
 import com.saas.report.consulta.application.dto.ConsultaRequest;
 import com.saas.report.consulta.application.dto.ConsultaResponse;
-import com.saas.report.consulta.application.usecase.ConsultarHistorialUseCase;
 import com.saas.report.consulta.application.usecase.GetConsultaUseCase;
-import com.saas.report.consulta.application.usecase.RegistrarConsultaUseCase;
+import com.saas.report.consulta.application.usecase.ListConsultasUseCase;
+import com.saas.report.consulta.application.usecase.RegisterConsultaUseCase;
 import com.saas.report.consulta.domain.valueobject.ConsultaHistorialUUID;
 import com.saas.report.tenant.domain.valueobject.TenantUUID;
 import jakarta.validation.Valid;
@@ -25,21 +25,21 @@ import java.util.UUID;
 @RequestMapping("/consultas")
 public class ConsultaController {
 
-    private final RegistrarConsultaUseCase registrarConsultaUseCase;
-    private final ConsultarHistorialUseCase consultarHistorialUseCase;
+    private final RegisterConsultaUseCase registerConsultaUseCase;
+    private final ListConsultasUseCase listConsultasUseCase;
     private final GetConsultaUseCase getConsultaUseCase;
 
-    public ConsultaController(RegistrarConsultaUseCase registrarConsultaUseCase,
-                              ConsultarHistorialUseCase consultarHistorialUseCase,
+    public ConsultaController(RegisterConsultaUseCase registerConsultaUseCase,
+                              ListConsultasUseCase listConsultasUseCase,
                               GetConsultaUseCase getConsultaUseCase) {
-        this.registrarConsultaUseCase = registrarConsultaUseCase;
-        this.consultarHistorialUseCase = consultarHistorialUseCase;
+        this.registerConsultaUseCase = registerConsultaUseCase;
+        this.listConsultasUseCase = listConsultasUseCase;
         this.getConsultaUseCase = getConsultaUseCase;
     }
 
     @PostMapping
     public ResponseEntity<ConsultaResponse> registrar(@Valid @RequestBody ConsultaRequest request) {
-        ConsultaResponse response = registrarConsultaUseCase.registrar(request);
+        ConsultaResponse response = registerConsultaUseCase.registrar(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -50,6 +50,6 @@ public class ConsultaController {
 
     @GetMapping
     public ResponseEntity<List<ConsultaResponse>> historial(@RequestParam UUID tenantId) {
-        return ResponseEntity.ok(consultarHistorialUseCase.listar(new TenantUUID(tenantId)));
+        return ResponseEntity.ok(listConsultasUseCase.listar(new TenantUUID(tenantId)));
     }
 }

@@ -1,5 +1,6 @@
 package com.saas.report.auth.infrastructure.security;
 
+import com.saas.report.shared.presentation.dto.ErrorResponse;
 import tools.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -10,7 +11,6 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.Map;
 
 @Component
 public class RestAccessDeniedHandler implements AccessDeniedHandler {
@@ -26,11 +26,12 @@ public class RestAccessDeniedHandler implements AccessDeniedHandler {
                        AccessDeniedException accessDeniedException) throws IOException {
         response.setStatus(HttpServletResponse.SC_FORBIDDEN);
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        objectMapper.writeValue(response.getOutputStream(), Map.of(
-                "timestamp", LocalDateTime.now().toString(),
-                "status", HttpServletResponse.SC_FORBIDDEN,
-                "error", "Forbidden",
-                "message", accessDeniedException.getMessage() != null ? accessDeniedException.getMessage() : "Acceso denegado",
-                "path", request.getServletPath()));
+        ErrorResponse body = new ErrorResponse(
+                HttpServletResponse.SC_FORBIDDEN,
+                "Forbidden",
+                accessDeniedException.getMessage() != null ? accessDeniedException.getMessage() : "Acceso denegado",
+                request.getServletPath(),
+                LocalDateTime.now());
+        objectMapper.writeValue(response.getOutputStream(), body);
     }
 }

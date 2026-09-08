@@ -15,7 +15,7 @@ public class Plan {
     private final String descripcion;
     private final PlanMaxUsuarios maxUsuarios;
     private final PlanLimiteConsultasMensuales limiteConsultasMensuales;
-    private final Boolean activo;
+    private final boolean activo;
     private final List<PlanPrecio> precios;
 
     public Plan(PlanUUID planId, String nombrePlan, String descripcion, PlanMaxUsuarios maxUsuarios,
@@ -73,7 +73,7 @@ public class Plan {
         return limiteConsultasMensuales;
     }
 
-    public Boolean isActivo() {
+    public boolean isActivo() {
         return activo;
     }
 

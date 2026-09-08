@@ -23,16 +23,16 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class SuspenderSuscripcionUseCaseTest {
+class CancelSuscripcionUseCaseTest {
 
     @Mock
     private SuscripcionRepository suscripcionRepository;
 
-    private SuspenderSuscripcionUseCase suspenderSuscripcionUseCase;
+    private CancelSuscripcionUseCase cancelSuscripcionUseCase;
 
     @BeforeEach
     void setUp() {
-        suspenderSuscripcionUseCase = new SuspenderSuscripcionUseCase(suscripcionRepository);
+        cancelSuscripcionUseCase = new CancelSuscripcionUseCase(suscripcionRepository);
     }
 
     private Suscripcion suscripcionActiva() {
@@ -41,24 +41,25 @@ class SuspenderSuscripcionUseCaseTest {
     }
 
     @Test
-    void suspendeYCambiaElEstado() {
+    void cancelaYCambiaElEstado() {
         Suscripcion suscripcion = suscripcionActiva();
 
         when(suscripcionRepository.findById(any(SuscripcionUUID.class))).thenReturn(Optional.of(suscripcion));
         when(suscripcionRepository.save(any(Suscripcion.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        SuscripcionResponse response = suspenderSuscripcionUseCase.suspender(suscripcion.getSuscripcionId());
+        SuscripcionResponse response = cancelSuscripcionUseCase.cancelar(suscripcion.getSuscripcionId());
 
-        assertThat(suscripcion.getEstado()).isEqualTo(SuscripcionEstado.SUSPENDED);
-        assertThat(response.estado()).isEqualTo(SuscripcionEstado.SUSPENDED);
+        assertThat(suscripcion.getEstado()).isEqualTo(SuscripcionEstado.CANCELED);
+        assertThat(response.estado()).isEqualTo(SuscripcionEstado.CANCELED);
+        assertThat(response.vigente()).isFalse();
     }
 
     @Test
     void lanzaExcepcionSiNoExiste() {
         when(suscripcionRepository.findById(any(SuscripcionUUID.class))).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> suspenderSuscripcionUseCase.suspender(SuscripcionUUID.generate()))
+        assertThatThrownBy(() -> cancelSuscripcionUseCase.cancelar(SuscripcionUUID.generate()))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 }

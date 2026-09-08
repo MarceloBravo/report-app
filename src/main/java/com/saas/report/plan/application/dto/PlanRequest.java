@@ -30,7 +30,6 @@ public record PlanRequest(
         Boolean activo,
 
         @NotEmpty(message = "El plan debe definir al menos un tramo de precio")
-        @Valid
-        List<PlanPrecioRequest> precios
+        List<@Valid PlanPrecioRequest> precios
 ) {
 }

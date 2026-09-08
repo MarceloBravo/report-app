@@ -9,21 +9,21 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class SuspenderSuscripcionUseCase {
+public class CancelSuscripcionUseCase {
 
     private final SuscripcionRepository suscripcionRepository;
 
-    public SuspenderSuscripcionUseCase(SuscripcionRepository suscripcionRepository) {
+    public CancelSuscripcionUseCase(SuscripcionRepository suscripcionRepository) {
         this.suscripcionRepository = suscripcionRepository;
     }
 
     @Transactional
-    public SuscripcionResponse suspender(SuscripcionUUID suscripcionId) {
+    public SuscripcionResponse cancelar(SuscripcionUUID suscripcionId) {
         Suscripcion suscripcion = suscripcionRepository.findById(suscripcionId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Suscripción no encontrada con ID: " + suscripcionId.getValue()));
 
-        suscripcion.suspender();
+        suscripcion.cancelar();
 
         return SuscripcionResponse.from(suscripcionRepository.save(suscripcion));
     }

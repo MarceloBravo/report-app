@@ -113,7 +113,7 @@ public class Suscripcion {
         if (nuevoPlan == null) {
             throw new IllegalArgumentException("El nuevo plan no puede ser nulo");
         }
-        if (nuevoPlan.isActivo() == null || !nuevoPlan.isActivo()) {
+        if (!nuevoPlan.isActivo()) {
             throw new InvalidStatusException("El plan de destino no está activo.");
         }
         this.planId = nuevoPlan.getPlanId();

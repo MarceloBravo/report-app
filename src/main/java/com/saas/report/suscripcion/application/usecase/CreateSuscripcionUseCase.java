@@ -22,12 +22,12 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 
 @Service
-public class CrearSuscripcionUseCase {
+public class CreateSuscripcionUseCase {
 
     private final SuscripcionRepository suscripcionRepository;
     private final PlanRepository planRepository;
 
-    public CrearSuscripcionUseCase(SuscripcionRepository suscripcionRepository, PlanRepository planRepository) {
+    public CreateSuscripcionUseCase(SuscripcionRepository suscripcionRepository, PlanRepository planRepository) {
         this.suscripcionRepository = suscripcionRepository;
         this.planRepository = planRepository;
     }
@@ -46,7 +46,7 @@ public class CrearSuscripcionUseCase {
         Plan plan = planRepository.findById(new PlanUUID(request.planId()))
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Plan no encontrado con ID: " + request.planId()));
-        if (plan.isActivo() == null || !plan.isActivo()) {
+        if (!plan.isActivo()) {
             throw new InvalidStatusException("El plan de destino no está activo.");
         }
 

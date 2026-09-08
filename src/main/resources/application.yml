@@ -9,7 +9,7 @@ spring:
     open-in-view: false
 
 jwt:
-  secret: ${JWT_SECRET:c2VjcmV0b19zdXBlcl9zZWd1cm9fZGVfcmVwb3J0X3Nhc18yMDI2X2NsYXZlXzMyYnl0ZQ==}
+  secret: ${JWT_SECRET}
   access-token-expiration: ${JWT_ACCESS_TOKEN_EXPIRATION:900000}
   refresh-token-expiration: ${JWT_REFRESH_TOKEN_EXPIRATION:604800000}
 

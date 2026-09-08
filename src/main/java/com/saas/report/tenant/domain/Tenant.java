@@ -17,8 +17,20 @@ public class Tenant {
         this(tenantId, nombreEmpresa, subdominioSlug, estado, LocalDateTime.now());
     }
 
-    public Tenant(TenantUUID tenantId, String nombreEmpresa, String subdominioSlug, TenantEstado estado,
-                  LocalDateTime fechaRegistro) {
+public Tenant(TenantUUID tenantId, String nombreEmpresa, String subdominioSlug, TenantEstado estado,
+              LocalDateTime fechaRegistro) {
+        if (tenantId == null) {
+            throw new IllegalArgumentException("El ID del tenant no puede ser nulo");
+        }
+        if (nombreEmpresa == null || nombreEmpresa.isBlank()) {
+            throw new IllegalArgumentException("El nombre de la empresa no puede estar vacío");
+        }
+        if (subdominioSlug == null || subdominioSlug.isBlank()) {
+            throw new IllegalArgumentException("El subdominio no puede estar vacío");
+        }
+        if (estado == null) {
+            throw new IllegalArgumentException("El estado no puede ser nulo");
+        }
         if (fechaRegistro == null) {
             throw new IllegalArgumentException("La fecha de registro no puede ser nula");
         }

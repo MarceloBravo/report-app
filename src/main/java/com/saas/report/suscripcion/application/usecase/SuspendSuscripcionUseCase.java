@@ -1,10 +1,6 @@
 package com.saas.report.suscripcion.application.usecase;
 
-import com.saas.report.plan.domain.Plan;
-import com.saas.report.plan.domain.PlanRepository;
-import com.saas.report.plan.domain.valueobject.PlanUUID;
 import com.saas.report.shared.exception.ResourceNotFoundException;
-import com.saas.report.suscripcion.application.dto.ActualizarPlanRequest;
 import com.saas.report.suscripcion.application.dto.SuscripcionResponse;
 import com.saas.report.suscripcion.domain.Suscripcion;
 import com.saas.report.suscripcion.domain.SuscripcionRepository;
@@ -13,27 +9,21 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class ActualizarPlanUseCase {
+public class SuspendSuscripcionUseCase {
 
     private final SuscripcionRepository suscripcionRepository;
-    private final PlanRepository planRepository;
 
-    public ActualizarPlanUseCase(SuscripcionRepository suscripcionRepository, PlanRepository planRepository) {
+    public SuspendSuscripcionUseCase(SuscripcionRepository suscripcionRepository) {
         this.suscripcionRepository = suscripcionRepository;
-        this.planRepository = planRepository;
     }
 
     @Transactional
-    public SuscripcionResponse actualizarPlan(SuscripcionUUID suscripcionId, ActualizarPlanRequest request) {
+    public SuscripcionResponse suspender(SuscripcionUUID suscripcionId) {
         Suscripcion suscripcion = suscripcionRepository.findById(suscripcionId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Suscripción no encontrada con ID: " + suscripcionId.getValue()));
 
-        Plan plan = planRepository.findById(new PlanUUID(request.planId()))
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Plan no encontrado con ID: " + request.planId()));
-
-        suscripcion.actualizarPlan(plan);
+        suscripcion.suspender();
 
         return SuscripcionResponse.from(suscripcionRepository.save(suscripcion));
     }

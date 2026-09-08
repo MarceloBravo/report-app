@@ -11,7 +11,7 @@ public class Usuario {
     private final String email;
     private final String password;
     private UsuarioRol rol;
-    private Boolean activo;
+    private boolean activo;
 
     public Usuario(UsuarioUUID usuarioId, TenantUUID tenantId, String nombre, String email, String password,
                    UsuarioRol rol, Boolean activo) {
@@ -32,6 +32,9 @@ public class Usuario {
         }
         if (rol == null) {
             throw new IllegalArgumentException("El rol no puede ser nulo");
+        }
+        if (activo == null) {
+            throw new IllegalArgumentException("El estado del usuario no puede ser nulo");
         }
         this.usuarioId = usuarioId;
         this.tenantId = tenantId;
@@ -66,7 +69,7 @@ public class Usuario {
         return rol;
     }
 
-    public Boolean getActivo() {
+    public boolean getActivo() {
         return activo;
     }
 

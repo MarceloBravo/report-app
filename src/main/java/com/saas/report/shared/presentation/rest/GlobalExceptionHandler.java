@@ -3,7 +3,9 @@ package com.saas.report.shared.presentation.rest;
 import com.saas.report.auth.domain.exception.EmailAlreadyExistsException;
 import com.saas.report.auth.domain.exception.InvalidCredentialsException;
 import com.saas.report.auth.domain.exception.TokenRevokedException;
+import com.saas.report.consulta.domain.exception.LimiteConsultasExcedidoException;
 import com.saas.report.plan.domain.exception.PlanNombreAlreadyExistsException;
+import com.saas.report.shared.exception.DomainException;
 import com.saas.report.shared.presentation.dto.ErrorResponse;
 import com.saas.report.suscripcion.domain.exception.SuscripcionAlreadyActiveException;
 import com.saas.report.shared.exception.InvalidStatusException;
@@ -48,7 +50,7 @@ public class GlobalExceptionHandler {
 
 @ExceptionHandler(PlanNombreAlreadyExistsException.class)
     public ResponseEntity<ErrorResponse> handlePlanNombreExists(PlanNombreAlreadyExistsException ex,
-                                                                 HttpServletRequest request) {
+                                                                HttpServletRequest request) {
         return build(HttpStatus.CONFLICT, ex.getMessage(), request);
     }
 
@@ -67,6 +69,24 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InvalidStatusException.class)
     public ResponseEntity<ErrorResponse> handleInvalidStatus(InvalidStatusException ex,
                                                              HttpServletRequest request) {
+        return build(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(LimiteConsultasExcedidoException.class)
+    public ResponseEntity<ErrorResponse> handleLimiteConsultasExcedido(LimiteConsultasExcedidoException ex,
+                                                                       HttpServletRequest request) {
+        return build(HttpStatus.TOO_MANY_REQUESTS, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(DomainException.class)
+    public ResponseEntity<ErrorResponse> handleDomain(DomainException ex,
+                                                      HttpServletRequest request) {
+        return build(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex,
+                                                               HttpServletRequest request) {
         return build(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
     }
 

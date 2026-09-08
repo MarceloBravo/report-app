@@ -21,16 +21,16 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class ConsultarHistorialUseCaseTest {
+class ListConsultasUseCaseTest {
 
     @Mock
     private ConsultaHistorialRepository consultaRepository;
 
-    private ConsultarHistorialUseCase consultarHistorialUseCase;
+    private ListConsultasUseCase listConsultasUseCase;
 
     @BeforeEach
     void setUp() {
-        consultarHistorialUseCase = new ConsultarHistorialUseCase(consultaRepository);
+        listConsultasUseCase = new ListConsultasUseCase(consultaRepository);
     }
 
     private ConsultaHistorial consulta(String pregunta, int periodo) {
@@ -44,7 +44,7 @@ class ConsultarHistorialUseCaseTest {
         when(consultaRepository.findByTenantId(any(TenantUUID.class)))
                 .thenReturn(List.of(consulta("¿Cuántas ventas?", 3), consulta("¿Cuántos clientes?", 2)));
 
-        List<ConsultaResponse> response = consultarHistorialUseCase.listar(TenantUUID.generate());
+        List<ConsultaResponse> response = listConsultasUseCase.listar(TenantUUID.generate());
 
         assertThat(response).hasSize(2);
         assertThat(response.get(0).preguntaUsuario()).isEqualTo("¿Cuántas ventas?");
