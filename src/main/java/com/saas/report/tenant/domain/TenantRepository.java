@@ -10,5 +10,7 @@ public interface TenantRepository {
 
     boolean existsById(TenantUUID tenantId);
 
+    boolean existsBySubdominioSlug(String subdominioSlug);
+
     Tenant save(Tenant tenant);
 }

@@ -21,6 +21,7 @@ public final class TenantMapper {
 
     public static Tenant toDomain(TenantJpaEntity entity) {
         return new Tenant(new TenantUUID(entity.getTenantId()),
-                entity.getNombreEmpresa(), entity.getSubdominioSlug(), entity.getEstado());
+                entity.getNombreEmpresa(), entity.getSubdominioSlug(), entity.getEstado(),
+                entity.getFechaRegistro());
     }
 }

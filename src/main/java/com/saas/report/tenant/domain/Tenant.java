@@ -14,11 +14,19 @@ public class Tenant {
     private final LocalDateTime fechaRegistro;
 
     public Tenant(TenantUUID tenantId, String nombreEmpresa, String subdominioSlug, TenantEstado estado) {
+        this(tenantId, nombreEmpresa, subdominioSlug, estado, LocalDateTime.now());
+    }
+
+    public Tenant(TenantUUID tenantId, String nombreEmpresa, String subdominioSlug, TenantEstado estado,
+                  LocalDateTime fechaRegistro) {
+        if (fechaRegistro == null) {
+            throw new IllegalArgumentException("La fecha de registro no puede ser nula");
+        }
         this.tenantId = tenantId;
         this.nombreEmpresa = nombreEmpresa;
         this.subdominioSlug = subdominioSlug;
         this.estado = estado;
-        this.fechaRegistro = LocalDateTime.now();
+        this.fechaRegistro = fechaRegistro;
     }
 
     public TenantUUID getTenantId() {

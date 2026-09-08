@@ -6,6 +6,7 @@ import com.saas.report.auth.domain.exception.TokenRevokedException;
 import com.saas.report.shared.presentation.dto.ErrorResponse;
 import com.saas.report.shared.exception.InvalidStatusException;
 import com.saas.report.shared.exception.ResourceNotFoundException;
+import com.saas.report.tenant.domain.exception.TenantSlugAlreadyExistsException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,6 +35,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(EmailAlreadyExistsException.class)
     public ResponseEntity<ErrorResponse> handleEmailExists(EmailAlreadyExistsException ex,
                                                            HttpServletRequest request) {
+        return build(HttpStatus.CONFLICT, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(TenantSlugAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handleTenantSlugExists(TenantSlugAlreadyExistsException ex,
+                                                                HttpServletRequest request) {
         return build(HttpStatus.CONFLICT, ex.getMessage(), request);
     }
 

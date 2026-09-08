@@ -32,6 +32,12 @@ public class TenantJpaAdapter implements TenantRepository {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public boolean existsBySubdominioSlug(String subdominioSlug) {
+        return repository.existsBySubdominioSlug(subdominioSlug);
+    }
+
+    @Override
     @Transactional
     public Tenant save(Tenant tenant) {
         return TenantMapper.toDomain(repository.save(TenantMapper.toJpa(tenant)));
