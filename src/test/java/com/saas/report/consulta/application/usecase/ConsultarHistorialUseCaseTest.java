@@ -1,0 +1,53 @@
+package com.saas.report.consulta.application.usecase;
+
+import com.saas.report.auth.domain.valueobject.UsuarioUUID;
+import com.saas.report.consulta.application.dto.ConsultaResponse;
+import com.saas.report.consulta.domain.ConsultaHistorial;
+import com.saas.report.consulta.domain.ConsultaHistorialRepository;
+import com.saas.report.consulta.domain.valueobject.ConsultaHistorialUUID;
+import com.saas.report.tenant.domain.valueobject.TenantDbConnectionUUID;
+import com.saas.report.tenant.domain.valueobject.TenantUUID;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+class ConsultarHistorialUseCaseTest {
+
+    @Mock
+    private ConsultaHistorialRepository consultaRepository;
+
+    private ConsultarHistorialUseCase consultarHistorialUseCase;
+
+    @BeforeEach
+    void setUp() {
+        consultarHistorialUseCase = new ConsultarHistorialUseCase(consultaRepository);
+    }
+
+    private ConsultaHistorial consulta(String pregunta, int periodo) {
+        return new ConsultaHistorial(ConsultaHistorialUUID.generate(), TenantUUID.generate(),
+                UsuarioUUID.generate(), pregunta, "SELECT 1;", LocalDateTime.now(), true, 5,
+                TenantDbConnectionUUID.generate(), periodo);
+    }
+
+    @Test
+    void listaElHistorialDelTenant() {
+        when(consultaRepository.findByTenantId(any(TenantUUID.class)))
+                .thenReturn(List.of(consulta("¿Cuántas ventas?", 3), consulta("¿Cuántos clientes?", 2)));
+
+        List<ConsultaResponse> response = consultarHistorialUseCase.listar(TenantUUID.generate());
+
+        assertThat(response).hasSize(2);
+        assertThat(response.get(0).preguntaUsuario()).isEqualTo("¿Cuántas ventas?");
+        assertThat(response.get(0).consultasEnPeriodo()).isEqualTo(3);
+    }
+}

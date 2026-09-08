@@ -5,6 +5,7 @@ import com.saas.report.auth.domain.exception.InvalidCredentialsException;
 import com.saas.report.auth.domain.exception.TokenRevokedException;
 import com.saas.report.plan.domain.exception.PlanNombreAlreadyExistsException;
 import com.saas.report.shared.presentation.dto.ErrorResponse;
+import com.saas.report.suscripcion.domain.exception.SuscripcionAlreadyActiveException;
 import com.saas.report.shared.exception.InvalidStatusException;
 import com.saas.report.shared.exception.ResourceNotFoundException;
 import com.saas.report.tenant.domain.exception.TenantSlugAlreadyExistsException;
@@ -45,9 +46,15 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.CONFLICT, ex.getMessage(), request);
     }
 
-    @ExceptionHandler(PlanNombreAlreadyExistsException.class)
+@ExceptionHandler(PlanNombreAlreadyExistsException.class)
     public ResponseEntity<ErrorResponse> handlePlanNombreExists(PlanNombreAlreadyExistsException ex,
-                                                                HttpServletRequest request) {
+                                                                 HttpServletRequest request) {
+        return build(HttpStatus.CONFLICT, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(SuscripcionAlreadyActiveException.class)
+    public ResponseEntity<ErrorResponse> handleSuscripcionAlreadyActive(SuscripcionAlreadyActiveException ex,
+                                                                        HttpServletRequest request) {
         return build(HttpStatus.CONFLICT, ex.getMessage(), request);
     }
 
