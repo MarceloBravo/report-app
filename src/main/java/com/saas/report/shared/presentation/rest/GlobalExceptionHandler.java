@@ -3,6 +3,7 @@ package com.saas.report.shared.presentation.rest;
 import com.saas.report.auth.domain.exception.EmailAlreadyExistsException;
 import com.saas.report.auth.domain.exception.InvalidCredentialsException;
 import com.saas.report.auth.domain.exception.TokenRevokedException;
+import com.saas.report.plan.domain.exception.PlanNombreAlreadyExistsException;
 import com.saas.report.shared.presentation.dto.ErrorResponse;
 import com.saas.report.shared.exception.InvalidStatusException;
 import com.saas.report.shared.exception.ResourceNotFoundException;
@@ -40,6 +41,12 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(TenantSlugAlreadyExistsException.class)
     public ResponseEntity<ErrorResponse> handleTenantSlugExists(TenantSlugAlreadyExistsException ex,
+                                                                HttpServletRequest request) {
+        return build(HttpStatus.CONFLICT, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(PlanNombreAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handlePlanNombreExists(PlanNombreAlreadyExistsException ex,
                                                                 HttpServletRequest request) {
         return build(HttpStatus.CONFLICT, ex.getMessage(), request);
     }
