@@ -56,17 +56,19 @@ public class JwtTokenProvider implements TokenService {
     public String generateAccessToken(Usuario usuario) {
         Instant now = Instant.now();
         Instant expiry = now.plusMillis(accessExpirationMillis);
-        return Jwts.builder()
+        var builder = Jwts.builder()
                 .id(UUID.randomUUID().toString())
                 .subject(usuario.getEmail())
                 .claim("userId", usuario.getUsuarioId().getValue().toString())
-                .claim("tenantId", usuario.getTenantId().getValue().toString())
                 .claim("rol", usuario.getRol().name())
                 .claim("typ", "access")
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(expiry))
-                .signWith(key)
-                .compact();
+                .signWith(key);
+        if (usuario.getTenantId() != null) {
+            builder.claim("tenantId", usuario.getTenantId().getValue().toString());
+        }
+        return builder.compact();
     }
 
     @Override

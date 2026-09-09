@@ -4,6 +4,7 @@ import com.saas.report.usuarios.domain.usuario.Usuario;
 import com.saas.report.usuarios.domain.valueobject.UsuarioUUID;
 import com.saas.report.usuarios.infrastructure.persistence.UsuarioJpaEntity;
 import com.saas.report.tenant.infrastructure.persistence.TenantJpaEntity;
+import com.saas.report.tenant.domain.valueobject.TenantUUID;
 import com.saas.report.tenant.infrastructure.persistence.mapper.TenantMapper;
 
 public final class UsuarioMapper {
@@ -24,8 +25,11 @@ public final class UsuarioMapper {
     }
 
     public static Usuario toDomain(UsuarioJpaEntity entity) {
+        TenantUUID tenantId = entity.getTenant() != null
+                ? TenantMapper.toDomain(entity.getTenant()).getTenantId()
+                : null;
         return new Usuario(new UsuarioUUID(entity.getUsuarioId()),
-                TenantMapper.toDomain(entity.getTenant()).getTenantId(),
+                tenantId,
                 entity.getNombre(), entity.getEmail(), entity.getPasswordHash(),
                 entity.getRol(), entity.getActivo());
     }

@@ -95,13 +95,34 @@ class AuthControllerTest {
 
     @Test
     void registroDevuelve201YUsaRolViewer() throws Exception {
+        SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(
+                new AuthPrincipal("admin@empresa.com", "u1", "t1", "ADMIN"), null,
+                java.util.List.of()));
+
         mockMvc.perform(post("/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"nombre\":\"Ana\",\"email\":\"a@b.com\",\"password\":\"12345678\","
                                 + "\"tenantId\":\"" + java.util.UUID.randomUUID() + "\"}"))
                 .andExpect(status().isCreated());
 
-        verify(registerUseCase).registrar(any(RegisterRequest.class), eq(UsuarioRol.VIEWER));
+        verify(registerUseCase).registrar(any(RegisterRequest.class), eq(UsuarioRol.VIEWER),
+                any(AuthPrincipal.class));
+    }
+
+    @Test
+    void adminRegistryUsaRolDelRequest() throws Exception {
+        SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(
+                new AuthPrincipal("root@saas.com", "u0", null, "PLATFORM_ADMIN"), null,
+                java.util.List.of()));
+
+        mockMvc.perform(post("/auth/admin/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nombre\":\"Pam\",\"email\":\"pam@saas.com\",\"password\":\"12345678\","
+                                + "\"rol\":\"PLATFORM_USER\"}"))
+                .andExpect(status().isCreated());
+
+        verify(registerUseCase).registrar(any(RegisterRequest.class), eq(UsuarioRol.PLATFORM_USER),
+                any(AuthPrincipal.class));
     }
 
     @Test

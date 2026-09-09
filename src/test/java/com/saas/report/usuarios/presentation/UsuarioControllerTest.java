@@ -1,5 +1,6 @@
 package com.saas.report.usuarios.presentation;
 
+import com.saas.report.auth.application.AuthPrincipal;
 import com.saas.report.usuarios.application.dto.UsuarioRequest;
 import com.saas.report.usuarios.application.usecase.CreateUsuarioUseCase;
 import com.saas.report.usuarios.application.usecase.DeleteUsuarioUseCase;
@@ -11,12 +12,15 @@ import com.saas.report.usuarios.domain.valueobject.UsuarioUUID;
 import com.saas.report.identity.domain.user.UsuarioRol;
 import com.saas.report.shared.presentation.rest.GlobalExceptionHandler;
 import com.saas.report.tenant.domain.valueobject.TenantUUID;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
@@ -65,6 +69,17 @@ class UsuarioControllerTest {
                 .build();
     }
 
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
+    }
+
+    private void autenticaComoPlatformAdmin() {
+        SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(
+                new AuthPrincipal("root@saas.com", "u0", null, "PLATFORM_ADMIN"), null,
+                List.of()));
+    }
+
     private Usuario usuario() {
         return new Usuario(UsuarioUUID.generate(), TenantUUID.generate(), "Ana", "ana@empresa.com",
                 "hash", UsuarioRol.ADMIN, true);
@@ -92,7 +107,9 @@ class UsuarioControllerTest {
 
     @Test
     void creaUnUsuarioYDevuelve201() throws Exception {
-        when(createUsuarioUseCase.execute(any(UsuarioRequest.class))).thenReturn(usuario());
+        autenticaComoPlatformAdmin();
+        when(createUsuarioUseCase.execute(any(UsuarioRequest.class), any(AuthPrincipal.class)))
+                .thenReturn(usuario());
 
         mockMvc.perform(post("/admin/usuarios")
                         .contentType(MediaType.APPLICATION_JSON)

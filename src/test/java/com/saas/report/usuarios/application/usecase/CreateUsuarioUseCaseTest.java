@@ -1,10 +1,12 @@
 package com.saas.report.usuarios.application.usecase;
 
+import com.saas.report.auth.application.AuthPrincipal;
 import com.saas.report.usuarios.application.dto.UsuarioRequest;
 import com.saas.report.usuarios.domain.exception.EmailAlreadyExistsException;
 import com.saas.report.usuarios.domain.usuario.Usuario;
 import com.saas.report.usuarios.domain.usuario.UsuarioRepository;
 import com.saas.report.identity.domain.user.UsuarioRol;
+import com.saas.report.shared.exception.ForbiddenException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,6 +44,10 @@ class CreateUsuarioUseCaseTest {
         return new UsuarioRequest(UUID.randomUUID(), "Ana", "ana@empresa.com", "secreto123", null, true);
     }
 
+    private AuthPrincipal creador(UsuarioRol rol) {
+        return new AuthPrincipal("jefe@saas.com", "u1", null, rol.name());
+    }
+
     @Test
     void creaUsuarioConPasswordEncriptadaYRolPorDefecto() {
         UsuarioRequest request = request();
@@ -50,7 +56,7 @@ class CreateUsuarioUseCaseTest {
         when(passwordEncoder.encode(anyString())).thenReturn("encoded-hash");
         when(usuarioRepository.save(any(Usuario.class))).thenAnswer(invocacion -> invocacion.getArgument(0));
 
-        Usuario creado = createUsuarioUseCase.execute(request);
+        Usuario creado = createUsuarioUseCase.execute(request, creador(UsuarioRol.PLATFORM_ADMIN));
 
         assertThat(creado.getNombre()).isEqualTo("Ana");
         assertThat(creado.getEmail()).isEqualTo("ana@empresa.com");
@@ -71,7 +77,7 @@ class CreateUsuarioUseCaseTest {
         when(usuarioRepository.existsByEmail(request.email())).thenReturn(false);
         when(passwordEncoder.encode(anyString())).thenReturn("encoded-hash");
 
-        createUsuarioUseCase.execute(request);
+        createUsuarioUseCase.execute(request, creador(UsuarioRol.PLATFORM_ADMIN));
 
         ArgumentCaptor<Usuario> captor = ArgumentCaptor.forClass(Usuario.class);
         verify(usuarioRepository).save(captor.capture());
@@ -80,12 +86,46 @@ class CreateUsuarioUseCaseTest {
     }
 
     @Test
+    void creaRolPlataformaSinTenant() {
+        UsuarioRequest request = new UsuarioRequest(null, "Pam", "pam@saas.com",
+                "secreto123", UsuarioRol.PLATFORM_USER, true);
+
+        when(usuarioRepository.existsByEmail(request.email())).thenReturn(false);
+        when(passwordEncoder.encode(anyString())).thenReturn("encoded-hash");
+
+        createUsuarioUseCase.execute(request, creador(UsuarioRol.PLATFORM_ADMIN));
+
+        ArgumentCaptor<Usuario> captor = ArgumentCaptor.forClass(Usuario.class);
+        verify(usuarioRepository).save(captor.capture());
+        assertThat(captor.getValue().getRol()).isEqualTo(UsuarioRol.PLATFORM_USER);
+        assertThat(captor.getValue().getTenantId()).isNull();
+    }
+
+    @Test
+    void plataformUserRechazaCrearRolDePlataforma() {
+        UsuarioRequest request = new UsuarioRequest(null, "Pam", "pam@saas.com",
+                "secreto123", UsuarioRol.PLATFORM_USER, true);
+
+        assertThatThrownBy(() -> createUsuarioUseCase.execute(request, creador(UsuarioRol.PLATFORM_USER)))
+                .isInstanceOf(ForbiddenException.class);
+    }
+
+    @Test
+    void rechazaRolTenantSinTenantId() {
+        UsuarioRequest request = new UsuarioRequest(null, "Ana", "ana@empresa.com",
+                "secreto123", UsuarioRol.ADMIN, true);
+
+        assertThatThrownBy(() -> createUsuarioUseCase.execute(request, creador(UsuarioRol.PLATFORM_ADMIN)))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     void rechazaEmailYaRegistrado() {
         UsuarioRequest request = request();
 
         when(usuarioRepository.existsByEmail(request.email())).thenReturn(true);
 
-        assertThatThrownBy(() -> createUsuarioUseCase.execute(request))
+        assertThatThrownBy(() -> createUsuarioUseCase.execute(request, creador(UsuarioRol.PLATFORM_ADMIN)))
                 .isInstanceOf(EmailAlreadyExistsException.class);
     }
 }

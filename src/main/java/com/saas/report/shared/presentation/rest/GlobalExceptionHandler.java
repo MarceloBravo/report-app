@@ -5,6 +5,7 @@ import com.saas.report.auth.domain.exception.TokenRevokedException;
 import com.saas.report.consulta.domain.exception.LimiteConsultasExcedidoException;
 import com.saas.report.plan.domain.exception.PlanNombreAlreadyExistsException;
 import com.saas.report.shared.exception.DomainException;
+import com.saas.report.shared.exception.ForbiddenException;
 import com.saas.report.shared.presentation.dto.ErrorResponse;
 import com.saas.report.suscripcion.domain.exception.SuscripcionAlreadyActiveException;
 import com.saas.report.usuarios.domain.exception.EmailAlreadyExistsException;
@@ -70,6 +71,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleInvalidStatus(InvalidStatusException ex,
                                                              HttpServletRequest request) {
         return build(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<ErrorResponse> handleForbidden(ForbiddenException ex,
+                                                         HttpServletRequest request) {
+        return build(HttpStatus.FORBIDDEN, ex.getMessage(), request);
     }
 
     @ExceptionHandler(LimiteConsultasExcedidoException.class)

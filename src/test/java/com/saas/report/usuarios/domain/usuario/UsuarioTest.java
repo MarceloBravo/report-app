@@ -62,6 +62,59 @@ class UsuarioTest {
     }
 
     @Test
+    void construyeUsuarioPlataformaSinTenant() {
+        Usuario usuario = new Usuario(UsuarioUUID.generate(), null, "Pam", "pam@saas.com",
+                "password-hash", UsuarioRol.PLATFORM_ADMIN, true);
+
+        assertThat(usuario.getTenantId()).isNull();
+        assertThat(usuario.esRolPlataforma()).isTrue();
+        assertThat(usuario.esAdminPlataforma()).isTrue();
+    }
+
+    @Test
+    void construyeUsuarioPlataformaUserSinTenant() {
+        Usuario usuario = new Usuario(UsuarioUUID.generate(), null, "Op", "op@saas.com",
+                "password-hash", UsuarioRol.PLATFORM_USER, true);
+
+        assertThat(usuario.getTenantId()).isNull();
+        assertThat(usuario.esRolPlataforma()).isTrue();
+        assertThat(usuario.esAdminPlataforma()).isFalse();
+    }
+
+    @Test
+    void rechazaRolPlataformaConTenant() {
+        assertThatThrownBy(() -> new Usuario(UsuarioUUID.generate(), TenantUUID.generate(),
+                "Pam", "pam@saas.com", "password-hash", UsuarioRol.PLATFORM_ADMIN, true))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new Usuario(UsuarioUUID.generate(), TenantUUID.generate(),
+                "Op", "op@saas.com", "password-hash", UsuarioRol.PLATFORM_USER, true))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void rechazaRolTenantSinTenant() {
+        assertThatThrownBy(() -> new Usuario(UsuarioUUID.generate(), null,
+                "Ana", "ana@empresa.com", "password-hash", UsuarioRol.VIEWER, true))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new Usuario(UsuarioUUID.generate(), null,
+                "Ana", "ana@empresa.com", "password-hash", UsuarioRol.ADMIN, true))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void cambiarRolRespetaCompatibilidadConTenant() {
+        Usuario admin = usuario(UsuarioRol.ADMIN, true);
+        assertThatThrownBy(() -> admin.cambiarRol(UsuarioRol.PLATFORM_ADMIN))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        Usuario plataforma = new Usuario(UsuarioUUID.generate(), null, "Pam", "pam@saas.com",
+                "password-hash", UsuarioRol.PLATFORM_ADMIN, true);
+        assertThatThrownBy(() -> plataforma.cambiarRol(UsuarioRol.ADMIN))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> admin.cambiarRol(null)).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     void cambiaElRol() {
         Usuario usuario = usuario(UsuarioRol.VIEWER, true);
 

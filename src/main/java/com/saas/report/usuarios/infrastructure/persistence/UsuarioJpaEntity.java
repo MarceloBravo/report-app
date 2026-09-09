@@ -28,8 +28,8 @@ public class UsuarioJpaEntity {
     @Column(name = "usuario_id", columnDefinition = "uuid")
     private UUID usuarioId;
 
-    @ManyToOne(fetch = FetchType.EAGER, optional = false)
-    @JoinColumn(name = "tenant_id", nullable = false)
+    @ManyToOne(fetch = FetchType.EAGER, optional = true)
+    @JoinColumn(name = "tenant_id", nullable = true)
     private TenantJpaEntity tenant;
 
     @Column(name = "nombre", nullable = false)

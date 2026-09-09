@@ -19,9 +19,7 @@ public class Usuario {
         if (usuarioId == null) {
             throw new IllegalArgumentException("El ID del usuario no puede ser nulo");
         }
-        if (tenantId == null) {
-            throw new IllegalArgumentException("El tenant no puede ser nulo");
-        }
+        validarCompatibilidadTenant(rol, tenantId);
         if (nombre == null || nombre.isBlank()) {
             throw new IllegalArgumentException("El nombre no puede estar vacío");
         }
@@ -30,9 +28,6 @@ public class Usuario {
         }
         if (password == null || password.isBlank()) {
             throw new IllegalArgumentException("La contraseña no puede estar vacía");
-        }
-        if (rol == null) {
-            throw new IllegalArgumentException("El rol no puede ser nulo");
         }
         if (activo == null) {
             throw new IllegalArgumentException("El estado del usuario no puede ser nulo");
@@ -78,10 +73,16 @@ public class Usuario {
         return this.rol == UsuarioRol.ADMIN;
     }
 
+    public boolean esRolPlataforma() {
+        return this.rol.esRolPlataforma();
+    }
+
+    public boolean esAdminPlataforma() {
+        return this.rol == UsuarioRol.PLATFORM_ADMIN;
+    }
+
     public void cambiarRol(UsuarioRol nuevoRol) {
-        if (nuevoRol == null) {
-            throw new IllegalArgumentException("El nuevo rol no puede ser nulo");
-        }
+        validarCompatibilidadTenant(nuevoRol, this.tenantId);
         this.rol = nuevoRol;
     }
 
@@ -112,5 +113,17 @@ public class Usuario {
 
     public void deshabilitar() {
         this.activo = false;
+    }
+
+    private void validarCompatibilidadTenant(UsuarioRol rol, TenantUUID tenantId) {
+        if (rol == null) {
+            throw new IllegalArgumentException("El rol no puede ser nulo");
+        }
+        if (rol.esRolTenant() && tenantId == null) {
+            throw new IllegalArgumentException("El rol " + rol + " requiere un tenant");
+        }
+        if (rol.esRolPlataforma() && tenantId != null) {
+            throw new IllegalArgumentException("El rol " + rol + " no puede tener tenant");
+        }
     }
 }

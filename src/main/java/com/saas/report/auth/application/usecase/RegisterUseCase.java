@@ -1,7 +1,9 @@
 package com.saas.report.auth.application.usecase;
 
+import com.saas.report.auth.application.AuthPrincipal;
 import com.saas.report.auth.application.dto.RegisterRequest;
 import com.saas.report.identity.domain.user.UsuarioRol;
+import com.saas.report.shared.exception.ForbiddenException;
 import com.saas.report.shared.exception.InvalidStatusException;
 import com.saas.report.shared.exception.ResourceNotFoundException;
 import com.saas.report.tenant.domain.Tenant;
@@ -14,6 +16,8 @@ import com.saas.report.usuarios.domain.valueobject.UsuarioUUID;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.UUID;
 
 @Service
 public class RegisterUseCase {
@@ -31,22 +35,22 @@ public class RegisterUseCase {
     }
 
     @Transactional
-    public void registrar(RegisterRequest request, UsuarioRol rol) {
+    public void registrar(RegisterRequest request, UsuarioRol rol, AuthPrincipal creador) {
         if (usuarioRepository.existsByEmail(request.email())) {
             throw new EmailAlreadyExistsException("El email '" + request.email() + "' ya está registrado");
         }
 
-        Tenant tenant = tenantRepository.findById(new TenantUUID(request.tenantId()))
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Tenant no encontrado con ID: " + request.tenantId()));
-
-        if (!tenant.estaActivo()) {
-            throw new InvalidStatusException("El tenant no se encuentra activo");
+        UsuarioRol rolCreador = rolCreador(creador);
+        if (!rolCreador.puedeCrear(rol)) {
+            throw new ForbiddenException("El rol " + rolCreador + " no puede crear usuarios con rol " + rol);
         }
+
+        TenantUUID tenantId = resolverTenantId(request, rol, rolCreador, creador);
+        validarTenantActivo(tenantId);
 
         Usuario usuario = new Usuario(
                 UsuarioUUID.generate(),
-                tenant.getTenantId(),
+                tenantId,
                 request.nombre(),
                 request.email(),
                 passwordEncoder.encode(request.password()),
@@ -54,5 +58,42 @@ public class RegisterUseCase {
                 true);
 
         usuarioRepository.save(usuario);
+    }
+
+    private UsuarioRol rolCreador(AuthPrincipal creador) {
+        if (creador == null || creador.rol() == null) {
+            throw new ForbiddenException("No autenticado");
+        }
+        return UsuarioRol.valueOf(creador.rol());
+    }
+
+    private TenantUUID resolverTenantId(RegisterRequest request, UsuarioRol rol,
+                                        UsuarioRol rolCreador, AuthPrincipal creador) {
+        if (rol.esRolPlataforma()) {
+            return null;
+        }
+        if (rolCreador == UsuarioRol.ADMIN) {
+            if (creador.tenantId() == null) {
+                throw new ForbiddenException("El administrador de tenant no tiene tenant asociado");
+            }
+            return new TenantUUID(UUID.fromString(creador.tenantId()));
+        }
+        if (request.tenantId() == null) {
+            throw new IllegalArgumentException("Se requiere tenant_id para el rol " + rol);
+        }
+        return new TenantUUID(request.tenantId());
+    }
+
+    private void validarTenantActivo(TenantUUID tenantId) {
+        if (tenantId == null) {
+            return;
+        }
+        Tenant tenant = tenantRepository.findById(tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Tenant no encontrado con ID: " + tenantId.getValue()));
+
+        if (!tenant.estaActivo()) {
+            throw new InvalidStatusException("El tenant no se encuentra activo");
+        }
     }
 }

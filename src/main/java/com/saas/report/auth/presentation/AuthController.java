@@ -10,6 +10,7 @@ import com.saas.report.auth.application.usecase.LogoutUseCase;
 import com.saas.report.auth.application.usecase.RefreshTokenUseCase;
 import com.saas.report.auth.application.usecase.RegisterUseCase;
 import com.saas.report.identity.domain.user.UsuarioRol;
+import com.saas.report.shared.exception.ForbiddenException;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -51,14 +52,14 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<Void> register(@Valid @RequestBody RegisterRequest request) {
-        registerUseCase.registrar(request, UsuarioRol.VIEWER);
+        registerUseCase.registrar(request, UsuarioRol.VIEWER, principalActual());
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @PostMapping("/admin/register")
     public ResponseEntity<Void> adminRegister(@Valid @RequestBody RegisterRequest request) {
         UsuarioRol rol = request.rol() != null ? request.rol() : UsuarioRol.VIEWER;
-        registerUseCase.registrar(request, rol);
+        registerUseCase.registrar(request, rol, principalActual());
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
@@ -86,6 +87,18 @@ public class AuthController {
                 "usuarioId", principal.usuarioId(),
                 "tenantId", principal.tenantId(),
                 "rol", principal.rol()));
+    }
+
+    private AuthPrincipal principalActual() {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            throw new ForbiddenException("No autenticado");
+        }
+        Object principal = authentication.getPrincipal();
+        if (!(principal instanceof AuthPrincipal authPrincipal)) {
+            throw new ForbiddenException("No autenticado");
+        }
+        return authPrincipal;
     }
 
     private String extractBearer(String authorization) {

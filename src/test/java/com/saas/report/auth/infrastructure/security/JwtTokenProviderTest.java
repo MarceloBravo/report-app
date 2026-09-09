@@ -43,6 +43,18 @@ class JwtTokenProviderTest {
     }
 
     @Test
+    void generaAccessTokenParaUsuarioPlataformaSinTenant() {
+        Usuario u = new Usuario(UsuarioUUID.generate(), null, "Pam", "pam@saas.com",
+                "hash", UsuarioRol.PLATFORM_ADMIN, true);
+
+        String token = provider.generateAccessToken(u);
+
+        assertThat(provider.esTokenValido(token)).isTrue();
+        assertThat(provider.extraerTenantId(token)).isNull();
+        assertThat(provider.extraerRol(token)).isEqualTo(UsuarioRol.PLATFORM_ADMIN.name());
+    }
+
+    @Test
     void generaRefreshTokenIdentificable() {
         Usuario u = usuario();
 

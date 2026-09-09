@@ -1,5 +1,7 @@
 package com.saas.report.usuarios.presentation;
 
+import com.saas.report.auth.application.AuthPrincipal;
+import com.saas.report.shared.exception.ForbiddenException;
 import com.saas.report.usuarios.application.dto.UpdateUsuarioRequest;
 import com.saas.report.usuarios.application.dto.UsuarioRequest;
 import com.saas.report.usuarios.application.dto.UsuarioResponse;
@@ -23,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
 import java.util.UUID;
@@ -51,7 +54,7 @@ public class UsuarioController {
 
     @PostMapping
     public ResponseEntity<UsuarioResponse> create(@Valid @RequestBody UsuarioRequest request) {
-        Usuario usuario = createUsuarioUseCase.execute(request);
+        Usuario usuario = createUsuarioUseCase.execute(request, principalActual());
         return ResponseEntity.status(HttpStatus.CREATED).body(UsuarioResponse.from(usuario));
     }
 
@@ -80,5 +83,17 @@ public class UsuarioController {
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         deleteUsuarioUseCase.execute(new UsuarioUUID(id));
         return ResponseEntity.noContent().build();
+    }
+
+    private AuthPrincipal principalActual() {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            throw new ForbiddenException("No autenticado");
+        }
+        Object principal = authentication.getPrincipal();
+        if (!(principal instanceof AuthPrincipal authPrincipal)) {
+            throw new ForbiddenException("No autenticado");
+        }
+        return authPrincipal;
     }
 }

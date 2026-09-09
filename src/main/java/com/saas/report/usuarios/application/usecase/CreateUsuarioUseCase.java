@@ -1,11 +1,13 @@
 package com.saas.report.usuarios.application.usecase;
 
+import com.saas.report.auth.application.AuthPrincipal;
 import com.saas.report.usuarios.application.dto.UsuarioRequest;
 import com.saas.report.usuarios.domain.exception.EmailAlreadyExistsException;
 import com.saas.report.usuarios.domain.usuario.Usuario;
 import com.saas.report.usuarios.domain.usuario.UsuarioRepository;
 import com.saas.report.usuarios.domain.valueobject.UsuarioUUID;
 import com.saas.report.identity.domain.user.UsuarioRol;
+import com.saas.report.shared.exception.ForbiddenException;
 import com.saas.report.tenant.domain.valueobject.TenantUUID;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -23,20 +25,45 @@ public class CreateUsuarioUseCase {
     }
 
     @Transactional
-    public Usuario execute(UsuarioRequest request) {
+    public Usuario execute(UsuarioRequest request, AuthPrincipal creador) {
         if (usuarioRepository.existsByEmail(request.email())) {
             throw new EmailAlreadyExistsException("El email '" + request.email() + "' ya está registrado");
         }
 
+        UsuarioRol rolCreador = rolCreador(creador);
+        UsuarioRol rolNuevo = request.rol() != null ? request.rol() : UsuarioRol.VIEWER;
+        if (!rolCreador.puedeCrear(rolNuevo)) {
+            throw new ForbiddenException("El rol " + rolCreador + " no puede crear usuarios con rol " + rolNuevo);
+        }
+
+        TenantUUID tenantId = resolverTenantId(request, rolNuevo);
+
         Usuario usuario = new Usuario(
                 UsuarioUUID.generate(),
-                new TenantUUID(request.tenantId()),
+                tenantId,
                 request.nombre(),
                 request.email(),
                 passwordEncoder.encode(request.password()),
-                request.rol() != null ? request.rol() : UsuarioRol.VIEWER,
+                rolNuevo,
                 request.activo() != null ? request.activo() : true);
 
         return usuarioRepository.save(usuario);
+    }
+
+    private UsuarioRol rolCreador(AuthPrincipal creador) {
+        if (creador == null || creador.rol() == null) {
+            throw new ForbiddenException("No autenticado");
+        }
+        return UsuarioRol.valueOf(creador.rol());
+    }
+
+    private TenantUUID resolverTenantId(UsuarioRequest request, UsuarioRol rol) {
+        if (!rol.esRolTenant()) {
+            return null;
+        }
+        if (request.tenantId() == null) {
+            throw new IllegalArgumentException("Se requiere tenant_id para el rol " + rol);
+        }
+        return new TenantUUID(request.tenantId());
     }
 }

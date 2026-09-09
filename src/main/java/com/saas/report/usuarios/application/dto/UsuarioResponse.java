@@ -17,7 +17,7 @@ public record UsuarioResponse(
     public static UsuarioResponse from(Usuario usuario) {
         return new UsuarioResponse(
                 usuario.getUsuarioId().getValue(),
-                usuario.getTenantId().getValue(),
+                usuario.getTenantId() != null ? usuario.getTenantId().getValue() : null,
                 usuario.getNombre(),
                 usuario.getEmail(),
                 usuario.getRol(),

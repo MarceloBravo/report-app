@@ -7,6 +7,7 @@ import com.saas.report.usuarios.infrastructure.persistence.UsuarioJpaEntity;
 import com.saas.report.usuarios.infrastructure.persistence.UsuarioJpaRepository;
 import com.saas.report.usuarios.infrastructure.persistence.mapper.UsuarioMapper;
 import com.saas.report.identity.domain.user.UsuarioRol;
+import com.saas.report.tenant.infrastructure.persistence.TenantJpaEntity;
 import com.saas.report.tenant.infrastructure.persistence.TenantJpaRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -64,7 +65,9 @@ public class UsuarioJpaAdapter implements UsuarioRepository {
     @Override
     @Transactional
     public Usuario save(Usuario usuario) {
-        var tenantJpa = tenantRepository.getReferenceById(usuario.getTenantId().getValue());
+        TenantJpaEntity tenantJpa = usuario.getTenantId() != null
+                ? tenantRepository.getReferenceById(usuario.getTenantId().getValue())
+                : null;
         UsuarioJpaEntity entity = UsuarioMapper.toJpa(usuario, tenantJpa);
         return UsuarioMapper.toDomain(repository.save(entity));
     }

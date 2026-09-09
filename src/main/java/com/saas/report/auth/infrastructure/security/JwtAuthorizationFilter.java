@@ -47,7 +47,9 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
                         AuthPrincipal principal = new AuthPrincipal(
                                 usuario.getEmail(),
                                 usuario.getUsuarioId().getValue().toString(),
-                                usuario.getTenantId().getValue().toString(),
+                                usuario.getTenantId() != null
+                                        ? usuario.getTenantId().getValue().toString()
+                                        : null,
                                 usuario.getRol().name());
 
                         var authentication = new UsernamePasswordAuthenticationToken(
@@ -67,7 +69,6 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
         boolean esRutaPublica = path.startsWith("/auth/login")
-                || path.startsWith("/auth/register")
                 || path.startsWith("/auth/refresh");
         boolean esPreflight = "OPTIONS".equalsIgnoreCase(request.getMethod());
         return esRutaPublica || esPreflight;
