@@ -1,6 +1,6 @@
 package com.saas.report.auth.application.dto;
 
-import com.saas.report.auth.domain.user.UsuarioRol;
+import com.saas.report.identity.domain.user.UsuarioRol;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

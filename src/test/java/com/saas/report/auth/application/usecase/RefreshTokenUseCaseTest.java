@@ -8,7 +8,7 @@ import com.saas.report.auth.domain.exception.TokenRevokedException;
 import com.saas.report.auth.domain.token.UsuarioToken;
 import com.saas.report.auth.domain.token.UsuarioTokenRepository;
 import com.saas.report.auth.domain.user.Usuario;
-import com.saas.report.auth.domain.user.UsuarioRol;
+import com.saas.report.identity.domain.user.UsuarioRol;
 import com.saas.report.auth.domain.valueobject.UsuarioTokenUUID;
 import com.saas.report.auth.domain.valueobject.UsuarioUUID;
 import com.saas.report.tenant.domain.valueobject.TenantUUID;

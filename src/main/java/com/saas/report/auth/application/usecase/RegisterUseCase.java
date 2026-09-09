@@ -4,7 +4,7 @@ import com.saas.report.auth.application.dto.RegisterRequest;
 import com.saas.report.auth.domain.exception.EmailAlreadyExistsException;
 import com.saas.report.auth.domain.user.Usuario;
 import com.saas.report.auth.domain.user.UsuarioRepository;
-import com.saas.report.auth.domain.user.UsuarioRol;
+import com.saas.report.identity.domain.user.UsuarioRol;
 import com.saas.report.auth.domain.valueobject.UsuarioUUID;
 import com.saas.report.shared.exception.InvalidStatusException;
 import com.saas.report.shared.exception.ResourceNotFoundException;

@@ -9,7 +9,7 @@ import com.saas.report.auth.application.usecase.LoginUseCase;
 import com.saas.report.auth.application.usecase.LogoutUseCase;
 import com.saas.report.auth.application.usecase.RefreshTokenUseCase;
 import com.saas.report.auth.application.usecase.RegisterUseCase;
-import com.saas.report.auth.domain.user.UsuarioRol;
+import com.saas.report.identity.domain.user.UsuarioRol;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;

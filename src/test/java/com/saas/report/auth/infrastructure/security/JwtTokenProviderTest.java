@@ -1,7 +1,7 @@
 package com.saas.report.auth.infrastructure.security;
 
 import com.saas.report.auth.domain.user.Usuario;
-import com.saas.report.auth.domain.user.UsuarioRol;
+import com.saas.report.identity.domain.user.UsuarioRol;
 import com.saas.report.auth.domain.valueobject.UsuarioUUID;
 import com.saas.report.tenant.domain.valueobject.TenantUUID;
 import org.junit.jupiter.api.BeforeEach;

@@ -1,4 +1,4 @@
-package com.saas.report.auth.domain.user;
+package com.saas.report.identity.domain.user;
 
 public enum UsuarioRol {
     ADMIN,

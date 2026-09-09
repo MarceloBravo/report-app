@@ -10,7 +10,7 @@ import com.saas.report.auth.application.usecase.LogoutUseCase;
 import com.saas.report.auth.application.usecase.RefreshTokenUseCase;
 import com.saas.report.auth.application.usecase.RegisterUseCase;
 import com.saas.report.auth.domain.exception.InvalidCredentialsException;
-import com.saas.report.auth.domain.user.UsuarioRol;
+import com.saas.report.identity.domain.user.UsuarioRol;
 import com.saas.report.shared.presentation.rest.GlobalExceptionHandler;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;

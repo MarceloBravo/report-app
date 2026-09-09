@@ -6,7 +6,7 @@ import com.saas.report.auth.application.dto.TokenResponse;
 import com.saas.report.auth.domain.exception.InvalidCredentialsException;
 import com.saas.report.auth.domain.user.Usuario;
 import com.saas.report.auth.domain.user.UsuarioRepository;
-import com.saas.report.auth.domain.user.UsuarioRol;
+import com.saas.report.identity.domain.user.UsuarioRol;
 import com.saas.report.auth.domain.valueobject.UsuarioUUID;
 import com.saas.report.tenant.domain.valueobject.TenantUUID;
 import org.junit.jupiter.api.BeforeEach;
