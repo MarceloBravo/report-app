@@ -1,6 +1,7 @@
 package com.saas.report.auth.domain.user;
 
 import com.saas.report.auth.domain.valueobject.UsuarioUUID;
+import com.saas.report.identity.domain.user.UsuarioRol;
 import com.saas.report.tenant.domain.valueobject.TenantUUID;
 import org.junit.jupiter.api.Test;
 
