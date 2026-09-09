@@ -6,3 +6,9 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
+
+springdoc:
+  swagger-ui:
+    enabled: true
+  api-docs:
+    enabled: true

@@ -17,7 +17,7 @@ public class Tenant {
         this(tenantId, nombreEmpresa, subdominioSlug, estado, LocalDateTime.now());
     }
 
-public Tenant(TenantUUID tenantId, String nombreEmpresa, String subdominioSlug, TenantEstado estado,
+    public Tenant(TenantUUID tenantId, String nombreEmpresa, String subdominioSlug, TenantEstado estado,
               LocalDateTime fechaRegistro) {
         if (tenantId == null) {
             throw new IllegalArgumentException("El ID del tenant no puede ser nulo");
