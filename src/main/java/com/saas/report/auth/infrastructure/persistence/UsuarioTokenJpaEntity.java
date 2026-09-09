@@ -1,5 +1,6 @@
 package com.saas.report.auth.infrastructure.persistence;
 
+import com.saas.report.usuarios.infrastructure.persistence.UsuarioJpaEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;

@@ -2,8 +2,9 @@ package com.saas.report.auth.infrastructure.persistence.mapper;
 
 import com.saas.report.auth.domain.token.UsuarioToken;
 import com.saas.report.auth.domain.valueobject.UsuarioTokenUUID;
-import com.saas.report.auth.infrastructure.persistence.UsuarioJpaEntity;
 import com.saas.report.auth.infrastructure.persistence.UsuarioTokenJpaEntity;
+import com.saas.report.usuarios.infrastructure.persistence.UsuarioJpaEntity;
+import com.saas.report.usuarios.infrastructure.persistence.mapper.UsuarioMapper;
 
 public final class UsuarioTokenMapper {
 

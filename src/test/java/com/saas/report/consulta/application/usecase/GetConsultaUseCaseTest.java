@@ -1,10 +1,10 @@
 package com.saas.report.consulta.application.usecase;
 
-import com.saas.report.auth.domain.valueobject.UsuarioUUID;
 import com.saas.report.consulta.application.dto.ConsultaResponse;
 import com.saas.report.consulta.domain.ConsultaHistorial;
 import com.saas.report.consulta.domain.ConsultaHistorialRepository;
 import com.saas.report.consulta.domain.valueobject.ConsultaHistorialUUID;
+import com.saas.report.usuarios.domain.valueobject.UsuarioUUID;
 import com.saas.report.shared.exception.ResourceNotFoundException;
 import com.saas.report.tenant.domain.valueobject.TenantUUID;
 import org.junit.jupiter.api.BeforeEach;

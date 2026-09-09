@@ -1,6 +1,5 @@
-package com.saas.report.auth.domain.user;
+package com.saas.report.identity.domain.user;
 
-import com.saas.report.identity.domain.user.UsuarioRol;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;

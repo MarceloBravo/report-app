@@ -1,7 +1,7 @@
 package com.saas.report.auth.domain.token;
 
-import com.saas.report.auth.domain.user.Usuario;
 import com.saas.report.auth.domain.valueobject.UsuarioTokenUUID;
+import com.saas.report.usuarios.domain.usuario.Usuario;
 
 import java.time.LocalDateTime;
 

@@ -1,8 +1,8 @@
-package com.saas.report.auth.infrastructure.persistence.mapper;
+package com.saas.report.usuarios.infrastructure.persistence.mapper;
 
-import com.saas.report.auth.domain.user.Usuario;
-import com.saas.report.auth.domain.valueobject.UsuarioUUID;
-import com.saas.report.auth.infrastructure.persistence.UsuarioJpaEntity;
+import com.saas.report.usuarios.domain.usuario.Usuario;
+import com.saas.report.usuarios.domain.valueobject.UsuarioUUID;
+import com.saas.report.usuarios.infrastructure.persistence.UsuarioJpaEntity;
 import com.saas.report.tenant.infrastructure.persistence.TenantJpaEntity;
 import com.saas.report.tenant.infrastructure.persistence.mapper.TenantMapper;
 

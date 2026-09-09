@@ -1,7 +1,7 @@
 package com.saas.report.auth.infrastructure.security;
 
 import com.saas.report.auth.application.TokenService;
-import com.saas.report.auth.domain.user.Usuario;
+import com.saas.report.usuarios.domain.usuario.Usuario;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;

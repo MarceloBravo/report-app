@@ -1,4 +1,4 @@
-package com.saas.report.auth.domain.valueobject;
+package com.saas.report.usuarios.domain.valueobject;
 
 import com.saas.report.shared.exception.InvalidUUIDException;
 

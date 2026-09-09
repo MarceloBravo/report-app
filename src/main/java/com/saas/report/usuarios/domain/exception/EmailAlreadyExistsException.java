@@ -1,4 +1,4 @@
-package com.saas.report.auth.domain.exception;
+package com.saas.report.usuarios.domain.exception;
 
 import com.saas.report.shared.exception.DomainException;
 

@@ -3,7 +3,7 @@ package com.saas.report.auth.infrastructure.security;
 import com.saas.report.auth.application.AuthPrincipal;
 import com.saas.report.auth.application.TokenService;
 import com.saas.report.auth.domain.token.UsuarioTokenRepository;
-import com.saas.report.auth.domain.user.Usuario;
+import com.saas.report.usuarios.domain.usuario.Usuario;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

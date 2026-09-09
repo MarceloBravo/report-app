@@ -1,6 +1,5 @@
 package com.saas.report.shared.presentation.rest;
 
-import com.saas.report.auth.domain.exception.EmailAlreadyExistsException;
 import com.saas.report.auth.domain.exception.InvalidCredentialsException;
 import com.saas.report.auth.domain.exception.TokenRevokedException;
 import com.saas.report.consulta.domain.exception.LimiteConsultasExcedidoException;
@@ -8,6 +7,7 @@ import com.saas.report.plan.domain.exception.PlanNombreAlreadyExistsException;
 import com.saas.report.shared.exception.DomainException;
 import com.saas.report.shared.presentation.dto.ErrorResponse;
 import com.saas.report.suscripcion.domain.exception.SuscripcionAlreadyActiveException;
+import com.saas.report.usuarios.domain.exception.EmailAlreadyExistsException;
 import com.saas.report.shared.exception.InvalidStatusException;
 import com.saas.report.shared.exception.ResourceNotFoundException;
 import com.saas.report.tenant.domain.exception.TenantSlugAlreadyExistsException;

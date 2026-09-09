@@ -1,10 +1,10 @@
 package com.saas.report.auth.application.usecase;
 
 import com.saas.report.auth.application.dto.RegisterRequest;
-import com.saas.report.auth.domain.exception.EmailAlreadyExistsException;
-import com.saas.report.auth.domain.user.Usuario;
-import com.saas.report.auth.domain.user.UsuarioRepository;
 import com.saas.report.identity.domain.user.UsuarioRol;
+import com.saas.report.usuarios.domain.exception.EmailAlreadyExistsException;
+import com.saas.report.usuarios.domain.usuario.Usuario;
+import com.saas.report.usuarios.domain.usuario.UsuarioRepository;
 import com.saas.report.shared.exception.InvalidStatusException;
 import com.saas.report.shared.exception.ResourceNotFoundException;
 import com.saas.report.tenant.domain.Tenant;

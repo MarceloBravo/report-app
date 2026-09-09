@@ -1,7 +1,7 @@
 package com.saas.report.auth.infrastructure.security;
 
-import com.saas.report.auth.domain.user.Usuario;
-import com.saas.report.auth.domain.user.UsuarioRepository;
+import com.saas.report.usuarios.domain.usuario.Usuario;
+import com.saas.report.usuarios.domain.usuario.UsuarioRepository;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;

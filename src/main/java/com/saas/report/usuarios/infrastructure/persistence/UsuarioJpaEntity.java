@@ -1,4 +1,4 @@
-package com.saas.report.auth.infrastructure.persistence;
+package com.saas.report.usuarios.infrastructure.persistence;
 
 import com.saas.report.identity.domain.user.UsuarioRol;
 import com.saas.report.tenant.infrastructure.persistence.TenantJpaEntity;

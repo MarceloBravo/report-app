@@ -2,10 +2,10 @@ package com.saas.report.auth.infrastructure.persistence.adapter;
 
 import com.saas.report.auth.domain.token.UsuarioToken;
 import com.saas.report.auth.domain.token.UsuarioTokenRepository;
-import com.saas.report.auth.infrastructure.persistence.UsuarioJpaRepository;
 import com.saas.report.auth.infrastructure.persistence.UsuarioTokenJpaEntity;
 import com.saas.report.auth.infrastructure.persistence.UsuarioTokenJpaRepository;
 import com.saas.report.auth.infrastructure.persistence.mapper.UsuarioTokenMapper;
+import com.saas.report.usuarios.infrastructure.persistence.UsuarioJpaRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 

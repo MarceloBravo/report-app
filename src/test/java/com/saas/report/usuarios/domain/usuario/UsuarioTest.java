@@ -1,6 +1,6 @@
-package com.saas.report.auth.domain.user;
+package com.saas.report.usuarios.domain.usuario;
 
-import com.saas.report.auth.domain.valueobject.UsuarioUUID;
+import com.saas.report.usuarios.domain.valueobject.UsuarioUUID;
 import com.saas.report.identity.domain.user.UsuarioRol;
 import com.saas.report.tenant.domain.valueobject.TenantUUID;
 import org.junit.jupiter.api.Test;
@@ -73,9 +73,51 @@ class UsuarioTest {
     }
 
     @Test
+    void cambiaElNombre() {
+        Usuario usuario = usuario(UsuarioRol.VIEWER, true);
+
+        usuario.cambiarNombre("Bety");
+
+        assertThat(usuario.getNombre()).isEqualTo("Bety");
+        assertThatThrownBy(() -> usuario.cambiarNombre(null)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> usuario.cambiarNombre("  ")).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void cambiaElEmail() {
+        Usuario usuario = usuario(UsuarioRol.VIEWER, true);
+
+        usuario.cambiarEmail("bety@empresa.com");
+
+        assertThat(usuario.getEmail()).isEqualTo("bety@empresa.com");
+        assertThatThrownBy(() -> usuario.cambiarEmail(null)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> usuario.cambiarEmail("  ")).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void cambiaLaPassword() {
+        Usuario usuario = usuario(UsuarioRol.VIEWER, true);
+
+        usuario.cambiarPassword("nuevo-hash");
+
+        assertThat(usuario.getPassword()).isEqualTo("nuevo-hash");
+        assertThatThrownBy(() -> usuario.cambiarPassword(null)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> usuario.cambiarPassword("  ")).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     void deshabilitaAlUsuario() {
         Usuario usuario = usuario(UsuarioRol.VIEWER, true);
         usuario.deshabilitar();
+
+        assertThat(usuario.getActivo()).isFalse();
+    }
+
+    @Test
+    void cambiaElEstado() {
+        Usuario usuario = usuario(UsuarioRol.VIEWER, true);
+
+        usuario.cambiarEstado(false);
 
         assertThat(usuario.getActivo()).isFalse();
     }

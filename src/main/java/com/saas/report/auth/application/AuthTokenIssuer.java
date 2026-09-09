@@ -3,8 +3,8 @@ package com.saas.report.auth.application;
 import com.saas.report.auth.application.dto.TokenResponse;
 import com.saas.report.auth.domain.token.UsuarioToken;
 import com.saas.report.auth.domain.token.UsuarioTokenRepository;
-import com.saas.report.auth.domain.user.Usuario;
 import com.saas.report.auth.domain.valueobject.UsuarioTokenUUID;
+import com.saas.report.usuarios.domain.usuario.Usuario;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 

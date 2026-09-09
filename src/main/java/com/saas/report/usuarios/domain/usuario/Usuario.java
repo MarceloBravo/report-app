@@ -1,6 +1,6 @@
-package com.saas.report.auth.domain.user;
+package com.saas.report.usuarios.domain.usuario;
 
-import com.saas.report.auth.domain.valueobject.UsuarioUUID;
+import com.saas.report.usuarios.domain.valueobject.UsuarioUUID;
 import com.saas.report.identity.domain.user.UsuarioRol;
 import com.saas.report.tenant.domain.valueobject.TenantUUID;
 
@@ -8,9 +8,9 @@ public class Usuario {
 
     private final UsuarioUUID usuarioId;
     private final TenantUUID tenantId;
-    private final String nombre;
-    private final String email;
-    private final String password;
+    private String nombre;
+    private String email;
+    private String password;
     private UsuarioRol rol;
     private boolean activo;
 
@@ -83,6 +83,31 @@ public class Usuario {
             throw new IllegalArgumentException("El nuevo rol no puede ser nulo");
         }
         this.rol = nuevoRol;
+    }
+
+    public void cambiarNombre(String nuevoNombre) {
+        if (nuevoNombre == null || nuevoNombre.isBlank()) {
+            throw new IllegalArgumentException("El nombre no puede estar vacío");
+        }
+        this.nombre = nuevoNombre;
+    }
+
+    public void cambiarEmail(String nuevoEmail) {
+        if (nuevoEmail == null || nuevoEmail.isBlank()) {
+            throw new IllegalArgumentException("El email no puede estar vacío");
+        }
+        this.email = nuevoEmail;
+    }
+
+    public void cambiarPassword(String nuevoPassword) {
+        if (nuevoPassword == null || nuevoPassword.isBlank()) {
+            throw new IllegalArgumentException("La contraseña no puede estar vacía");
+        }
+        this.password = nuevoPassword;
+    }
+
+    public void cambiarEstado(boolean nuevoEstado) {
+        this.activo = nuevoEstado;
     }
 
     public void deshabilitar() {

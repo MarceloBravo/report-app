@@ -1,9 +1,9 @@
 package com.saas.report.consulta.infrastructure.persistence.mapper;
 
-import com.saas.report.auth.domain.valueobject.UsuarioUUID;
 import com.saas.report.consulta.domain.ConsultaHistorial;
 import com.saas.report.consulta.domain.valueobject.ConsultaHistorialUUID;
 import com.saas.report.consulta.infrastructure.persistence.ConsultaHistorialJpaEntity;
+import com.saas.report.usuarios.domain.valueobject.UsuarioUUID;
 import com.saas.report.tenant.domain.valueobject.TenantDbConnectionUUID;
 import com.saas.report.tenant.domain.valueobject.TenantUUID;
 

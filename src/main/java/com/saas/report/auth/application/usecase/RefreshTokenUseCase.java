@@ -7,7 +7,7 @@ import com.saas.report.auth.domain.exception.InvalidCredentialsException;
 import com.saas.report.auth.domain.exception.TokenRevokedException;
 import com.saas.report.auth.domain.token.UsuarioToken;
 import com.saas.report.auth.domain.token.UsuarioTokenRepository;
-import com.saas.report.auth.domain.user.Usuario;
+import com.saas.report.usuarios.domain.usuario.Usuario;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

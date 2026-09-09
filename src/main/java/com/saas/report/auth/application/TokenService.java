@@ -1,6 +1,6 @@
 package com.saas.report.auth.application;
 
-import com.saas.report.auth.domain.user.Usuario;
+import com.saas.report.usuarios.domain.usuario.Usuario;
 
 import java.time.LocalDateTime;
 
