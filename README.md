@@ -9,6 +9,14 @@ Estado actual
 - Construcción: Maven (incluye `mvnw`/`mvnw.cmd` wrappers).
 - Perfil de configuración principal: `application-dev.yml` (usa variables de entorno para la conexión a la BD).
 - Se añadió un paquete `identity` con clases de dominio compartidas (Shared Kernel mínimo).
+- Alta de clientes **self-serve**: el cliente se incorpora solo vía `POST /self-serve/registro` (crea tenant + usuario ADMIN + suscripción al plan gratuito + conexión a su BD cifrada). El alta administrativa (`POST /admin/tenants`) fue removida; `/admin/tenants` mantiene solo consulta/activar/suspender/cancelar.
+- Extracción y caché del esquema de la BD del cliente (`information_schema`) al registrarse, con credenciales cifradas en reposo (AES-GCM).
+- Seguridad del endpoint público: rate limiting por IP (`SELF_SERVE_RATE_LIMIT_PER_MINUTE`, default 5) y verificación de email por token (`GET /self-serve/verificar-email?token=...`). `FRONTEND_BASE_URL` (default `http://localhost:5173`) se usa para construir el enlace de verificación.
+
+Variables de entorno requeridas
+- `JWT_SECRET` — secreto para firmar tokens JWT.
+- `ENCRYPTION_KEY` — clave Base64 de 16/24/32 bytes para cifrar credenciales de BD (AES-GCM) y derivar la firma de tokens de email.
+- Opcionales: `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `FREE_PLAN_NAME` (default `Starter`), `SELF_SERVE_RATE_LIMIT_PER_MINUTE`, `EMAIL_VERIFICATION_EXPIRATION_MILLIS`, `FRONTEND_BASE_URL`, `CORS_ALLOWED_ORIGINS`.
 
 Contenido importante
 - Código fuente: `src/main/java`.
@@ -59,6 +67,8 @@ Notas importantes
 - Se movió el enum `UsuarioRol` al paquete `com.saas.report.identity.domain.user` para evitar duplicación entre módulos. El paquete `identity` actúa como un Shared Kernel pequeño. Archivo: `src/main/java/com/saas/report/identity/domain/user/UsuarioRol.java`.
 - El Shared Kernel debe mantenerse pequeño y estable: documenta cualquier cambio público y versiona el módulo si se publica como artefacto Maven en el futuro.
 - Si en el futuro los roles pasan a ser dinámicos (gestión CRUD), convierte `UsuarioRol` en una entidad `Role` dentro del mismo `identity` module y añade repositorio y migración de datos.
+- En el perfil `dev` se siembra el plan gratuito inicial (`src/main/resources/db/seed-plan-gratuito.sql`) si aún no existe, para que el onboarding encuentre el plan free.
+- La extracción del esquema vía `information_schema` concreta la Parte C del plan de onboarding (`docs/Plan_Onboarding_SelfServe.md`); el lenguaje natural y el agente consultor son piezas pendientes (backend Python).
 
 Próximos pasos sugeridos
 - Crear un módulo Maven independiente `report-identity` si quieres producir un artefacto compartido consumible por otros servicios.

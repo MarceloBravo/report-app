@@ -77,33 +77,48 @@ src/main/java/com/saas/report/
 │   │   │   ├── TenantUUID.java                  # Record value object: identidad UUID del tenant
 │   │   │   └── TenantDbConnectionUUID.java      # Record value object: identidad UUID de conexión DB externa
 │   │   ├── connection/
-│   │   │   ├── TenantDbConnection.java          # Entity: conexión DB del tenant (host, puerto, dbName, user, password, tipo, schema)
-│   │   │   └── TipoConexion.java                # Enum: EXTERNAL_DB, INTERNAL_SCHEMA — tipo de conexión
+│   │   │   ├── TenantDbConnection.java          # Entity: conexión DB del tenant (host, puerto, dbName, user, password cifrada, tipo, schema)
+│   │   │   ├── TipoConexion.java                # Enum: EXTERNAL_DB, INTERNAL_SCHEMA — tipo de conexión
+│   │   │   ├── TenantDbConnectionRepository.java # Puerto de repositorio: save, findById, findByTenantId
+│   │   │   └── CredentialCipher.java            # Puerto de cifrado/descifrado de credenciales de BD
+│   │   ├── schema/
+│   │   │   ├── ColumnaEsquema.java              # Record: columna (nombre, tipoDato, nullable, esPrimaryKey)
+│   │   │   ├── TablaEsquema.java                # Record: tabla con sus columnas
+│   │   │   ├── EsquemaTenant.java               # Record: esquema extraído del tenant (tablas + extraidoEn)
+│   │   │   ├── SchemaExtractor.java             # Puerto: extrae EsquemaTenant desde una TenantDbConnection
+│   │   │   └── EsquemaCache.java                # Puerto: caché del esquema por tenantId (buscar/guardar/invalidar)
 │   │   └── exception/
 │   │       └── TenantSlugAlreadyExistsException.java # Excepción: slug de subdominio ya existe
 │   │
 │   ├── application/
 │   │   ├── usecase/
-│   │   │   ├── CreateTenantUseCase.java         # Crea tenant: valida slug único, crea en estado ACTIVE
 │   │   │   ├── GetTenantUseCase.java            # Consulta tenant por ID
 │   │   │   ├── ActivateTenantUseCase.java       # Reactiva tenant SUSPENDED → ACTIVE
 │   │   │   ├── SuspendTenantUseCase.java        # Suspende tenant ACTIVE → SUSPENDED
 │   │   │   └── CancelTenantUseCase.java         # Cancela tenant ACTIVE → CANCELED
 │   │   └── dto/
-│   │       ├── TenantRequest.java               # Record con @Valid: entrada (name, slug con pattern)
 │   │       └── TenantResponse.java              # Record + static from(Tenant): respuesta con todos los campos
 │   │
 │   ├── presentation/
-│   │   └── TenantController.java                # @RestController /admin/tenants: CRUD + activate, suspend, cancel (solo admin)
+│   │   └── TenantController.java                # @RestController /admin/tenants: GET + activate, suspend, cancel (solo admin)
 │   │
 │   └── infrastructure/
-│       └── persistence/
-│           ├── TenantJpaEntity.java             # @Entity tabla "tenants"
-│           ├── TenantJpaRepository.java         # JpaRepository: existsBySubdominioSlug
-│           ├── adapter/
-│           │   └── TenantJpaAdapter.java        # @Component implements TenantRepository: mapeo domain ↔ JPA
-│           └── mapper/
-│               └── TenantMapper.java            # Mapper estático Tenant ↔ TenantJpaEntity
+│       ├── persistence/
+│       │   ├── TenantJpaEntity.java             # @Entity tabla "tenants"
+│       │   ├── TenantJpaRepository.java         # JpaRepository: existsBySubdominioSlug
+│       │   ├── TenantDbConnectionJpaEntity.java # @Entity tabla "tenant_db_connection"
+│       │   ├── TenantDbConnectionJpaRepository.java # JpaRepository: findByTenantId
+│       │   ├── adapter/
+│       │   │   ├── TenantJpaAdapter.java        # @Component implements TenantRepository: mapeo domain ↔ JPA
+│       │   │   └── TenantDbConnectionJpaAdapter.java # @Component implements TenantDbConnectionRepository: mapeo domain ↔ JPA
+│       │   └── mapper/
+│       │       ├── TenantMapper.java            # Mapper estático Tenant ↔ TenantJpaEntity
+│       │       └── TenantDbConnectionMapper.java # Mapper estático TenantDbConnection ↔ JPA
+│       ├── schema/
+│       │   ├── JdbcSchemaExtractor.java         # @Component implements SchemaExtractor: JDBC + information_schema (PostgreSQL)
+│       │   └── EsquemaCacheService.java         # @Component implements EsquemaCache: ConcurrentHashMap por tenantId
+│       └── security/
+│           └── AesCredentialCipher.java         # @Component implements CredentialCipher: AES-GCM para credenciales de BD
 │
 │
 ├── plan/                                        # ━━ Módulo de Planes de Suscripción y Pricing ━━
@@ -215,6 +230,69 @@ src/main/java/com/saas/report/
 │               └── ConsultaHistorialMapper.java # Mapper estático ConsultaHistorial ↔ JPA
 │
 │
+├── onboarding/                                 # ━━ Módulo de Alta Self-Serve de Clientes (proceso) ━━
+│   │
+│   ├── application/
+│   │   ├── usecase/
+│   │   │   └── OnboardClienteUseCase.java      # Orquesta en una transacción: tenant + usuario ADMIN + suscripción al plan gratuito + conexión cifrada; publica TenantRegistradoEvent y genera link de verificación de email
+│   │   ├── dto/
+│   │   │   ├── OnboardingRequest.java          # Record con @Valid: cliente + usuario + conexion (anidados)
+│   │   │   └── OnboardingResponse.java         # Record: tenantId, usuarioId, suscripcionId, dbConnectionId, emailVerificacionUrl
+│   │   └── event/
+│   │       └── TenantRegistradoEvent.java      # Evento de dominio del proceso: se dispara tras persistir la conexión
+│   │
+│   ├── presentation/
+│   │   └── OnboardingController.java           # @RestController /self-serve/registro (público, con rate limit)
+│   │
+│   └── infrastructure/
+│       ├── TenantSchemaSyncListener.java      # @TransactionalEventListener(AFTER_COMMIT): extrae y cachea el esquema de la BD del tenant
+│       └── security/
+│           ├── SelfServeRateLimiter.java      # Token bucket por IP para el endpoint público
+│           └── SelfServeRateLimitFilter.java  # OncePerRequestFilter: 429 cuando se excede el límite en /self-serve/registro
+│
+│
+├── usuarios/                                   # ━━ Módulo de Gestión de Usuarios (CRUD / dominio) ━━
+│   │
+│   ├── domain/
+│   │   ├── usuario/
+│   │   │   ├── Usuario.java                    # Aggregate root: rol, activo, emailVerificado
+│   │   │   └── UsuarioRepository.java          # Interfaz de repositorio: findByEmail, findById, save
+│   │   ├── valueobject/
+│   │   │   └── UsuarioUUID.java                # Record value object: identidad UUID del usuario
+│   │   ├── emailverificacion/
+│   │   │   └── EmailVerificationTokenService.java # Puerto: generar/verificar token de verificación de email
+│   │   └── exception/
+│   │       └── EmailAlreadyExistsException.java # Excepción: email ya registrado
+│   │
+│   ├── application/
+│   │   ├── usecase/
+│   │   │   ├── CreateUsuarioUseCase.java       # Crea usuario (flujo admin)
+│   │   │   ├── GetUsuarioUseCase.java          # Consulta usuario por ID
+│   │   │   ├── ListUsuariosUseCase.java        # Lista usuarios
+│   │   │   ├── UpdateUsuarioUseCase.java       # Actualiza datos de usuario
+│   │   │   ├── DeleteUsuarioUseCase.java       # Elimina usuario
+│   │   │   └── VerificarEmailUseCase.java      # Valida el token y marca el email como verificado
+│   │   └── dto/
+│   │       ├── UsuarioRequest.java             # Record con @Valid: entrada
+│   │       ├── UsuarioResponse.java            # Record + static from(Usuario): respuesta
+│   │       └── UpdateUsuarioRequest.java       # Record: solicitud de actualización
+│   │
+│   ├── presentation/
+│   │   ├── UsuarioController.java              # @RestController /admin/usuarios
+│   │   └── EmailVerificacionController.java    # @RestController /self-serve/verificar-email (público, GET por token)
+│   │
+│   └── infrastructure/
+│       ├── persistence/
+│       │   ├── UsuarioJpaEntity.java           # @Entity tabla "usuarios": incluye email_verificado
+│       │   ├── UsuarioJpaRepository.java       # JpaRepository: findByEmail, existsByEmail
+│       │   ├── adapter/
+│       │   │   └── UsuarioJpaAdapter.java      # @Component implements UsuarioRepository: mapeo domain ↔ JPA
+│       │   └── mapper/
+│       │       └── UsuarioMapper.java          # Mapper estático Usuario ↔ UsuarioJpaEntity
+│       └── security/
+│           └── HmacEmailVerificationTokenService.java # @Component implements EmailVerificationTokenService (HMAC-SHA256, expiración, clave derivada de ENCRYPTION_KEY)
+│
+│
 └── shared/                                      # ━━ Componentes Transversales ━━
     │
     ├── exception/
@@ -236,19 +314,21 @@ src/main/java/com/saas/report/
 
 | Categoría | Cantidad |
 |-----------|----------|
-| **Total archivos Java** | **~86** |
-| domain (entities, value objects, repos, enums, exceptions) | ~30 |
-| application (usecases, DTOs, services) | ~22 |
-| presentation (controllers, exception handler, DTOs) | ~8 |
-| infrastructure (JPA entities, repos, adapters, mappers, security, config) | ~26 |
+| **Total archivos Java** | **~97** |
+| domain (entities, value objects, repos, enums, exceptions) | ~36 |
+| application (usecases, DTOs, services) | ~23 |
+| presentation (controllers, exception handler, DTOs) | ~9 |
+| infrastructure (JPA entities, repos, adapters, mappers, security, config) | ~29 |
 
 | Módulo | Archivos | Aggregate Root |
 |--------|----------|----------------|
 | **auth** | 26 | `Usuario`, `UsuarioToken` |
-| **tenant** | 14 | `Tenant` |
+| **tenant** | 26 | `Tenant`, `TenantDbConnection` |
 | **plan** | 13 | `Plan` |
 | **suscripcion** | 14 | `Suscripcion` |
 | **consulta** | 10 | `ConsultaHistorial` |
+| **onboarding** | 9 | *(proceso: orquesta tenant+usuario+suscripción+conexión+esquema)* |
+| **usuarios** | 21 | `Usuario` |
 | **shared** | 7 | *(componentes transversales)* |
 | **root** | 2 | *(bootstrap)* |
 

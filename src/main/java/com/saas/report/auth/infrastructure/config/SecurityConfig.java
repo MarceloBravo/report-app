@@ -5,6 +5,7 @@ import com.saas.report.auth.domain.token.UsuarioTokenRepository;
 import com.saas.report.auth.infrastructure.security.JwtAuthorizationFilter;
 import com.saas.report.auth.infrastructure.security.RestAccessDeniedHandler;
 import com.saas.report.auth.infrastructure.security.RestAuthenticationEntryPoint;
+import com.saas.report.onboarding.infrastructure.security.SelfServeRateLimitFilter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,13 +32,16 @@ public class SecurityConfig {
 
     private final RestAuthenticationEntryPoint authenticationEntryPoint;
     private final RestAccessDeniedHandler accessDeniedHandler;
+    private final SelfServeRateLimitFilter rateLimitFilter;
     private final String[] allowedOrigins;
 
     public SecurityConfig(RestAuthenticationEntryPoint authenticationEntryPoint,
                           RestAccessDeniedHandler accessDeniedHandler,
+                          SelfServeRateLimitFilter rateLimitFilter,
                           @Value("${app.cors.allowed-origins}") String allowedOriginsValue) {
         this.authenticationEntryPoint = authenticationEntryPoint;
         this.accessDeniedHandler = accessDeniedHandler;
+        this.rateLimitFilter = rateLimitFilter;
         this.allowedOrigins = allowedOriginsValue == null ? new String[0] : allowedOriginsValue.split(",");
     }
 
@@ -57,12 +61,14 @@ public class SecurityConfig {
                         .accessDeniedHandler(accessDeniedHandler))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/login", "/auth/refresh").permitAll()
+                        .requestMatchers("/self-serve/registro", "/self-serve/verificar-email").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
                         .requestMatchers("/auth/register", "/auth/admin/register")
                         .hasAnyRole("ADMIN", "PLATFORM_ADMIN", "PLATFORM_USER")
                         .requestMatchers("/admin/**").hasAnyRole("PLATFORM_ADMIN", "PLATFORM_USER")
                         .anyRequest().authenticated())
+                .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthorizationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

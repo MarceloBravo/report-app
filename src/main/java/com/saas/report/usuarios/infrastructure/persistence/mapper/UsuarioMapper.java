@@ -21,6 +21,7 @@ public final class UsuarioMapper {
         entity.setPasswordHash(usuario.getPassword());
         entity.setRol(usuario.getRol());
         entity.setActivo(usuario.getActivo());
+        entity.setEmailVerificado(usuario.getEmailVerificado());
         return entity;
     }
 
@@ -31,6 +32,6 @@ public final class UsuarioMapper {
         return new Usuario(new UsuarioUUID(entity.getUsuarioId()),
                 tenantId,
                 entity.getNombre(), entity.getEmail(), entity.getPasswordHash(),
-                entity.getRol(), entity.getActivo());
+                entity.getRol(), entity.getActivo(), entity.getEmailVerificado());
     }
 }

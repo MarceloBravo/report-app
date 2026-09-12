@@ -52,4 +52,14 @@ public class ConsultaController {
     public ResponseEntity<List<ConsultaResponse>> historial(@RequestParam UUID tenantId) {
         return ResponseEntity.ok(listConsultasUseCase.listar(new TenantUUID(tenantId)));
     }
+
+    @GetMapping("/consulta/query")
+    public ResponseEntity<List<ConsultaResponse>> query(@Valid 
+        @RequestBody String userQuery, 
+        @RequestParam UUID tenantId,
+        @RequestParam UUID userId
+    ) {
+        return ResponseEntity.ok(listConsultasUseCase.listar(new TenantUUID(tenantId)));
+    }
+
 }

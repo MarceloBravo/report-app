@@ -13,9 +13,15 @@ public class Usuario {
     private String password;
     private UsuarioRol rol;
     private boolean activo;
+    private boolean emailVerificado;
 
     public Usuario(UsuarioUUID usuarioId, TenantUUID tenantId, String nombre, String email, String password,
                    UsuarioRol rol, Boolean activo) {
+        this(usuarioId, tenantId, nombre, email, password, rol, activo, true);
+    }
+
+    public Usuario(UsuarioUUID usuarioId, TenantUUID tenantId, String nombre, String email, String password,
+                   UsuarioRol rol, Boolean activo, Boolean emailVerificado) {
         if (usuarioId == null) {
             throw new IllegalArgumentException("El ID del usuario no puede ser nulo");
         }
@@ -39,6 +45,7 @@ public class Usuario {
         this.password = password;
         this.rol = rol;
         this.activo = activo;
+        this.emailVerificado = emailVerificado == null || emailVerificado;
     }
 
     public UsuarioUUID getUsuarioId() {
@@ -113,6 +120,14 @@ public class Usuario {
 
     public void deshabilitar() {
         this.activo = false;
+    }
+
+    public boolean getEmailVerificado() {
+        return emailVerificado;
+    }
+
+    public void marcarEmailComoVerificado() {
+        this.emailVerificado = true;
     }
 
     private void validarCompatibilidadTenant(UsuarioRol rol, TenantUUID tenantId) {

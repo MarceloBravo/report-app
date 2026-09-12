@@ -47,4 +47,7 @@ public class UsuarioJpaEntity {
 
     @Column(name = "activo", nullable = false)
     private Boolean activo;
+
+    @Column(name = "email_verificado", nullable = false)
+    private Boolean emailVerificado = true;
 }
