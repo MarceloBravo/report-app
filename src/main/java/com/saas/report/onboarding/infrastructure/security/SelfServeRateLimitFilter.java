@@ -1,7 +1,5 @@
 package com.saas.report.onboarding.infrastructure.security;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.saas.report.shared.presentation.dto.ErrorResponse;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,12 +16,12 @@ import java.time.LocalDateTime;
 @Component
 public class SelfServeRateLimitFilter extends OncePerRequestFilter {
 
-    private final SelfServeRateLimiter rateLimiter;
-    private final ObjectMapper objectMapper;
+    private static final String MESSAGE = "Demasiadas solicitudes de registro. Intente más tarde.";
 
-    public SelfServeRateLimitFilter(SelfServeRateLimiter rateLimiter, ObjectMapper objectMapper) {
+    private final SelfServeRateLimiter rateLimiter;
+
+    public SelfServeRateLimitFilter(SelfServeRateLimiter rateLimiter) {
         this.rateLimiter = rateLimiter;
-        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -36,16 +34,15 @@ public class SelfServeRateLimitFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
         if (!rateLimiter.intentarConsumir(obtenerIpCliente(request))) {
-            ErrorResponse body = new ErrorResponse(
-                    HttpStatus.TOO_MANY_REQUESTS.value(),
-                    HttpStatus.TOO_MANY_REQUESTS.getReasonPhrase(),
-                    "Demasiadas solicitudes de registro. Intente más tarde.",
-                    request.getServletPath(),
-                    LocalDateTime.now());
+            String body = "{\"status\":" + HttpStatus.TOO_MANY_REQUESTS.value()
+                    + ",\"error\":\"" + HttpStatus.TOO_MANY_REQUESTS.getReasonPhrase() + "\""
+                    + ",\"message\":\"" + MESSAGE + "\""
+                    + ",\"path\":\"" + escapar(request.getServletPath()) + "\""
+                    + ",\"timestamp\":\"" + LocalDateTime.now() + "\"}";
             response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
             response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-            response.getWriter().write(objectMapper.writeValueAsString(body));
+            response.getWriter().write(body);
             return;
         }
         filterChain.doFilter(request, response);
@@ -57,5 +54,9 @@ public class SelfServeRateLimitFilter extends OncePerRequestFilter {
             return forwarded.split(",")[0].trim();
         }
         return request.getRemoteAddr();
+    }
+
+    private String escapar(String valor) {
+        return valor == null ? "" : valor.replace("\\", "\\\\").replace("\"", "\\\"");
     }
 }
