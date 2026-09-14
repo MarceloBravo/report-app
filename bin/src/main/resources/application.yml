@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: report
+  profiles:
+    active: dev
+  config:
+    import: optional:file:.env[.properties]
+  jpa:
+    open-in-view: false
+
+jwt:
+  secret: ${JWT_SECRET}
+  access-token-expiration: ${JWT_ACCESS_TOKEN_EXPIRATION:900000}
+  refresh-token-expiration: ${JWT_REFRESH_TOKEN_EXPIRATION:604800000}
+
+app:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:8080}
+  encryption:
+    key: ${ENCRYPTION_KEY}
+  onboarding:
+    free-plan-name: ${FREE_PLAN_NAME:Starter}
+    frontend-base-url: ${FRONTEND_BASE_URL:http://localhost:5173}
+    rate-limit:
+      requests-per-minute: ${SELF_SERVE_RATE_LIMIT_PER_MINUTE:5}
+    email-verification:
+      expiration-millis: ${EMAIL_VERIFICATION_EXPIRATION_MILLIS:86400000}
+
+springdoc:
+  swagger-ui:
+    enabled: false
+  api-docs:
+    enabled: true
