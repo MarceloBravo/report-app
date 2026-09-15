@@ -2,6 +2,8 @@ package com.saas.report.consulta.presentation;
 
 import com.saas.report.consulta.application.dto.ConsultaRequest;
 import com.saas.report.consulta.application.dto.ConsultaResponse;
+import com.saas.report.consulta.application.dto.ConvertirConsultaRequest;
+import com.saas.report.consulta.application.usecase.ConvertirConsultaUseCase;
 import com.saas.report.consulta.application.usecase.GetConsultaUseCase;
 import com.saas.report.consulta.application.usecase.ListConsultasUseCase;
 import com.saas.report.consulta.application.usecase.RegisterConsultaUseCase;
@@ -28,13 +30,21 @@ public class ConsultaController {
     private final RegisterConsultaUseCase registerConsultaUseCase;
     private final ListConsultasUseCase listConsultasUseCase;
     private final GetConsultaUseCase getConsultaUseCase;
+    private final ConvertirConsultaUseCase convertirConsultaUseCase;
 
     public ConsultaController(RegisterConsultaUseCase registerConsultaUseCase,
                               ListConsultasUseCase listConsultasUseCase,
-                              GetConsultaUseCase getConsultaUseCase) {
+                              GetConsultaUseCase getConsultaUseCase,
+                              ConvertirConsultaUseCase convertirConsultaUseCase) {
         this.registerConsultaUseCase = registerConsultaUseCase;
         this.listConsultasUseCase = listConsultasUseCase;
         this.getConsultaUseCase = getConsultaUseCase;
+        this.convertirConsultaUseCase = convertirConsultaUseCase;
+    }
+
+    @PostMapping("/convertir")
+    public ResponseEntity<ConsultaResponse> convertir(@Valid @RequestBody ConvertirConsultaRequest request) {
+        return ResponseEntity.ok(convertirConsultaUseCase.convertir(request));
     }
 
     @PostMapping
@@ -53,13 +63,4 @@ public class ConsultaController {
         return ResponseEntity.ok(listConsultasUseCase.listar(new TenantUUID(tenantId)));
     }
 
-    @GetMapping("/consulta/query")
-    public ResponseEntity<List<ConsultaResponse>> query(@Valid 
-        @RequestBody String userQuery, 
-        @RequestParam UUID tenantId,
-        @RequestParam UUID userId
-    ) {
-        return ResponseEntity.ok(listConsultasUseCase.listar(new TenantUUID(tenantId)));
     }
-
-}

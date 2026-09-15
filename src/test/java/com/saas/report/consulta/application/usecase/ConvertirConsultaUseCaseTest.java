@@ -1,0 +1,172 @@
+package com.saas.report.consulta.application.usecase;
+
+import com.saas.report.consulta.application.dto.ConvertirConsultaRequest;
+import com.saas.report.consulta.application.dto.ConsultaResponse;
+import com.saas.report.consulta.domain.ConsultaHistorial;
+import com.saas.report.consulta.domain.ConsultaHistorialRepository;
+import com.saas.report.consulta.domain.GeneradorSqlPort;
+import com.saas.report.consulta.domain.exception.LimiteConsultasExcedidoException;
+import com.saas.report.consulta.domain.exception.SqlInvalidoException;
+import com.saas.report.plan.domain.Plan;
+import com.saas.report.plan.domain.PlanPrecio;
+import com.saas.report.plan.domain.PlanRepository;
+import com.saas.report.plan.domain.valueobject.PlanLimiteConsultasMensuales;
+import com.saas.report.plan.domain.valueobject.PlanMaxUsuarios;
+import com.saas.report.plan.domain.valueobject.PlanPrecioUUID;
+import com.saas.report.plan.domain.valueobject.PlanUUID;
+import com.saas.report.shared.exception.ResourceNotFoundException;
+import com.saas.report.suscripcion.domain.Suscripcion;
+import com.saas.report.suscripcion.domain.SuscripcionEstado;
+import com.saas.report.suscripcion.domain.SuscripcionRepository;
+import com.saas.report.suscripcion.domain.valueobject.SuscripcionUUID;
+import com.saas.report.tenant.domain.schema.ColumnaEsquema;
+import com.saas.report.tenant.domain.schema.EsquemaCache;
+import com.saas.report.tenant.domain.schema.EsquemaTenant;
+import com.saas.report.tenant.domain.schema.TablaEsquema;
+import com.saas.report.tenant.domain.valueobject.TenantUUID;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+class ConvertirConsultaUseCaseTest {
+
+    @Mock
+    private ConsultaHistorialRepository consultaRepository;
+
+    @Mock
+    private SuscripcionRepository suscripcionRepository;
+
+    @Mock
+    private PlanRepository planRepository;
+
+    @Mock
+    private EsquemaCache esquemaCache;
+
+    @Mock
+    private GeneradorSqlPort generadorSqlPort;
+
+    private ConvertirConsultaUseCase convertirConsultaUseCase;
+
+    @BeforeEach
+    void setUp() {
+        convertirConsultaUseCase = new ConvertirConsultaUseCase(
+                consultaRepository, suscripcionRepository, planRepository, esquemaCache, generadorSqlPort);
+    }
+
+    private ConvertirConsultaRequest request() {
+        return new ConvertirConsultaRequest(
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                "¿Cuántas ventas hubo en marzo?",
+                null);
+    }
+
+    private EsquemaTenant esquema(TenantUUID tenantId) {
+        return new EsquemaTenant(tenantId, List.of(new TablaEsquema("ventas",
+                List.of(new ColumnaEsquema("monto", "numeric", false, false)))), Instant.now());
+    }
+
+    private Plan planConLimite(Integer limite) {
+        PlanUUID planId = PlanUUID.generate();
+        PlanPrecio tramo = new PlanPrecio(PlanPrecioUUID.generate(), planId, 1, null, new BigDecimal("9.90"));
+        return new Plan(planId, "STARTER", "Plan starter", new PlanMaxUsuarios(5),
+                new PlanLimiteConsultasMensuales(limite), true, List.of(tramo));
+    }
+
+    private Suscripcion suscripcionActiva(PlanUUID planId) {
+        return new Suscripcion(SuscripcionUUID.generate(), TenantUUID.generate(), planId, LocalDate.now(),
+                SuscripcionEstado.ACTIVE, LocalDate.now().plusMonths(1));
+    }
+
+    @Test
+    void convierteLaPreguntaYSanitizaElSqlGenerado() {
+        ConvertirConsultaRequest request = request();
+        TenantUUID tenantId = new TenantUUID(request.tenantId());
+        EsquemaTenant esquema = esquema(tenantId);
+
+        when(consultaRepository.countByTenantIdAndFechaConsultaAfter(any(), any(LocalDateTime.class)))
+                .thenReturn(4L);
+        when(esquemaCache.buscarPorTenant(tenantId)).thenReturn(Optional.of(esquema));
+        when(generadorSqlPort.generarSql(eq(esquema), eq(request.preguntaUsuario())))
+                .thenReturn("  SELECT * FROM ventas  ");
+        when(consultaRepository.save(any(ConsultaHistorial.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        ConsultaResponse response = convertirConsultaUseCase.convertir(request);
+
+        ArgumentCaptor<ConsultaHistorial> captor = ArgumentCaptor.forClass(ConsultaHistorial.class);
+        verify(consultaRepository).save(captor.capture());
+        ConsultaHistorial guardada = captor.getValue();
+        assertThat(guardada.getQuerySqlGenerada()).isEqualTo("SELECT * FROM ventas");
+        assertThat(guardada.getPreguntaUsuario()).isEqualTo(request.preguntaUsuario());
+        assertThat(guardada.getConsultasEnPeriodo()).isEqualTo(5);
+
+        assertThat(response.consultasEnPeriodo()).isEqualTo(5);
+        assertThat(response.querySqlGenerada()).isEqualTo("SELECT * FROM ventas");
+    }
+
+    @Test
+    void rechazaLaConversionSiElSqlNoEsDeSoloLectura() {
+        ConvertirConsultaRequest request = request();
+        TenantUUID tenantId = new TenantUUID(request.tenantId());
+
+        when(consultaRepository.countByTenantIdAndFechaConsultaAfter(any(), any(LocalDateTime.class)))
+                .thenReturn(0L);
+        when(esquemaCache.buscarPorTenant(tenantId)).thenReturn(Optional.of(esquema(tenantId)));
+        when(generadorSqlPort.generarSql(any(), any())).thenReturn("DELETE FROM ventas");
+
+        assertThatThrownBy(() -> convertirConsultaUseCase.convertir(request))
+                .isInstanceOf(SqlInvalidoException.class)
+                .hasMessageContaining("SELECT");
+    }
+
+    @Test
+    void rechazaCuandoSeExcedeElLimiteDelPlan() {
+        ConvertirConsultaRequest request = request();
+        TenantUUID tenantId = new TenantUUID(request.tenantId());
+        Plan plan = planConLimite(5);
+
+        when(suscripcionRepository.findByTenantIdAndEstado(tenantId, SuscripcionEstado.ACTIVE))
+                .thenReturn(Optional.of(suscripcionActiva(plan.getPlanId())));
+        when(planRepository.findById(plan.getPlanId())).thenReturn(Optional.of(plan));
+        when(consultaRepository.countByTenantIdAndFechaConsultaAfter(any(), any(LocalDateTime.class)))
+                .thenReturn(5L);
+
+        assertThatThrownBy(() -> convertirConsultaUseCase.convertir(request))
+                .isInstanceOf(LimiteConsultasExcedidoException.class)
+                .hasMessageContaining("límite");
+    }
+
+    @Test
+    void rechazaCuandoElEsquemaDelTenantNoEstaEnCache() {
+        ConvertirConsultaRequest request = request();
+        TenantUUID tenantId = new TenantUUID(request.tenantId());
+
+        when(consultaRepository.countByTenantIdAndFechaConsultaAfter(any(), any(LocalDateTime.class)))
+                .thenReturn(0L);
+        when(esquemaCache.buscarPorTenant(tenantId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> convertirConsultaUseCase.convertir(request))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("esquema");
+    }
+}

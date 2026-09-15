@@ -23,11 +23,7 @@ public class OnboardingController {
 
     @PostMapping("/registro")
     public ResponseEntity<OnboardingResponse> registrar(@Valid @RequestBody OnboardingRequest request) {
-        try {
-            OnboardingResponse response = onboardClienteUseCase.registrar(request);
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+        OnboardingResponse response = onboardClienteUseCase.registrar(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

@@ -3,6 +3,7 @@ package com.saas.report.shared.presentation.rest;
 import com.saas.report.auth.domain.exception.InvalidCredentialsException;
 import com.saas.report.auth.domain.exception.TokenRevokedException;
 import com.saas.report.consulta.domain.exception.LimiteConsultasExcedidoException;
+import com.saas.report.consulta.domain.exception.ProveedorIaNoDisponibleException;
 import com.saas.report.plan.domain.exception.PlanNombreAlreadyExistsException;
 import com.saas.report.shared.exception.DomainException;
 import com.saas.report.shared.exception.ForbiddenException;
@@ -83,6 +84,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleLimiteConsultasExcedido(LimiteConsultasExcedidoException ex,
                                                                        HttpServletRequest request) {
         return build(HttpStatus.TOO_MANY_REQUESTS, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(ProveedorIaNoDisponibleException.class)
+    public ResponseEntity<ErrorResponse> handleProveedorIaNoDisponible(ProveedorIaNoDisponibleException ex,
+                                                                       HttpServletRequest request) {
+        return build(HttpStatus.BAD_GATEWAY, ex.getMessage(), request);
     }
 
     @ExceptionHandler(DomainException.class)

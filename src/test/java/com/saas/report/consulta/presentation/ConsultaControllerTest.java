@@ -2,6 +2,8 @@ package com.saas.report.consulta.presentation;
 
 import com.saas.report.consulta.application.dto.ConsultaRequest;
 import com.saas.report.consulta.application.dto.ConsultaResponse;
+import com.saas.report.consulta.application.dto.ConvertirConsultaRequest;
+import com.saas.report.consulta.application.usecase.ConvertirConsultaUseCase;
 import com.saas.report.consulta.application.usecase.GetConsultaUseCase;
 import com.saas.report.consulta.application.usecase.ListConsultasUseCase;
 import com.saas.report.consulta.application.usecase.RegisterConsultaUseCase;
@@ -40,6 +42,9 @@ class ConsultaControllerTest {
     @Mock
     private GetConsultaUseCase getConsultaUseCase;
 
+    @Mock
+    private ConvertirConsultaUseCase convertirConsultaUseCase;
+
     private MockMvc mockMvc;
 
     @BeforeEach
@@ -48,7 +53,7 @@ class ConsultaControllerTest {
         validator.afterPropertiesSet();
         mockMvc = MockMvcBuilders
                 .standaloneSetup(new ConsultaController(registerConsultaUseCase, listConsultasUseCase,
-                        getConsultaUseCase))
+                        getConsultaUseCase, convertirConsultaUseCase))
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .setValidator(validator)
                 .build();
@@ -62,6 +67,32 @@ class ConsultaControllerTest {
     private String bodyRegistro() {
         return "{\"tenantId\":\"" + UUID.randomUUID() + "\",\"usuarioId\":\"" + UUID.randomUUID()
                 + "\",\"preguntaUsuario\":\"¿Cuántas ventas?\",\"querySqlGenerada\":\"SELECT 1;\"}";
+    }
+
+    private String bodyConvertir() {
+        return "{\"tenantId\":\"" + UUID.randomUUID() + "\",\"usuarioId\":\"" + UUID.randomUUID()
+                + "\",\"preguntaUsuario\":\"¿Cuántas ventas?\"}";
+    }
+
+    @Test
+    void convierteConsultaNLASqlYDevuelve200() throws Exception {
+        when(convertirConsultaUseCase.convertir(any(ConvertirConsultaRequest.class))).thenReturn(response());
+
+        mockMvc.perform(post("/consultas/convertir")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(bodyConvertir()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.querySqlGenerada").value("SELECT 1;"));
+    }
+
+    @Test
+    void devuelve400SiLaPreguntaDeConversionEstaVacia() throws Exception {
+        mockMvc.perform(post("/consultas/convertir")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"tenantId\":\"" + UUID.randomUUID() + "\",\"usuarioId\":\""
+                                + UUID.randomUUID() + "\",\"preguntaUsuario\":\"\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400));
     }
 
     @Test

@@ -26,6 +26,9 @@ app:
     email-verification:
       expiration-millis: ${EMAIL_VERIFICATION_EXPIRATION_MILLIS:86400000}
 
+ai-service:
+  base-url: ${AI_SERVICE_BASE_URL:http://localhost:8000}
+
 springdoc:
   swagger-ui:
     enabled: false
