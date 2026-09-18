@@ -3,7 +3,6 @@ package com.saas.report.onboarding.application.usecase;
 import com.saas.report.identity.domain.user.UsuarioRol;
 import com.saas.report.onboarding.application.dto.OnboardingRequest;
 import com.saas.report.onboarding.application.dto.OnboardingResponse;
-import com.saas.report.onboarding.application.event.TenantRegistradoEvent;
 import com.saas.report.plan.domain.Plan;
 import com.saas.report.plan.domain.PlanPrecio;
 import com.saas.report.plan.domain.PlanRepository;
@@ -30,7 +29,6 @@ import com.saas.report.usuarios.domain.usuario.Usuario;
 import com.saas.report.usuarios.domain.usuario.UsuarioRepository;
 import com.saas.report.usuarios.domain.valueobject.UsuarioUUID;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -50,7 +48,6 @@ public class OnboardClienteUseCase {
     private final CredentialCipher credentialCipher;
     private final PasswordEncoder passwordEncoder;
     private final String freePlanName;
-    private final ApplicationEventPublisher eventPublisher;
     private final EmailVerificationTokenService emailTokenService;
     private final String frontendBaseUrl;
 
@@ -62,7 +59,6 @@ public class OnboardClienteUseCase {
                                  CredentialCipher credentialCipher,
                                  PasswordEncoder passwordEncoder,
                                  @Value("${app.onboarding.free-plan-name}") String freePlanName,
-                                 ApplicationEventPublisher eventPublisher,
                                  EmailVerificationTokenService emailTokenService,
                                  @Value("${app.onboarding.frontend-base-url}") String frontendBaseUrl) {
         this.tenantRepository = tenantRepository;
@@ -73,7 +69,6 @@ public class OnboardClienteUseCase {
         this.credentialCipher = credentialCipher;
         this.passwordEncoder = passwordEncoder;
         this.freePlanName = freePlanName;
-        this.eventPublisher = eventPublisher;
         this.emailTokenService = emailTokenService;
         this.frontendBaseUrl = frontendBaseUrl;
     }
@@ -105,8 +100,6 @@ public class OnboardClienteUseCase {
         Suscripcion suscripcion = crearSuscripcionInicial(tenant.getTenantId());
 
         TenantDbConnection conexion = crearConexion(tenant.getTenantId(), request.conexion());
-
-        eventPublisher.publishEvent(new TenantRegistradoEvent(tenant.getTenantId()));
 
         String emailVerificacionUrl = crearEmailVerificacionUrl(usuario.getUsuarioId(), email);
 

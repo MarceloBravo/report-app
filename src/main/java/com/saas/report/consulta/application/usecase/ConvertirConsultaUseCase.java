@@ -1,4 +1,4 @@
-package com.saas.report.consulta.application.usecase;
+﻿package com.saas.report.consulta.application.usecase;
 
 import com.saas.report.consulta.application.SanitizadorSql;
 import com.saas.report.consulta.application.dto.ConvertirConsultaRequest;
@@ -12,8 +12,10 @@ import com.saas.report.plan.domain.PlanRepository;
 import com.saas.report.shared.exception.ResourceNotFoundException;
 import com.saas.report.suscripcion.domain.SuscripcionEstado;
 import com.saas.report.suscripcion.domain.SuscripcionRepository;
-import com.saas.report.tenant.domain.schema.EsquemaCache;
+import com.saas.report.tenant.domain.connection.TenantDbConnection;
+import com.saas.report.tenant.domain.connection.TenantDbConnectionRepository;
 import com.saas.report.tenant.domain.schema.EsquemaTenant;
+import com.saas.report.tenant.domain.schema.SchemaExtractor;
 import com.saas.report.tenant.domain.valueobject.TenantDbConnectionUUID;
 import com.saas.report.tenant.domain.valueobject.TenantUUID;
 import com.saas.report.usuarios.domain.valueobject.UsuarioUUID;
@@ -21,6 +23,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class ConvertirConsultaUseCase {
@@ -28,18 +32,21 @@ public class ConvertirConsultaUseCase {
     private final ConsultaHistorialRepository consultaRepository;
     private final SuscripcionRepository suscripcionRepository;
     private final PlanRepository planRepository;
-    private final EsquemaCache esquemaCache;
+    private final TenantDbConnectionRepository dbConnectionRepository;
+    private final SchemaExtractor schemaExtractor;
     private final GeneradorSqlPort generadorSqlPort;
 
     public ConvertirConsultaUseCase(ConsultaHistorialRepository consultaRepository,
                                     SuscripcionRepository suscripcionRepository,
                                     PlanRepository planRepository,
-                                    EsquemaCache esquemaCache,
+                                    TenantDbConnectionRepository dbConnectionRepository,
+                                    SchemaExtractor schemaExtractor,
                                     GeneradorSqlPort generadorSqlPort) {
         this.consultaRepository = consultaRepository;
         this.suscripcionRepository = suscripcionRepository;
         this.planRepository = planRepository;
-        this.esquemaCache = esquemaCache;
+        this.dbConnectionRepository = dbConnectionRepository;
+        this.schemaExtractor = schemaExtractor;
         this.generadorSqlPort = generadorSqlPort;
     }
 
@@ -54,11 +61,9 @@ public class ConvertirConsultaUseCase {
 
         validarLimiteMensual(tenantId, consultasEnPeriodo);
 
-        EsquemaTenant esquema = esquemaCache.buscarPorTenant(tenantId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "No se encontró el esquema de la base de datos para el tenant " + tenantId.getValue() + "."));
+        EsquemaTenant esquema = extraerEsquema(tenantId, request.dbConnectionId());
 
-        String sqlGenerado = generadorSqlPort.generarSql(esquema, request.preguntaUsuario());
+        String sqlGenerado = generadorSqlPort.generarSql(esquema, request.preguntaUsuario(), request.usuarioId());
         String sqlSanitizado = SanitizadorSql.sanitizar(sqlGenerado);
 
         ConsultaHistorial consulta = new ConsultaHistorial(
@@ -74,6 +79,17 @@ public class ConvertirConsultaUseCase {
                 consultasEnPeriodo);
 
         return ConsultaResponse.from(consultaRepository.save(consulta));
+    }
+
+    private EsquemaTenant extraerEsquema(TenantUUID tenantId, UUID dbConnectionId) {
+        Optional<TenantDbConnection> conexion = dbConnectionId != null
+                ? dbConnectionRepository.findById(new TenantDbConnectionUUID(dbConnectionId))
+                : dbConnectionRepository.findByTenantId(tenantId);
+
+        TenantDbConnection encontrada = conexion.orElseThrow(() -> new ResourceNotFoundException(
+                "No se encontró una conexión de base de datos para el tenant " + tenantId.getValue() + "."));
+
+        return schemaExtractor.extraer(encontrada);
     }
 
     private void validarLimiteMensual(TenantUUID tenantId, Integer consultasEnPeriodo) {

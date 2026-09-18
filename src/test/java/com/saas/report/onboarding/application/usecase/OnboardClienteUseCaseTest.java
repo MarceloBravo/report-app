@@ -32,7 +32,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -67,9 +66,6 @@ class OnboardClienteUseCaseTest {
     private TenantDbConnectionRepository dbConnectionRepository;
 
     @Mock
-    private ApplicationEventPublisher eventPublisher;
-
-    @Mock
     private EmailVerificationTokenService emailTokenService;
 
     private final CredentialCipher credentialCipher = new CredentialCipher() {
@@ -94,7 +90,7 @@ class OnboardClienteUseCaseTest {
         onboardClienteUseCase = new OnboardClienteUseCase(
                 tenantRepository, usuarioRepository, planRepository, suscripcionRepository,
                 dbConnectionRepository, credentialCipher, passwordEncoder, "Starter",
-                eventPublisher, emailTokenService, "http://localhost:5173");
+                emailTokenService, "http://localhost:5173");
     }
 
     private Plan planGratuito() {
@@ -131,8 +127,6 @@ class OnboardClienteUseCaseTest {
         assertThat(response.dbConnectionId()).isNotNull();
         assertThat(response.emailVerificacionUrl())
                 .isEqualTo("http://localhost:5173/verificar-email?token=token-verificacion");
-
-        verify(eventPublisher).publishEvent(any(Object.class));
 
         ArgumentCaptor<Usuario> usuarioCaptor = ArgumentCaptor.forClass(Usuario.class);
         verify(usuarioRepository).save(usuarioCaptor.capture());

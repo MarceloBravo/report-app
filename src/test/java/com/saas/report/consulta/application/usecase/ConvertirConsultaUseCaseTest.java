@@ -19,10 +19,14 @@ import com.saas.report.suscripcion.domain.Suscripcion;
 import com.saas.report.suscripcion.domain.SuscripcionEstado;
 import com.saas.report.suscripcion.domain.SuscripcionRepository;
 import com.saas.report.suscripcion.domain.valueobject.SuscripcionUUID;
+import com.saas.report.tenant.domain.connection.TenantDbConnection;
+import com.saas.report.tenant.domain.connection.TenantDbConnectionRepository;
+import com.saas.report.tenant.domain.connection.TipoConexion;
 import com.saas.report.tenant.domain.schema.ColumnaEsquema;
-import com.saas.report.tenant.domain.schema.EsquemaCache;
 import com.saas.report.tenant.domain.schema.EsquemaTenant;
+import com.saas.report.tenant.domain.schema.SchemaExtractor;
 import com.saas.report.tenant.domain.schema.TablaEsquema;
+import com.saas.report.tenant.domain.valueobject.TenantDbConnectionUUID;
 import com.saas.report.tenant.domain.valueobject.TenantUUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -59,7 +63,10 @@ class ConvertirConsultaUseCaseTest {
     private PlanRepository planRepository;
 
     @Mock
-    private EsquemaCache esquemaCache;
+    private TenantDbConnectionRepository dbConnectionRepository;
+
+    @Mock
+    private SchemaExtractor schemaExtractor;
 
     @Mock
     private GeneradorSqlPort generadorSqlPort;
@@ -69,7 +76,8 @@ class ConvertirConsultaUseCaseTest {
     @BeforeEach
     void setUp() {
         convertirConsultaUseCase = new ConvertirConsultaUseCase(
-                consultaRepository, suscripcionRepository, planRepository, esquemaCache, generadorSqlPort);
+                consultaRepository, suscripcionRepository, planRepository,
+                dbConnectionRepository, schemaExtractor, generadorSqlPort);
     }
 
     private ConvertirConsultaRequest request() {
@@ -83,6 +91,12 @@ class ConvertirConsultaUseCaseTest {
     private EsquemaTenant esquema(TenantUUID tenantId) {
         return new EsquemaTenant(tenantId, List.of(new TablaEsquema("ventas",
                 List.of(new ColumnaEsquema("monto", "numeric", false, false)))), Instant.now());
+    }
+
+    private TenantDbConnection conexion(TenantUUID tenantId) {
+        return new TenantDbConnection(
+                TenantDbConnectionUUID.generate(), tenantId, "db.acme.com", 5432,
+                "ventas", "report_ro", "CIFRADO:secreto", TipoConexion.EXTERNAL_DB, "public");
     }
 
     private Plan planConLimite(Integer limite) {
@@ -105,8 +119,9 @@ class ConvertirConsultaUseCaseTest {
 
         when(consultaRepository.countByTenantIdAndFechaConsultaAfter(any(), any(LocalDateTime.class)))
                 .thenReturn(4L);
-        when(esquemaCache.buscarPorTenant(tenantId)).thenReturn(Optional.of(esquema));
-        when(generadorSqlPort.generarSql(eq(esquema), eq(request.preguntaUsuario())))
+        when(dbConnectionRepository.findByTenantId(tenantId)).thenReturn(Optional.of(conexion(tenantId)));
+        when(schemaExtractor.extraer(any(TenantDbConnection.class))).thenReturn(esquema);
+        when(generadorSqlPort.generarSql(eq(esquema), eq(request.preguntaUsuario()), eq(request.usuarioId())))
                 .thenReturn("  SELECT * FROM ventas  ");
         when(consultaRepository.save(any(ConsultaHistorial.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
@@ -131,8 +146,9 @@ class ConvertirConsultaUseCaseTest {
 
         when(consultaRepository.countByTenantIdAndFechaConsultaAfter(any(), any(LocalDateTime.class)))
                 .thenReturn(0L);
-        when(esquemaCache.buscarPorTenant(tenantId)).thenReturn(Optional.of(esquema(tenantId)));
-        when(generadorSqlPort.generarSql(any(), any())).thenReturn("DELETE FROM ventas");
+        when(dbConnectionRepository.findByTenantId(tenantId)).thenReturn(Optional.of(conexion(tenantId)));
+        when(schemaExtractor.extraer(any(TenantDbConnection.class))).thenReturn(esquema(tenantId));
+        when(generadorSqlPort.generarSql(any(), any(), any())).thenReturn("DELETE FROM ventas");
 
         assertThatThrownBy(() -> convertirConsultaUseCase.convertir(request))
                 .isInstanceOf(SqlInvalidoException.class)
@@ -157,16 +173,16 @@ class ConvertirConsultaUseCaseTest {
     }
 
     @Test
-    void rechazaCuandoElEsquemaDelTenantNoEstaEnCache() {
+    void rechazaCuandoNoExisteConexionParaElTenant() {
         ConvertirConsultaRequest request = request();
         TenantUUID tenantId = new TenantUUID(request.tenantId());
 
         when(consultaRepository.countByTenantIdAndFechaConsultaAfter(any(), any(LocalDateTime.class)))
                 .thenReturn(0L);
-        when(esquemaCache.buscarPorTenant(tenantId)).thenReturn(Optional.empty());
+        when(dbConnectionRepository.findByTenantId(tenantId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> convertirConsultaUseCase.convertir(request))
                 .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessageContaining("esquema");
+                .hasMessageContaining("conexión");
     }
 }
