@@ -1,4 +1,4 @@
-﻿package com.saas.report.consulta.application.usecase;
+package com.saas.report.consulta.application.usecase;
 
 import com.saas.report.consulta.application.SanitizadorSql;
 import com.saas.report.consulta.application.dto.ConvertirConsultaRequest;
