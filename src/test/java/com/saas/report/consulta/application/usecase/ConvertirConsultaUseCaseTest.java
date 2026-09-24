@@ -90,7 +90,7 @@ class ConvertirConsultaUseCaseTest {
 
     private EsquemaTenant esquema(TenantUUID tenantId) {
         return new EsquemaTenant(tenantId, List.of(new TablaEsquema("ventas",
-                List.of(new ColumnaEsquema("monto", "numeric", false, false)))), Instant.now());
+                List.of(new ColumnaEsquema("ventas", "monto", "numeric", false, false, false, null, null)))), Instant.now());
     }
 
     private TenantDbConnection conexion(TenantUUID tenantId) {

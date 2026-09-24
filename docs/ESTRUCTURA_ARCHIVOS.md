@@ -82,7 +82,7 @@ src/main/java/com/saas/report/
 │   │   │   ├── TenantDbConnectionRepository.java # Puerto de repositorio: save, findById, findByTenantId
 │   │   │   └── CredentialCipher.java            # Puerto de cifrado/descifrado de credenciales de BD
 │   │   ├── schema/
-│   │   │   ├── ColumnaEsquema.java              # Record: columna (nombre, tipoDato, nullable, esPrimaryKey)
+│   │   │   ├── ColumnaEsquema.java              # Record: columna (nombre, tipoDato, nullable, PK/FK, tabla/columna referenciada)
 │   │   │   ├── TablaEsquema.java                # Record: tabla con sus columnas
 │   │   │   ├── EsquemaTenant.java               # Record: esquema extraído del tenant (tablas + extraidoEn)
 │   │   │   ├── SchemaExtractor.java             # Puerto: extrae EsquemaTenant desde una TenantDbConnection

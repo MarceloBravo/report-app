@@ -28,6 +28,8 @@ class PythonSqlGeneratorAdapterTest {
     private HttpServer servidor;
     private PythonSqlGeneratorAdapter adapter;
 
+    private String ultimoCuerpoRecibido;
+
     @BeforeEach
     void setUp() throws IOException {
         servidor = HttpServer.create(new InetSocketAddress(0), 0);
@@ -100,8 +102,25 @@ class PythonSqlGeneratorAdapterTest {
                 .hasMessageContaining("no devolvió un SQL");
     }
 
+    @Test
+    void enviaLasRelacionesDeClavesForaneasEnElEsquema() {
+        responder(HttpStatusCode.OK_200, ""
+                .concat("{\"tenantId\":\"")
+                .concat(UUID.randomUUID().toString())
+                .concat("\",\"querySql\":\"SELECT * FROM ventas\",\"exitosa\":true,\"tiempoMs\":120}"),
+                "application/json");
+
+        adapter.generarSql(esquema(), "¿Cuántas ventas hubo?", UUID.randomUUID());
+
+        assertThat(ultimoCuerpoRecibido)
+                .contains("\"esForeignKey\":true")
+                .contains("\"tablaReferenciada\":\"clientes\"")
+                .contains("\"columnaReferenciada\":\"id\"");
+    }
+
     private void responder(int status, String cuerpo, String contentType) {
         servidor.createContext("/sql", exchange -> {
+            ultimoCuerpoRecibido = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
             byte[] bytes = cuerpo.getBytes(StandardCharsets.UTF_8);
             exchange.getResponseHeaders().add("Content-Type", contentType);
             exchange.sendResponseHeaders(status, bytes.length);
@@ -115,7 +134,9 @@ class PythonSqlGeneratorAdapterTest {
     private EsquemaTenant esquema() {
         return new EsquemaTenant(TenantUUID.generate(),
                 List.of(new TablaEsquema("ventas",
-                        List.of(new ColumnaEsquema("monto", "numeric", false, false)))),
+                        List.of(new ColumnaEsquema("ventas", "id", "uuid", false, true, false, null, null),
+                                new ColumnaEsquema("ventas", "cliente_id", "uuid", false, false, true,
+                                        "clientes", "id")))),
                 Instant.now());
     }
 

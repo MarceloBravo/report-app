@@ -56,6 +56,9 @@ class JdbcSchemaExtractorTest {
         when(resultSet.getString("data_type")).thenReturn("integer", "character varying", "numeric");
         when(resultSet.getBoolean("es_nullable")).thenReturn(false, false, true);
         when(resultSet.getBoolean("es_primary_key")).thenReturn(true, false, false);
+        when(resultSet.getBoolean("es_foreign_key")).thenReturn(false, false, true);
+        when(resultSet.getString("tabla_referenciada")).thenReturn(null, null, "clientes");
+        when(resultSet.getString("columna_referenciada")).thenReturn(null, null, "id");
 
         JdbcSchemaExtractor extractor = new JdbcSchemaExtractor(credentialCipher, appDataSource);
 
@@ -73,5 +76,13 @@ class JdbcSchemaExtractorTest {
                     assertThat(columna.nullable()).isFalse();
                 });
         assertThat(esquema.tablas().get(1).nombre()).isEqualTo("pedidos");
+        assertThat(esquema.tablas().get(1).columnas())
+                .singleElement()
+                .satisfies(columna -> {
+                    assertThat(columna.nombre()).isEqualTo("total");
+                    assertThat(columna.esForeignKey()).isTrue();
+                    assertThat(columna.tablaReferenciada()).isEqualTo("clientes");
+                    assertThat(columna.columnaReferenciada()).isEqualTo("id");
+                });
     }
 }

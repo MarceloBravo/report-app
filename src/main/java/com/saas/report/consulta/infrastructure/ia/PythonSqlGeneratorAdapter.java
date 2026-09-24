@@ -119,7 +119,9 @@ public class PythonSqlGeneratorAdapter implements GeneradorSqlPort {
     }
 
     private ColumnaRequest toColumna(ColumnaEsquema columna) {
-        return new ColumnaRequest(columna.nombre(), columna.tipoDato(), columna.nullable(), columna.esPrimaryKey());
+        return new ColumnaRequest(
+                columna.nombre(), columna.tipoDato(), columna.nullable(), columna.esPrimaryKey(),
+                columna.esForeignKey(), columna.tablaReferenciada(), columna.columnaReferenciada());
     }
 
     private record SqlRequest(String tenantId, String usuarioId, String preguntaUsuario, EsquemaRequest esquema) {
@@ -131,7 +133,8 @@ public class PythonSqlGeneratorAdapter implements GeneradorSqlPort {
     private record TablaRequest(String nombre, List<ColumnaRequest> columnas) {
     }
 
-    private record ColumnaRequest(String nombre, String tipoDato, boolean nullable, boolean esPrimaryKey) {
+    private record ColumnaRequest(String nombre, String tipoDato, boolean nullable, boolean esPrimaryKey,
+                                  boolean esForeignKey, String tablaReferenciada, String columnaReferenciada) {
     }
 
     private record SqlResponse(String tenantId, String querySql, Boolean exitosa, Integer tiempoMs) {

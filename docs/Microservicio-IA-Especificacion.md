@@ -96,9 +96,9 @@ Transforma una pregunta en lenguaje natural a SQL usando el esquema recibido.
       {
         "nombre": "ventas",
         "columnas": [
-          { "nombre": "id", "tipoDato": "uuid", "nullable": false, "esPrimaryKey": true },
-          { "nombre": "monto", "tipoDato": "numeric", "nullable": false, "esPrimaryKey": false },
-          { "nombre": "fecha", "tipoDato": "timestamp", "nullable": false, "esPrimaryKey": false }
+          { "nombre": "id", "tipoDato": "uuid", "nullable": false, "esPrimaryKey": true, "esForeignKey": false, "tablaReferenciada": null, "columnaReferenciada": null },
+          { "nombre": "cliente_id", "tipoDato": "uuid", "nullable": false, "esPrimaryKey": false, "esForeignKey": true, "tablaReferenciada": "clientes", "columnaReferenciada": "id" },
+          { "nombre": "fecha", "tipoDato": "timestamp", "nullable": false, "esPrimaryKey": false, "esForeignKey": false, "tablaReferenciada": null, "columnaReferenciada": null }
         ]
       }
     ]
@@ -109,8 +109,9 @@ Transforma una pregunta en lenguaje natural a SQL usando el esquema recibido.
 > El `esquema` reproduce el modelo del módulo `tenant` de Spring Boot:
 > `EsquemaTenant(tenantId, List<TablaEsquema>, extraidoEn)`,
 > `TablaEsquema(nombre, List<ColumnaEsquema>)`,
-> `ColumnaEsquema(nombre, tipoDato, nullable, esPrimaryKey)`.
-> El campo `extraidoEn` no es necesario enviarlo al LLM; solo `tablas` es obligatorio.
+> `ColumnaEsquema(tabla, nombre, tipoDato, nullable, esPrimaryKey, esForeignKey, tablaReferenciada, columnaReferenciada)`.
+> `esForeignKey`/`tablaReferenciada`/`columnaReferenciada` permiten al LLM componer `JOIN`s a partir de las
+> relaciones reales del esquema. El campo `extraidoEn` no es necesario enviarlo al LLM; solo `tablas` es obligatorio.
 
 **Respuesta 200**
 
