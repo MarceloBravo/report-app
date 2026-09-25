@@ -6,6 +6,7 @@ import com.saas.report.consulta.domain.valueobject.ConsultaHistorialUUID;
 import com.saas.report.consulta.infrastructure.persistence.ConsultaHistorialJpaRepository;
 import com.saas.report.consulta.infrastructure.persistence.mapper.ConsultaHistorialMapper;
 import com.saas.report.tenant.domain.valueobject.TenantUUID;
+
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 

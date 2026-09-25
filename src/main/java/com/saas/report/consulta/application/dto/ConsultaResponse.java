@@ -4,6 +4,8 @@ import com.saas.report.consulta.domain.ConsultaHistorial;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
+import java.util.List;
+import java.util.Map;
 
 public record ConsultaResponse(
         UUID consultaId,
@@ -15,10 +17,11 @@ public record ConsultaResponse(
         Boolean exitosa,
         Integer registrosCount,
         UUID dbConnectionId,
-        Integer consultasEnPeriodo
+        Integer consultasEnPeriodo,
+        List<Map<String, Object>> data
 ) {
 
-    public static ConsultaResponse from(ConsultaHistorial consulta) {
+    public static ConsultaResponse from(ConsultaHistorial consulta, List<Map<String, Object>> data) {
         return new ConsultaResponse(
                 consulta.getConsultaId().getValue(),
                 consulta.getTenantId().getValue(),
@@ -29,6 +32,12 @@ public record ConsultaResponse(
                 consulta.getExitosa(),
                 consulta.getRegistrosCount(),
                 consulta.getDbConnectionId() != null ? consulta.getDbConnectionId().getValue() : null,
-                consulta.getConsultasEnPeriodo());
+                consulta.getConsultasEnPeriodo(),
+                data
+        );
+    }
+
+    public static ConsultaResponse from(ConsultaHistorial consulta) {
+        return from(consulta, List.of());
     }
 }

@@ -61,7 +61,7 @@ class ConsultaControllerTest {
 
     private ConsultaResponse response() {
         return new ConsultaResponse(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
-                "¿Cuántas ventas?", "SELECT 1;", LocalDateTime.now(), true, 5, null, 3);
+                "¿Cuántas ventas?", "SELECT 1;", LocalDateTime.now(), true, 5, null, 3, List.of());
     }
 
     private String bodyRegistro() {

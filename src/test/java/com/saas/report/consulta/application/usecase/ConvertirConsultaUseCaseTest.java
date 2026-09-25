@@ -5,6 +5,7 @@ import com.saas.report.consulta.application.dto.ConsultaResponse;
 import com.saas.report.consulta.domain.ConsultaHistorial;
 import com.saas.report.consulta.domain.ConsultaHistorialRepository;
 import com.saas.report.consulta.domain.GeneradorSqlPort;
+import com.saas.report.consulta.domain.SqlEjecutorPort;
 import com.saas.report.consulta.domain.exception.LimiteConsultasExcedidoException;
 import com.saas.report.consulta.domain.exception.SqlInvalidoException;
 import com.saas.report.plan.domain.Plan;
@@ -40,6 +41,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -47,6 +49,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -71,13 +74,16 @@ class ConvertirConsultaUseCaseTest {
     @Mock
     private GeneradorSqlPort generadorSqlPort;
 
+    @Mock
+    private SqlEjecutorPort sqlEjecutorPort;
+
     private ConvertirConsultaUseCase convertirConsultaUseCase;
 
     @BeforeEach
     void setUp() {
         convertirConsultaUseCase = new ConvertirConsultaUseCase(
                 consultaRepository, suscripcionRepository, planRepository,
-                dbConnectionRepository, schemaExtractor, generadorSqlPort);
+                dbConnectionRepository, schemaExtractor, generadorSqlPort, sqlEjecutorPort);
     }
 
     private ConvertirConsultaRequest request() {
@@ -123,6 +129,8 @@ class ConvertirConsultaUseCaseTest {
         when(schemaExtractor.extraer(any(TenantDbConnection.class))).thenReturn(esquema);
         when(generadorSqlPort.generarSql(eq(esquema), eq(request.preguntaUsuario()), eq(request.usuarioId())))
                 .thenReturn("  SELECT * FROM ventas  ");
+        when(sqlEjecutorPort.ejecutar(any(TenantDbConnection.class), any(String.class)))
+                .thenReturn(List.of(Map.of("monto", 150)));
         when(consultaRepository.save(any(ConsultaHistorial.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -137,6 +145,51 @@ class ConvertirConsultaUseCaseTest {
 
         assertThat(response.consultasEnPeriodo()).isEqualTo(5);
         assertThat(response.querySqlGenerada()).isEqualTo("SELECT * FROM ventas");
+    }
+
+    @Test
+    void ejecutaElSqlSanitizadoSobreLaConexionDelTenantYDevuelveLosDatos() {
+        ConvertirConsultaRequest request = request();
+        TenantUUID tenantId = new TenantUUID(request.tenantId());
+        TenantDbConnection conexion = conexion(tenantId);
+        List<Map<String, Object>> filas = List.of(
+                Map.of("monto", 150),
+                Map.of("monto", 320));
+
+        when(consultaRepository.countByTenantIdAndFechaConsultaAfter(any(), any(LocalDateTime.class)))
+                .thenReturn(0L);
+        when(dbConnectionRepository.findByTenantId(tenantId)).thenReturn(Optional.of(conexion));
+        when(schemaExtractor.extraer(conexion)).thenReturn(esquema(tenantId));
+        when(generadorSqlPort.generarSql(any(), any(), any())).thenReturn("SELECT monto FROM ventas");
+        when(sqlEjecutorPort.ejecutar(conexion, "SELECT monto FROM ventas")).thenReturn(filas);
+        when(consultaRepository.save(any(ConsultaHistorial.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        ConsultaResponse response = convertirConsultaUseCase.convertir(request);
+
+        verify(sqlEjecutorPort).ejecutar(conexion, "SELECT monto FROM ventas");
+        assertThat(response.data()).isEqualTo(filas);
+        assertThat(response.registrosCount()).isEqualTo(2);
+        assertThat(response.exitosa()).isTrue();
+    }
+
+    @Test
+    void noEjecutaSqlSiLaGeneracionEsInvalida() {
+        ConvertirConsultaRequest request = request();
+        TenantUUID tenantId = new TenantUUID(request.tenantId());
+
+        when(consultaRepository.countByTenantIdAndFechaConsultaAfter(any(), any(LocalDateTime.class)))
+                .thenReturn(0L);
+        when(dbConnectionRepository.findByTenantId(tenantId)).thenReturn(Optional.of(conexion(tenantId)));
+        when(schemaExtractor.extraer(any(TenantDbConnection.class))).thenReturn(esquema(tenantId));
+        when(generadorSqlPort.generarSql(any(), any(), any())).thenReturn("DELETE FROM ventas");
+
+        assertThatThrownBy(() -> convertirConsultaUseCase.convertir(request))
+                .isInstanceOf(SqlInvalidoException.class)
+                .hasMessageContaining("SELECT");
+
+        verify(sqlEjecutorPort, never()).ejecutar(any(), any());
+        verify(consultaRepository, never()).save(any());
     }
 
     @Test
