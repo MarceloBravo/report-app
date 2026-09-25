@@ -20,7 +20,7 @@ Variables de entorno requeridas
 
 Contenido importante
 - Código fuente: `src/main/java`.
-- Tests: `src/test/java` (existen tests unitarios / de integración parciales).
+- Tests: `src/test/java/com/saas/report` (unitarios) y `src/test/java/com/saas/integration` (integración con Testcontainers).
 - Configuración dev: `src/main/resources/application-dev.yml`.
 
 Cómo compilar
@@ -57,11 +57,28 @@ $env:DB_PASSWORD='postgres'
 
 Tests
 
-Ejecutar la suite de pruebas con:
+Unitarios e integración viven en paquetes separados y se ejecutan con comandos distintos.
+
+| Suite | Comando | Qué corre |
+|---|---|---|
+| Unitaria | `./mvnw test` | `*Test.java` (rápido, sin Docker) |
+| Integración | `./mvnw verify -Pit` | `*IT.java` en `src/test/java/com/saas/integration` (Testcontainers) |
+| Completa | `./mvnw verify` | ambas |
 
 ```bash
 ./mvnw test
+./mvnw verify -Pit
 ```
+
+Los tests de integración levantan contenedores `postgres:16-alpine` y `mysql:8.4` con Testcontainers y validan las queries de `information_schema` de cada motor. En Windows, si Testcontainers no encuentra Docker, hay que iniciar el servicio `com.docker.service` o exportar `DOCKER_HOST`.
+
+Para correr la integración contra motores ya levantados en vez de contenedores efímeros:
+
+```bash
+./mvnw verify -Pit -Dit.postgres.url=jdbc:postgresql://localhost:5432/saas_test -Dit.mysql.url=jdbc:mysql://localhost:3306/saas_test
+```
+
+Si no hay Docker disponible ni se pasan esas URLs, los tests de integración se omiten (`[TEST OMITIDO]`) en lugar de romper la build.
 
 Notas importantes
 - Se movió el enum `UsuarioRol` al paquete `com.saas.report.identity.domain.user` para evitar duplicación entre módulos. El paquete `identity` actúa como un Shared Kernel pequeño. Archivo: `src/main/java/com/saas/report/identity/domain/user/UsuarioRol.java`.

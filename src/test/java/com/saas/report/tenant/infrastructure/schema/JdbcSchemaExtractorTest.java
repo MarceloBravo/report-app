@@ -7,6 +7,8 @@ import com.saas.report.tenant.domain.schema.EsquemaTenant;
 import com.saas.report.tenant.domain.schema.TablaEsquema;
 import com.saas.report.tenant.domain.valueobject.TenantDbConnectionUUID;
 import com.saas.report.tenant.domain.valueobject.TenantUUID;
+import com.saas.report.tenant.infrastructure.schema.strategy.MySqlSchemaQueryProviderStrategy;
+import com.saas.report.tenant.infrastructure.schema.strategy.PostgresqlSchemaQueryProviderStrategy;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -14,11 +16,15 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -32,6 +38,9 @@ class JdbcSchemaExtractorTest {
 
     @Mock
     private Connection connection;
+
+    @Mock
+    private DatabaseMetaData databaseMetaData;
 
     @Mock
     private PreparedStatement statement;
@@ -48,6 +57,8 @@ class JdbcSchemaExtractorTest {
                 TipoConexion.INTERNAL_SCHEMA, "public");
 
         when(appDataSource.getConnection()).thenReturn(connection);
+        when(connection.getMetaData()).thenReturn(databaseMetaData);
+        when(databaseMetaData.getDatabaseProductName()).thenReturn("PostgreSQL");
         when(connection.prepareStatement(anyString())).thenReturn(statement);
         when(statement.executeQuery()).thenReturn(resultSet);
         when(resultSet.next()).thenReturn(true, true, true, false);
@@ -84,5 +95,65 @@ class JdbcSchemaExtractorTest {
                     assertThat(columna.tablaReferenciada()).isEqualTo("clientes");
                     assertThat(columna.columnaReferenciada()).isEqualTo("id");
                 });
+    }
+
+    @Test
+    void usaLaQueryDeLaEstrategiaDePostgresql() throws Exception {
+        TenantDbConnection conexion = conexionCon(TipoConexion.INTERNAL_SCHEMA, "public");
+
+        prepararConexion("PostgreSQL");
+        when(connection.prepareStatement(anyString())).thenReturn(statement);
+        when(statement.executeQuery()).thenReturn(resultSet);
+        when(resultSet.next()).thenReturn(false);
+
+        JdbcSchemaExtractor extractor = new JdbcSchemaExtractor(credentialCipher, appDataSource);
+        extractor.extraer(conexion);
+
+        verify(connection).prepareStatement(
+                new PostgresqlSchemaQueryProviderStrategy().getSchemaQuery());
+        verify(statement).setString(1, "public");
+    }
+
+    @Test
+    void usaLaQueryDeLaEstrategiaDeMysql() throws Exception {
+        TenantDbConnection conexion = conexionCon(TipoConexion.INTERNAL_SCHEMA, "reporte");
+
+        prepararConexion("MySQL");
+        when(connection.prepareStatement(anyString())).thenReturn(statement);
+        when(statement.executeQuery()).thenReturn(resultSet);
+        when(resultSet.next()).thenReturn(false);
+
+        JdbcSchemaExtractor extractor = new JdbcSchemaExtractor(credentialCipher, appDataSource);
+        extractor.extraer(conexion);
+
+        verify(connection).prepareStatement(new MySqlSchemaQueryProviderStrategy().getSchemaQuery());
+        verify(statement).setString(1, "reporte");
+    }
+
+    @Test
+    void fallaConIllegalStateExceptionCuandoElMotorNoEsSoportado() throws Exception {
+        TenantDbConnection conexion = conexionCon(TipoConexion.INTERNAL_SCHEMA, "public");
+
+        prepararConexion("Oracle");
+
+        JdbcSchemaExtractor extractor = new JdbcSchemaExtractor(credentialCipher, appDataSource);
+
+        assertThatThrownBy(() -> extractor.extraer(conexion))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("No se pudo extraer el esquema de la BD del tenant 'report_db'")
+                .hasRootCauseMessage("Unsupported database type: Oracle");
+    }
+
+    private TenantDbConnection conexionCon(TipoConexion tipo, String schema) {
+        return new TenantDbConnection(
+                TenantDbConnectionUUID.generate(), TenantUUID.generate(),
+                "localhost", 3306, "report_db", "report_ro", "CIFRADO:secreto",
+                tipo, schema);
+    }
+
+    private void prepararConexion(String dbProduct) throws SQLException {
+        when(appDataSource.getConnection()).thenReturn(connection);
+        when(connection.getMetaData()).thenReturn(databaseMetaData);
+        when(databaseMetaData.getDatabaseProductName()).thenReturn(dbProduct);
     }
 }
