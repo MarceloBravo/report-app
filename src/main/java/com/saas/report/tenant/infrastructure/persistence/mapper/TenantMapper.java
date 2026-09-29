@@ -24,4 +24,5 @@ public final class TenantMapper {
                 entity.getNombreEmpresa(), entity.getSubdominioSlug(), entity.getEstado(),
                 entity.getFechaRegistro());
     }
+
 }

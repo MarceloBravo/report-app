@@ -8,15 +8,36 @@ import com.saas.report.tenant.infrastructure.persistence.mapper.TenantMapper;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+
 import java.util.Optional;
 
 @Component
 public class TenantJpaAdapter implements TenantRepository {
 
+    private static final int DEFAULT_PAGE_SIZE = 10;
+    private static final int MAX_PAGE_SIZE = 200;
+
     private final TenantJpaRepository repository;
 
     public TenantJpaAdapter(TenantJpaRepository repository) {
         this.repository = repository;
+    }
+
+    private String normalizar(String searchTextString) {
+        return (searchTextString == null || searchTextString.isBlank()) ? null : searchTextString.trim();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<Tenant> findAll(String searchTextString, Integer page, Integer size){
+        page = (page == null || page < 0) ? 0 : page;
+        size = (size == null || size < 1) ? DEFAULT_PAGE_SIZE : Math.min(size, MAX_PAGE_SIZE);
+        Pageable pageable = PageRequest.of(page, size);
+        return repository.findAll(normalizar(searchTextString), pageable)
+                .map(TenantMapper::toDomain);
     }
 
     @Override
