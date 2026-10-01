@@ -3,7 +3,8 @@ package com.saas.report.usuarios.domain.usuario;
 import com.saas.report.usuarios.domain.valueobject.UsuarioUUID;
 import com.saas.report.identity.domain.user.UsuarioRol;
 
-import java.util.List;
+import org.springframework.data.domain.Page;
+
 import java.util.Optional;
 
 public interface UsuarioRepository {
@@ -14,11 +15,7 @@ public interface UsuarioRepository {
 
     boolean existsByEmail(String email);
 
-    List<Usuario> findAll();
-
-    List<Usuario> findByRol(UsuarioRol rol);
-
-    List<Usuario> findByActivo(boolean activo);
+    Page<Usuario> findAll(UsuarioRol rol, Boolean activo, Integer page, Integer size);
 
     Usuario save(Usuario usuario);
 

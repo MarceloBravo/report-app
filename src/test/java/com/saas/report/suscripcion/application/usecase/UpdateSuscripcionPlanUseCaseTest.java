@@ -12,7 +12,9 @@ import com.saas.report.suscripcion.application.dto.ActualizarPlanRequest;
 import com.saas.report.suscripcion.application.dto.SuscripcionResponse;
 import com.saas.report.suscripcion.domain.Suscripcion;
 import com.saas.report.suscripcion.domain.SuscripcionEstado;
+import com.saas.report.suscripcion.domain.SuscripcionHistorialPrecio;
 import com.saas.report.suscripcion.domain.SuscripcionRepository;
+import com.saas.report.suscripcion.domain.valueobject.SuscripcionHistorialPrecioUUID;
 import com.saas.report.suscripcion.domain.valueobject.SuscripcionUUID;
 import com.saas.report.tenant.domain.valueobject.TenantUUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -84,6 +86,37 @@ class UpdateSuscripcionPlanUseCaseTest {
         assertThatThrownBy(() -> updateSuscripcionPlanUseCase.actualizarPlan(
                 SuscripcionUUID.generate(), new ActualizarPlanRequest(UUID.randomUUID())))
                 .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void registraElPrecioNuevoEnElHistorial() {
+        Suscripcion suscripcion = suscripcionActiva();
+        Plan planViejo = planActivo(new BigDecimal("9.90"));
+        Plan planNuevo = planActivo(new BigDecimal("19.90"));
+        LocalDate inicio = LocalDate.now().minusMonths(2);
+        PlanPrecio tramoViejo = planViejo.getPrecios().get(0);
+        suscripcion.addHistorialPrecio(new SuscripcionHistorialPrecio(
+                SuscripcionHistorialPrecioUUID.generate(), suscripcion, inicio, null,
+                tramoViejo.getPrecio(), tramoViejo.getPlanPrecioId()));
+
+        when(suscripcionRepository.findById(any(SuscripcionUUID.class))).thenReturn(Optional.of(suscripcion));
+        when(planRepository.findById(planNuevo.getPlanId())).thenReturn(Optional.of(planNuevo));
+        when(suscripcionRepository.save(any(Suscripcion.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        SuscripcionResponse response = updateSuscripcionPlanUseCase.actualizarPlan(
+                suscripcion.getSuscripcionId(), new ActualizarPlanRequest(planNuevo.getPlanId().getValue()));
+
+        assertThat(response.historialPrecios()).hasSize(2);
+        SuscripcionResponse.SuscripcionHistorialPrecioResponse cerrado = response.historialPrecios().get(0);
+        SuscripcionResponse.SuscripcionHistorialPrecioResponse vigente = response.historialPrecios().get(1);
+        assertThat(cerrado.periodoFin()).isEqualTo(LocalDate.now().minusDays(1));
+        assertThat(cerrado.vigente()).isFalse();
+        assertThat(cerrado.precioAplicado()).isEqualByComparingTo(new BigDecimal("9.90"));
+        assertThat(vigente.periodoInicio()).isEqualTo(LocalDate.now());
+        assertThat(vigente.periodoFin()).isNull();
+        assertThat(vigente.vigente()).isTrue();
+        assertThat(vigente.precioAplicado()).isEqualByComparingTo(new BigDecimal("19.90"));
     }
 
     @Test

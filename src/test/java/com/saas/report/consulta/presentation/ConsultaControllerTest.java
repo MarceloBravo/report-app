@@ -9,11 +9,14 @@ import com.saas.report.consulta.application.usecase.ListConsultasUseCase;
 import com.saas.report.consulta.application.usecase.RegisterConsultaUseCase;
 import com.saas.report.consulta.domain.exception.LimiteConsultasExcedidoException;
 import com.saas.report.shared.presentation.rest.GlobalExceptionHandler;
+import com.saas.report.tenant.domain.valueobject.TenantUUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -24,6 +27,8 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -131,7 +136,8 @@ class ConsultaControllerTest {
     void obtieneYListaConsultas() throws Exception {
         UUID id = UUID.randomUUID();
         when(getConsultaUseCase.obtener(any())).thenReturn(response());
-        when(listConsultasUseCase.listar(any())).thenReturn(List.of(response()));
+        when(listConsultasUseCase.listar(any(), any(), any()))
+                .thenReturn(new PageImpl<>(List.of(response()), PageRequest.of(0, 10), 1));
 
         mockMvc.perform(get("/consultas/{consultaId}", id))
                 .andExpect(status().isOk())
@@ -139,6 +145,50 @@ class ConsultaControllerTest {
 
         mockMvc.perform(get("/consultas").param("tenantId", UUID.randomUUID().toString()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].consultasEnPeriodo").value(3));
+                .andExpect(jsonPath("$.content[0].consultasEnPeriodo").value(3))
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.size").value(10))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.totalPages").value(1))
+                .andExpect(jsonPath("$.first").value(true))
+                .andExpect(jsonPath("$.last").value(true))
+                .andExpect(jsonPath("$.pageable").doesNotExist());
+    }
+
+    @Test
+    void listaElHistorialPaginando() throws Exception {
+        when(listConsultasUseCase.listar(any(), any(), any()))
+                .thenReturn(new PageImpl<>(List.of(response()), PageRequest.of(2, 5), 20));
+
+        mockMvc.perform(get("/consultas")
+                        .param("tenantId", UUID.randomUUID().toString())
+                        .param("page", "2")
+                        .param("size", "5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.page").value(2))
+                .andExpect(jsonPath("$.size").value(5))
+                .andExpect(jsonPath("$.totalElements").value(20))
+                .andExpect(jsonPath("$.totalPages").value(4))
+                .andExpect(jsonPath("$.first").value(false))
+                .andExpect(jsonPath("$.last").value(false));
+    }
+
+    @Test
+    void delegaTenantPageYSizeAlCasoDeUso() throws Exception {
+        when(listConsultasUseCase.listar(any(), any(), any()))
+                .thenReturn(new PageImpl<>(List.of(response()), PageRequest.of(0, 10), 1));
+
+        mockMvc.perform(get("/consultas").param("tenantId", UUID.randomUUID().toString()))
+                .andExpect(status().isOk());
+
+        verify(listConsultasUseCase).listar(any(TenantUUID.class), isNull(), isNull());
+    }
+
+    @Test
+    void devuelve400SiFaltaElTenantId() throws Exception {
+        mockMvc.perform(get("/consultas"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.message").value("Falta el parámetro obligatorio 'tenantId'"));
     }
 }

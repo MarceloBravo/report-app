@@ -9,10 +9,13 @@ import com.saas.report.usuarios.infrastructure.persistence.mapper.UsuarioMapper;
 import com.saas.report.identity.domain.user.UsuarioRol;
 import com.saas.report.tenant.infrastructure.persistence.TenantJpaEntity;
 import com.saas.report.tenant.infrastructure.persistence.TenantJpaRepository;
+import com.saas.report.shared.helpers.PaginationHelper;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -46,20 +49,10 @@ public class UsuarioJpaAdapter implements UsuarioRepository {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Usuario> findAll() {
-        return repository.findAll().stream().map(UsuarioMapper::toDomain).toList();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<Usuario> findByRol(UsuarioRol rol) {
-        return repository.findByRol(rol).stream().map(UsuarioMapper::toDomain).toList();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<Usuario> findByActivo(boolean activo) {
-        return repository.findByActivo(activo).stream().map(UsuarioMapper::toDomain).toList();
+    public Page<Usuario> findAll(UsuarioRol rol, Boolean activo, Integer page, Integer size) {
+        Pageable pageable = PaginationHelper.getPageable(page, size);
+        return repository.findAllByFiltros(rol, activo, pageable)
+                .map(UsuarioMapper::toDomain);
     }
 
     @Override

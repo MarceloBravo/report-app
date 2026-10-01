@@ -1,5 +1,6 @@
 package com.saas.report.usuarios.presentation;
 
+import com.saas.report.shared.presentation.dto.PageResponse;
 import com.saas.report.shared.presentation.rest.SecurityContextAuth;
 import com.saas.report.usuarios.application.dto.UpdateUsuarioRequest;
 import com.saas.report.usuarios.application.dto.UsuarioRequest;
@@ -25,7 +26,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
 import java.util.UUID;
 
 /**
@@ -35,6 +35,10 @@ import java.util.UUID;
  * que realiza cada operación se toma del contexto de seguridad
  * ({@link SecurityContextAuth}), no del cuerpo de la petición, para que el alta
  * quede auditada a nombre de quien la ejecutó.
+ *
+ * <p>El listado es paginado con los query params {@code page} y {@code size}, y
+ * acepta los filtros opcionales {@code rol} y {@code activo}, que se combinan
+ * entre sí.
  *
  * <p>Las rutas cuelgan de {@code /admin} y requieren los roles de plataforma
  * {@code PLATFORM_ADMIN} o {@code PLATFORM_USER}.
@@ -77,20 +81,25 @@ public class UsuarioController {
     }
 
     /**
-     * Lista usuarios aplicando filtros opcionales.
+     * Lista los usuarios paginados aplicando filtros opcionales.
      *
-     * @param rol filtro por rol; {@code null} devuelve todos
-     * @param activo filtro por estado; {@code null} devuelve tanto activos como inactivos
-     * @return la lista de usuarios que cumplen los filtros
+     * <p>Los filtros se combinan: pasar ambos filtra por rol <i>y</i> por estado.
+     *
+     * @param rol    filtro por rol; si no se envía no filtra
+     * @param activo filtro por estado; si no se envía no filtra
+     * @param page   número de página, empezando en 0; null o negativo se trata como 0
+     * @param size   cantidad de elementos por página; null o no positivo usa 10 y
+     *               el máximo es 200
+     * @return la página de usuarios que cumple los filtros
      */
     @GetMapping
-    public ResponseEntity<List<UsuarioResponse>> list(
+    public ResponseEntity<PageResponse<UsuarioResponse>> list(
             @RequestParam(required = false) UsuarioRol rol,
-            @RequestParam(required = false) Boolean activo) {
-        List<UsuarioResponse> response = listUsuariosUseCase.listar(rol, activo).stream()
-                .map(UsuarioResponse::from)
-                .toList();
-        return ResponseEntity.ok(response);
+            @RequestParam(required = false) Boolean activo,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size) {
+        return ResponseEntity.ok(
+                PageResponse.from(listUsuariosUseCase.listar(rol, activo, page, size)));
     }
 
     /**

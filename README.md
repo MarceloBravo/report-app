@@ -108,6 +108,7 @@ Convenciones transversales:
 | POST | `/auth/admin/register` | ADMIN/PLATFORM_* | Alta de usuario con rol explícito |
 | POST | `/self-serve/registro` | público (rate limit) | Alta self-serve: tenant + admin + plan free + conexión cifrada |
 | GET | `/self-serve/verificar-email?token=` | público | Valida el token y marca el email como verificado |
+| GET | `/admin/tenants?page=&size=&search=` | PLATFORM_* | Listado paginado de tenants; `search` filtra por nombre, subdominio o estado |
 | GET | `/admin/tenants/{id}` | PLATFORM_* | Consulta de tenant |
 | POST | `/admin/tenants/{id}/activate\|suspend\|cancel` | PLATFORM_* | Cambio de estado del tenant |
 | POST/GET | `/admin/plans` | PLATFORM_* | Alta y consulta de planes |
@@ -117,7 +118,7 @@ Convenciones transversales:
 | POST/GET/PUT/DELETE | `/admin/usuarios` | PLATFORM_* | CRUD de usuarios (filtros `rol`, `activo`) |
 | POST | `/consultas/convertir` | autenticado | NL → SQL delegando en el microservicio de IA |
 | POST | `/consultas` | autenticado | Registra la consulta; valida suscripción y cuota mensual |
-| GET | `/consultas?tenantId=` | autenticado | Historial de consultas del tenant |
+| GET | `/consultas?tenantId=&page=&size=` | autenticado | Historial paginado de consultas del tenant, de la más reciente a la más antigua |
 | GET | `/actuator/**` | público | Salud y métricas |
 
 Documentación interactiva (perfil `dev`): <http://localhost:8080/swagger-ui.html>

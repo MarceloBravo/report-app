@@ -89,7 +89,7 @@ class TenantControllerTest {
         when(listTenantUseCase.list(any(), any(), any()))
                 .thenReturn(new PageImpl<>(List.of(response()), PageRequest.of(0, 10), 1));
 
-        mockMvc.perform(get("/admin/tenants/{page}/{size}", 0, 10))
+        mockMvc.perform(get("/admin/tenants").param("page", "0").param("size", "10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].nombreEmpresa").value("Acme"))
                 .andExpect(jsonPath("$.page").value(0))
@@ -104,11 +104,24 @@ class TenantControllerTest {
     }
 
     @Test
+    void listaSinParametrosUsaLosValoresPorDefecto() throws Exception {
+        when(listTenantUseCase.list(any(), any(), any()))
+                .thenReturn(new PageImpl<>(List.of(response()), PageRequest.of(0, 10), 1));
+
+        mockMvc.perform(get("/admin/tenants"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].nombreEmpresa").value("Acme"));
+
+        verify(listTenantUseCase).list(null, null, null);
+    }
+
+    @Test
     void listaConSearchText() throws Exception {
         when(listTenantUseCase.list(any(), any(), any()))
                 .thenReturn(new PageImpl<>(List.of(response()), PageRequest.of(0, 10), 15));
 
-        mockMvc.perform(get("/admin/tenants/{page}/{size}/{searchTextString}", 0, 10, "acme"))
+        mockMvc.perform(get("/admin/tenants")
+                        .param("search", "acme").param("page", "0").param("size", "10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.page").value(0))
                 .andExpect(jsonPath("$.totalElements").value(15))

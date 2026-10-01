@@ -1,5 +1,6 @@
 package com.saas.report.consulta.presentation;
 
+import com.saas.report.shared.presentation.dto.PageResponse;
 import com.saas.report.consulta.application.dto.ConsultaRequest;
 import com.saas.report.consulta.application.dto.ConsultaResponse;
 import com.saas.report.consulta.application.dto.ConvertirConsultaRequest;
@@ -20,14 +21,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
 import java.util.UUID;
 
 /**
  * Registro y consulta del historial de consultas de reportes.
  *
  * <p>El historial pertenece a un tenant, que se toma del cuerpo en el registro y
- * del parámetro {@code tenantId} en el listado. Las rutas requieren autenticación.
+ * del parámetro {@code tenantId} en el listado. Ese listado es paginado con los
+ * query params {@code page} y {@code size}. Las rutas requieren autenticación.
  */
 @RestController
 @RequestMapping("/consultas")
@@ -84,14 +85,19 @@ public class ConsultaController {
     }
 
     /**
-     * Lista el historial de consultas de un tenant.
+     * Lista el historial de consultas de un tenant, de la más reciente a la más antigua.
      *
      * @param tenantId tenant cuyas consultas se quieren listar
-     * @return la lista de consultas del tenant
+     * @param page     número de página, empezando en 0; null o negativo se trata como 0
+     * @param size     cantidad de elementos por página; null o no positivo usa 10 y
+     *                 el máximo es 200
+     * @return la página de consultas del tenant
      */
     @GetMapping
-    public ResponseEntity<List<ConsultaResponse>> historial(@RequestParam UUID tenantId) {
-        return ResponseEntity.ok(listConsultasUseCase.listar(new TenantUUID(tenantId)));
+    public ResponseEntity<PageResponse<ConsultaResponse>> historial(@RequestParam UUID tenantId,
+                                                                     @RequestParam(required = false) Integer page,
+                                                                     @RequestParam(required = false) Integer size) {
+        return ResponseEntity.ok(
+                PageResponse.from(listConsultasUseCase.listar(new TenantUUID(tenantId), page, size)));
     }
-
-    }
+}

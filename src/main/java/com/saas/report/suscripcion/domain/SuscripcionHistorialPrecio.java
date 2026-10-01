@@ -1,6 +1,7 @@
 package com.saas.report.suscripcion.domain;
 
 import com.saas.report.shared.exception.InvalidAmountException;
+import com.saas.report.shared.exception.InvalidStatusException;
 import com.saas.report.plan.domain.valueobject.PlanPrecioUUID;
 import com.saas.report.suscripcion.domain.valueobject.SuscripcionHistorialPrecioUUID;
 
@@ -14,7 +15,7 @@ public class SuscripcionHistorialPrecio {
     private final SuscripcionHistorialPrecioUUID historialId;
     private final Suscripcion suscripcion;
     private final LocalDate periodoInicio;
-    private final LocalDate periodoFin;
+    private LocalDate periodoFin;
     private final BigDecimal precioAplicado;
     private final PlanPrecioUUID planPrecioId;
 
@@ -69,6 +70,29 @@ public class SuscripcionHistorialPrecio {
 
     public PlanPrecioUUID getPlanPrecioId() {
         return planPrecioId;
+    }
+
+    /**
+     * Cierra el período abierto en la fecha indicada.
+     *
+     * <p>Se invoca cuando la suscripción cambia de plan o se cancela: el tramo
+     * deja de estar vigente y el siguiente período empieza al día siguiente.
+     *
+     * @param fecha fin del período; no puede ser anterior al inicio
+     * @throws IllegalArgumentException si la fecha es nula o anterior al inicio
+     * @throws InvalidStatusException si el período ya estaba cerrado
+     */
+    public void cerrarPeriodo(LocalDate fecha) {
+        if (this.periodoFin != null) {
+            throw new InvalidStatusException("El período de precio ya está cerrado.");
+        }
+        if (fecha == null) {
+            throw new IllegalArgumentException("El fin del período no puede ser nulo");
+        }
+        if (fecha.isBefore(this.periodoInicio)) {
+            throw new IllegalArgumentException("El fin del período no puede ser anterior al inicio");
+        }
+        this.periodoFin = fecha;
     }
 
     public boolean estaVigente() {

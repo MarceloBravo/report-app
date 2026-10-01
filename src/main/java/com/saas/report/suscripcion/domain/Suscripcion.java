@@ -1,5 +1,6 @@
 package com.saas.report.suscripcion.domain;
 
+import com.saas.report.suscripcion.domain.valueobject.SuscripcionHistorialPrecioUUID;
 import com.saas.report.suscripcion.domain.valueobject.SuscripcionUUID;
 import com.saas.report.plan.domain.Plan;
 import com.saas.report.plan.domain.PlanPrecio;
@@ -109,6 +110,17 @@ public class Suscripcion {
         this.estado = SuscripcionEstado.SUSPENDED;
     }
 
+    /**
+     * Cambia el plan contratado y registra el cambio en el historial de precios.
+     *
+     * <p>El período de precio vigente se cierra el día anterior al cambio y se abre
+     * uno nuevo desde la fecha del cambio, con el precio del tramo del plan de destino
+     * que corresponde a los meses ya contrato.
+     *
+     * @param nuevoPlan plan al que se mueve la suscripción; debe estar activo
+     * @throws IllegalArgumentException si el plan es nulo o si ya es el plan actual
+     * @throws InvalidStatusException si el plan de destino está inactivo
+     */
     public void actualizarPlan(Plan nuevoPlan) {
         if (nuevoPlan == null) {
             throw new IllegalArgumentException("El nuevo plan no puede ser nulo");
@@ -116,7 +128,33 @@ public class Suscripcion {
         if (!nuevoPlan.isActivo()) {
             throw new InvalidStatusException("El plan de destino no está activo.");
         }
+        if (this.planId.equals(nuevoPlan.getPlanId())) {
+            throw new IllegalArgumentException("La suscripción ya está contratada con ese plan.");
+        }
+        registrarCambioDePrecio(nuevoPlan, LocalDate.now());
         this.planId = nuevoPlan.getPlanId();
+    }
+
+    /**
+     * Cierra el período de precio vigente y abre uno nuevo con el precio del tramo
+     * que corresponde a los meses contrados de la suscripción.
+     *
+     * @param nuevoPlan plan de destino, ya validado como activo
+     * @param fecha     fecha del cambio de plan
+     */
+    private void registrarCambioDePrecio(Plan nuevoPlan, LocalDate fecha) {
+        this.historialPrecios.stream()
+                .filter(h -> h.getPeriodoFin() == null)
+                .forEach(h -> h.cerrarPeriodo(fecha.minusDays(1)));
+
+        PlanPrecio tramo = nuevoPlan.getPrecioParaMes(Math.max(getMesesContratados(), 1));
+        this.historialPrecios.add(new SuscripcionHistorialPrecio(
+                SuscripcionHistorialPrecioUUID.generate(),
+                this,
+                fecha,
+                null,
+                tramo.getPrecio(),
+                tramo.getPlanPrecioId()));
     }
 
     public List<SuscripcionHistorialPrecio> getHistorialPrecios() {

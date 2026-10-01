@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
@@ -23,9 +24,10 @@ import java.util.UUID;
  * <p>Permite consultar el listado paginado, con o sin filtro de búsqueda, y
  * gestionar el ciclo de vida del tenant: activación, suspensión y cancelación.
  *
- * <p>El listado se expone paginado en la propia URL ({@code /{page}/{size}}) en
- * lugar de con parámetros de query. Todas las rutas requieren los roles de
- * plataforma {@code PLATFORM_ADMIN} o {@code PLATFORM_USER}.
+ * <p>El listado se expone paginado con parámetros de query ({@code page},
+ * {@code size} y el filtro opcional {@code search}) sobre {@code GET /admin/tenants}.
+ * Todas las rutas requieren los roles de plataforma {@code PLATFORM_ADMIN} o
+ * {@code PLATFORM_USER}.
  */
 @RestController
 @RequestMapping("/admin/tenants")
@@ -50,35 +52,22 @@ public class TenantController {
     }
 
     /**
-     * Lista los tenants paginados, sin filtro de búsqueda.
+     * Lista los tenants paginados, con filtro de búsqueda opcional.
      *
-     * @param page número de página, empezando en 0
-     * @param size cantidad de elementos por página
-     * @return la página de tenants solicitada
+     * @param search texto libre a contrastar contra nombre, subdominio o estado;
+     *               si no se envía se listan todos
+     * @param page   número de página, empezando en 0; null o negativo se trata como 0
+     * @param size   cantidad de elementos por página; null o no positivo usa 10 y
+     *               el máximo es 200
+     * @return la página de tenants que cumple el filtro
      */
-    @GetMapping("/{page}/{size}")
+    @GetMapping
     public ResponseEntity<PageResponse<TenantResponse>> list(
-            @PathVariable Integer page,
-            @PathVariable Integer size
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size
     ) {
-        return ResponseEntity.ok(PageResponse.from(listTenantUseCase.list(null, page, size)));
-    }
-
-    /**
-     * Lista los tenants paginados aplicando un filtro de búsqueda de texto libre.
-     *
-     * @param searchTextString texto a contrastar contra los datos del tenant
-     * @param page            número de página, empezando en 0
-     * @param size            cantidad de elementos por página
-     * @return la página de tenants que coinciden con el filtro
-     */
-    @GetMapping("/{page}/{size}/{searchTextString}")
-    public ResponseEntity<PageResponse<TenantResponse>> list(
-            @PathVariable String searchTextString,
-            @PathVariable Integer page,
-            @PathVariable Integer size
-    ) {
-        return ResponseEntity.ok(PageResponse.from(listTenantUseCase.list(searchTextString, page, size)));
+        return ResponseEntity.ok(PageResponse.from(listTenantUseCase.list(search, page, size)));
     }
 
     /**

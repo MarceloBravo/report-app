@@ -7,11 +7,14 @@ import com.saas.report.consulta.infrastructure.persistence.ConsultaHistorialJpaR
 import com.saas.report.consulta.infrastructure.persistence.mapper.ConsultaHistorialMapper;
 import com.saas.report.tenant.domain.valueobject.TenantUUID;
 
+import com.saas.report.shared.helpers.PaginationHelper;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -31,10 +34,10 @@ public class ConsultaHistorialJpaAdapter implements ConsultaHistorialRepository 
 
     @Override
     @Transactional(readOnly = true)
-    public List<ConsultaHistorial> findByTenantId(TenantUUID tenantId) {
-        return repository.findAllByTenantIdOrderByFechaConsultaDesc(tenantId.getValue()).stream()
-                .map(ConsultaHistorialMapper::toDomain)
-                .toList();
+    public Page<ConsultaHistorial> findByTenantId(TenantUUID tenantId, Integer page, Integer size) {
+        Pageable pageable = PaginationHelper.getPageable(page, size);
+        return repository.findAllByTenantIdOrderByFechaConsultaDesc(tenantId.getValue(), pageable)
+                .map(ConsultaHistorialMapper::toDomain);
     }
 
     @Override

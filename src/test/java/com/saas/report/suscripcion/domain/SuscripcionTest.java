@@ -32,6 +32,13 @@ class SuscripcionTest {
                 new PlanLimiteConsultasMensuales(100), true, List.of(tramo));
     }
 
+    private Plan planConPrecio(BigDecimal precio) {
+        PlanUUID planId = PlanUUID.generate();
+        PlanPrecio tramo = new PlanPrecio(PlanPrecioUUID.generate(), planId, 1, null, precio);
+        return new Plan(planId, "PRO", "Plan pro", new PlanMaxUsuarios(20),
+                new PlanLimiteConsultasMensuales(1000), true, List.of(tramo));
+    }
+
     private Suscripcion suscripcionActiva() {
         return new Suscripcion(SuscripcionUUID.generate(), tenant(), planConTramoFijo().getPlanId(), LocalDate.now(),
                 SuscripcionEstado.ACTIVE, LocalDate.now().plusMonths(1));
@@ -175,6 +182,58 @@ class SuscripcionTest {
         suscripcion.actualizarPlan(nuevoPlan);
 
         assertThat(suscripcion.getPlanId()).isEqualTo(nuevoPlan.getPlanId());
+    }
+
+    @Test
+    void actualizarPlanCierraElPeriodoVigenteYAbreUnoNuevo() {
+        Plan planAnterior = planConTramoFijo();
+        Plan planNuevo = planConPrecio(new BigDecimal("19.90"));
+        LocalDate hoy = LocalDate.now();
+        Suscripcion suscripcion = new Suscripcion(SuscripcionUUID.generate(), tenant(), planAnterior.getPlanId(),
+                hoy.minusMonths(2), SuscripcionEstado.ACTIVE, hoy.plusMonths(1));
+        PlanPrecio tramoAnterior = planAnterior.getPrecios().get(0);
+        suscripcion.addHistorialPrecio(new SuscripcionHistorialPrecio(
+                SuscripcionHistorialPrecioUUID.generate(), suscripcion, hoy.minusMonths(2), null,
+                tramoAnterior.getPrecio(), tramoAnterior.getPlanPrecioId()));
+
+        suscripcion.actualizarPlan(planNuevo);
+
+        List<SuscripcionHistorialPrecio> historial = suscripcion.getHistorialPrecios();
+        assertThat(historial).hasSize(2);
+        assertThat(historial.get(0).getPeriodoFin()).isEqualTo(hoy.minusDays(1));
+        assertThat(historial.get(0).estaVigente()).isFalse();
+        assertThat(historial.get(1).getPeriodoInicio()).isEqualTo(hoy);
+        assertThat(historial.get(1).getPeriodoFin()).isNull();
+        assertThat(historial.get(1).getPrecioAplicado()).isEqualByComparingTo(new BigDecimal("19.90"));
+        assertThat(historial.get(1).getPlanPrecioId()).isEqualTo(planNuevo.getPrecios().get(0).getPlanPrecioId());
+        assertThat(historial.get(1).estaVigente()).isTrue();
+    }
+
+    @Test
+    void actualizarPlanAplicaElTramoQueCorrespondeALosMesesContratados() {
+        PlanUUID planId = PlanUUID.generate();
+        Plan planNuevo = new Plan(planId, "PRO", "Plan pro", new PlanMaxUsuarios(20),
+                new PlanLimiteConsultasMensuales(1000), true,
+                List.of(new PlanPrecio(PlanPrecioUUID.generate(), planId, 1, 2, new BigDecimal("10.00")),
+                        new PlanPrecio(PlanPrecioUUID.generate(), planId, 3, null, new BigDecimal("5.00"))));
+        Suscripcion suscripcion = new Suscripcion(SuscripcionUUID.generate(), tenant(), planConTramoFijo().getPlanId(),
+                LocalDate.now().minusMonths(4), SuscripcionEstado.ACTIVE, LocalDate.now().plusMonths(1));
+
+        suscripcion.actualizarPlan(planNuevo);
+
+        assertThat(suscripcion.getHistorialPrecios()).hasSize(1);
+        assertThat(suscripcion.getHistorialPrecios().get(0).getPrecioAplicado())
+                .isEqualByComparingTo(new BigDecimal("5.00"));
+    }
+
+    @Test
+    void actualizarAlMismoPlanLanzaExcepcion() {
+        Plan plan = planConTramoFijo();
+        Suscripcion suscripcion = new Suscripcion(SuscripcionUUID.generate(), tenant(), plan.getPlanId(),
+                LocalDate.now(), SuscripcionEstado.ACTIVE, LocalDate.now().plusMonths(1));
+
+        assertThatThrownBy(() -> suscripcion.actualizarPlan(plan))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test

@@ -3,6 +3,7 @@ package com.saas.report.consulta.infrastructure.persistence;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,7 +13,10 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "consulta_historial")
+@Table(name = "consulta_historial", indexes = {
+            @Index(name = "idx_consulta_historial_tenant_fecha",
+                    columnList = "tenant_id, fecha_consulta")
+    })
 @Getter
 @Setter
 @NoArgsConstructor
