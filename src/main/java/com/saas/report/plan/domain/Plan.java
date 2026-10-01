@@ -3,6 +3,7 @@ package com.saas.report.plan.domain;
 import com.saas.report.plan.domain.valueobject.PlanUUID;
 import com.saas.report.plan.domain.valueobject.PlanLimiteConsultasMensuales;
 import com.saas.report.plan.domain.valueobject.PlanMaxUsuarios;
+import com.saas.report.shared.exception.InvalidStatusException;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -15,7 +16,7 @@ public class Plan {
     private final String descripcion;
     private final PlanMaxUsuarios maxUsuarios;
     private final PlanLimiteConsultasMensuales limiteConsultasMensuales;
-    private final boolean activo;
+    private boolean activo;
     private final List<PlanPrecio> precios;
 
     public Plan(PlanUUID planId, String nombrePlan, String descripcion, PlanMaxUsuarios maxUsuarios,
@@ -112,5 +113,19 @@ public class Plan {
 
     public List<PlanPrecio> getPrecios() {
         return Collections.unmodifiableList(precios);
+    }
+
+    public void activar() {
+        if (this.activo) {
+            throw new InvalidStatusException("El plan ya está activo.");
+        }
+        this.activo = true;
+    }
+
+    public void desactivar() {
+        if (!this.activo) {
+            throw new InvalidStatusException("El plan ya está inactivo.");
+        }
+        this.activo = false;
     }
 }

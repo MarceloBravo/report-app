@@ -124,7 +124,7 @@ src/main/java/com/saas/report/
 ├── plan/                                        # ━━ Módulo de Planes de Suscripción y Pricing ━━
 │   │
 │   ├── domain/
-│   │   ├── Plan.java                            # Aggregate root: plan con nombre, descripción, maxUsuarios, limiteConsultas, activo, tramos de precio
+│   │   ├── Plan.java                            # Aggregate root: plan con nombre, descripción, maxUsuarios, limiteConsultas, activo, tramos de precio; activar()/desactivar()
 │   │   ├── PlanPrecio.java                      # Value/entity: tramo de precio (mesDesde/mesHasta, precio) con lógica aplicaParaMes()
 │   │   ├── PlanRepository.java                  # Interfaz de repositorio: findById, findAll, existsByNombrePlan, save
 │   │   ├── valueobject/
@@ -139,7 +139,9 @@ src/main/java/com/saas/report/
 │   │   ├── usecase/
 │   │   │   ├── CreatePlanUseCase.java           # Crea plan: valida nombre único, agrega tramos de precio
 │   │   │   ├── GetPlanUseCase.java              # Consulta plan por ID
-│   │   │   └── ListPlansUseCase.java            # Lista todos los planes
+│   │   │   ├── ListPlansUseCase.java            # Lista todos los planes
+│   │   │   ├── ActivatePlanUseCase.java         # Reactiva un plan inactivo (activo = true)
+│   │   │   └── DeactivatePlanUseCase.java       # Baja lógica (activo = false); bloquea el plan gratuito del onboarding
 │   │   └── dto/
 │   │       ├── PlanRequest.java                 # Record con @Valid: entrada con lista anidada de precios
 │   │       ├── PlanResponse.java                # Record + static from(Plan): respuesta con esIlimitado
@@ -147,7 +149,7 @@ src/main/java/com/saas/report/
 │   │       └── PlanPrecioResponse.java          # Record + static from(PlanPrecio): respuesta del tramo
 │   │
 │   ├── presentation/
-│   │   └── PlanController.java                  # @RestController /admin/plans: crear, obtener, listar (solo admin)
+│   │   └── PlanController.java                  # @RestController /admin/plans: crear, obtener, listar (PLATFORM_*) y activar/desactivar (solo PLATFORM_ADMIN)
 │   │
 │   └── infrastructure/
 │       └── persistence/
@@ -178,14 +180,17 @@ src/main/java/com/saas/report/
 │   │   │   ├── CreateSuscripcionUseCase.java    # Crea suscripción: valida plan activo, previene duplicados, semilla historial precio
 │   │   │   ├── UpdateSuscripcionPlanUseCase.java # Cambia plan de suscripción existente, crea nuevo registro de historial
 │   │   │   ├── SuspendSuscripcionUseCase.java   # Suspende suscripción
-│   │   │   └── CancelSuscripcionUseCase.java    # Cancela suscripción (vigente=false)
+│   │   │   ├── CancelSuscripcionUseCase.java    # Cancela suscripción (vigente=false)
+│   │   │   └── GetMiSuscripcionUseCase.java     # Devuelve la suscripción más reciente del tenant junto con los datos de su plan
 │   │   └── dto/
 │   │       ├── SuscripcionRequest.java          # Record con @Valid: entrada (tenantId, planId, fechaInicio)
 │   │       ├── SuscripcionResponse.java         # Record + historial anidado: respuesta completa
+│   │       ├── MiSuscripcionResponse.java       # Record + static from(Suscripcion, Plan): suscripción y plan anidados
 │   │       └── ActualizarPlanRequest.java       # Record: solicitud de cambio de plan (nuevo planId)
 │   │
 │   ├── presentation/
-│   │   └── SuscripcionController.java           # @RestController /admin/suscripciones: crear, cancelar, suspender, cambiar plan (solo admin)
+│   │   ├── SuscripcionController.java           # @RestController /admin/suscripciones: crear, cancelar, suspender, cambiar plan (solo admin)
+│   │   └── MiSuscripcionController.java         # @RestController /suscripcion: GET /mia, resuelve el tenant desde el principal JWT (solo ADMIN del tenant)
 │   │
 │   └── infrastructure/
 │       └── persistence/
@@ -305,9 +310,10 @@ src/main/java/com/saas/report/
     │
     └── presentation/
         ├── rest/
-        │   └── GlobalExceptionHandler.java      # @RestControllerAdvice: mapea excepciones → ErrorResponse con HTTP status adecuado
+        │   ├── GlobalExceptionHandler.java      # @RestControllerAdvice: mapea excepciones → ErrorResponse con HTTP status adecuado
+        │   └── SecurityContextAuth.java         # Utilidad estática: extrae AuthPrincipal y tenantId del SecurityContext (403 si no hay tenant)
         └── dto/
-            └── ErrorResponse.java               # Record: respuesta de error estandarizada (status, error, message, path, timestamp)
+            ├── ErrorResponse.java               # Record: respuesta de error estandarizada (status, error, message, path, timestamp)
 ```
 
 ## Resumen Estadístico

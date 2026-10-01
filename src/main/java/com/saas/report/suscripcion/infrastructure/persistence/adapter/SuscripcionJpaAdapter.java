@@ -10,6 +10,7 @@ import com.saas.report.tenant.domain.valueobject.TenantUUID;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -31,6 +32,14 @@ public class SuscripcionJpaAdapter implements SuscripcionRepository {
     @Transactional(readOnly = true)
     public Optional<Suscripcion> findByTenantIdAndEstado(TenantUUID tenantId, SuscripcionEstado estado) {
         return repository.findByTenantIdAndEstado(tenantId.getValue(), estado).map(SuscripcionMapper::toDomain);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Suscripcion> findByTenantId(TenantUUID tenantId) {
+        return repository.findByTenantIdOrderByFechaInicioDesc(tenantId.getValue()).stream()
+                .map(SuscripcionMapper::toDomain)
+                .toList();
     }
 
     @Override

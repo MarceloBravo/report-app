@@ -3,10 +3,13 @@ package com.saas.report.plan.presentation;
 import com.saas.report.plan.application.dto.PlanPrecioResponse;
 import com.saas.report.plan.application.dto.PlanRequest;
 import com.saas.report.plan.application.dto.PlanResponse;
+import com.saas.report.plan.application.usecase.ActivatePlanUseCase;
 import com.saas.report.plan.application.usecase.CreatePlanUseCase;
+import com.saas.report.plan.application.usecase.DeactivatePlanUseCase;
 import com.saas.report.plan.application.usecase.GetPlanUseCase;
 import com.saas.report.plan.application.usecase.ListPlansUseCase;
 import com.saas.report.plan.domain.exception.PlanNombreAlreadyExistsException;
+import com.saas.report.shared.exception.InvalidStatusException;
 import com.saas.report.shared.presentation.rest.GlobalExceptionHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,6 +44,12 @@ class PlanControllerTest {
     @Mock
     private ListPlansUseCase listPlansUseCase;
 
+    @Mock
+    private ActivatePlanUseCase activatePlanUseCase;
+
+    @Mock
+    private DeactivatePlanUseCase deactivatePlanUseCase;
+
     private MockMvc mockMvc;
 
     @BeforeEach
@@ -48,7 +57,8 @@ class PlanControllerTest {
         LocalValidatorFactoryBean validator = new LocalValidatorFactoryBean();
         validator.afterPropertiesSet();
         mockMvc = MockMvcBuilders
-                .standaloneSetup(new PlanController(createPlanUseCase, getPlanUseCase, listPlansUseCase))
+                .standaloneSetup(new PlanController(createPlanUseCase, getPlanUseCase, listPlansUseCase,
+                        activatePlanUseCase, deactivatePlanUseCase))
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .setValidator(validator)
                 .build();
@@ -56,6 +66,11 @@ class PlanControllerTest {
 
     private PlanResponse response() {
         return new PlanResponse(UUID.randomUUID(), "PRO", "Plan pro", 20, 1000, true, false,
+                List.of(new PlanPrecioResponse(UUID.randomUUID(), 1, null, new BigDecimal("10.00"))));
+    }
+
+    private PlanResponse response(Boolean activo) {
+        return new PlanResponse(UUID.randomUUID(), "PRO", "Plan pro", 20, 1000, activo, false,
                 List.of(new PlanPrecioResponse(UUID.randomUUID(), 1, null, new BigDecimal("10.00"))));
     }
 
@@ -107,5 +122,33 @@ class PlanControllerTest {
         mockMvc.perform(get("/admin/plans"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].nombrePlan").value("PRO"));
+    }
+
+    @Test
+    void activaElPlanYDevuelve200() throws Exception {
+        when(activatePlanUseCase.activar(any())).thenReturn(response(true));
+
+        mockMvc.perform(post("/admin/plans/{planId}/activar", UUID.randomUUID()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.activo").value(true));
+    }
+
+    @Test
+    void desactivaElPlanYDevuelve200() throws Exception {
+        when(deactivatePlanUseCase.desactivar(any())).thenReturn(response(false));
+
+        mockMvc.perform(post("/admin/plans/{planId}/desactivar", UUID.randomUUID()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.activo").value(false));
+    }
+
+    @Test
+    void devuelve400SiNoSePuedeCambiarElEstadoDelPlan() throws Exception {
+        when(deactivatePlanUseCase.desactivar(any()))
+                .thenThrow(new InvalidStatusException("El plan gratuito no se puede desactivar"));
+
+        mockMvc.perform(post("/admin/plans/{planId}/desactivar", UUID.randomUUID()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400));
     }
 }

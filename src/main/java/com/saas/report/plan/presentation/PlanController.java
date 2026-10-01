@@ -2,7 +2,9 @@ package com.saas.report.plan.presentation;
 
 import com.saas.report.plan.application.dto.PlanRequest;
 import com.saas.report.plan.application.dto.PlanResponse;
+import com.saas.report.plan.application.usecase.ActivatePlanUseCase;
 import com.saas.report.plan.application.usecase.CreatePlanUseCase;
+import com.saas.report.plan.application.usecase.DeactivatePlanUseCase;
 import com.saas.report.plan.application.usecase.GetPlanUseCase;
 import com.saas.report.plan.application.usecase.ListPlansUseCase;
 import com.saas.report.plan.domain.valueobject.PlanUUID;
@@ -26,13 +28,19 @@ public class PlanController {
     private final CreatePlanUseCase createPlanUseCase;
     private final GetPlanUseCase getPlanUseCase;
     private final ListPlansUseCase listPlansUseCase;
+    private final ActivatePlanUseCase activatePlanUseCase;
+    private final DeactivatePlanUseCase deactivatePlanUseCase;
 
     public PlanController(CreatePlanUseCase createPlanUseCase,
                           GetPlanUseCase getPlanUseCase,
-                          ListPlansUseCase listPlansUseCase) {
+                          ListPlansUseCase listPlansUseCase,
+                          ActivatePlanUseCase activatePlanUseCase,
+                          DeactivatePlanUseCase deactivatePlanUseCase) {
         this.createPlanUseCase = createPlanUseCase;
         this.getPlanUseCase = getPlanUseCase;
         this.listPlansUseCase = listPlansUseCase;
+        this.activatePlanUseCase = activatePlanUseCase;
+        this.deactivatePlanUseCase = deactivatePlanUseCase;
     }
 
     @PostMapping
@@ -49,5 +57,15 @@ public class PlanController {
     @GetMapping
     public ResponseEntity<List<PlanResponse>> list() {
         return ResponseEntity.ok(listPlansUseCase.listar());
+    }
+
+    @PostMapping("/{planId}/activar")
+    public ResponseEntity<PlanResponse> activate(@PathVariable UUID planId) {
+        return ResponseEntity.ok(activatePlanUseCase.activar(new PlanUUID(planId)));
+    }
+
+    @PostMapping("/{planId}/desactivar")
+    public ResponseEntity<PlanResponse> deactivate(@PathVariable UUID planId) {
+        return ResponseEntity.ok(deactivatePlanUseCase.desactivar(new PlanUUID(planId)));
     }
 }

@@ -1,6 +1,5 @@
 package com.saas.report.auth.presentation;
 
-import com.saas.report.auth.application.AuthPrincipal;
 import com.saas.report.auth.application.dto.LoginRequest;
 import com.saas.report.auth.application.dto.RefreshTokenRequest;
 import com.saas.report.auth.application.dto.RegisterRequest;
@@ -10,7 +9,7 @@ import com.saas.report.auth.application.usecase.LogoutUseCase;
 import com.saas.report.auth.application.usecase.RefreshTokenUseCase;
 import com.saas.report.auth.application.usecase.RegisterUseCase;
 import com.saas.report.identity.domain.user.UsuarioRol;
-import com.saas.report.shared.exception.ForbiddenException;
+import com.saas.report.shared.presentation.rest.SecurityContextAuth;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -52,14 +51,14 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<Void> register(@Valid @RequestBody RegisterRequest request) {
-        registerUseCase.registrar(request, UsuarioRol.VIEWER, principalActual());
+        registerUseCase.registrar(request, UsuarioRol.VIEWER, SecurityContextAuth.principalActual());
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @PostMapping("/admin/register")
     public ResponseEntity<Void> adminRegister(@Valid @RequestBody RegisterRequest request) {
         UsuarioRol rol = request.rol() != null ? request.rol() : UsuarioRol.VIEWER;
-        registerUseCase.registrar(request, rol, principalActual());
+        registerUseCase.registrar(request, rol, SecurityContextAuth.principalActual());
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
@@ -80,25 +79,12 @@ public class AuthController {
 
     @GetMapping("/me")
     public ResponseEntity<Map<String, Object>> me() {
-        var authentication = SecurityContextHolder.getContext().getAuthentication();
-        AuthPrincipal principal = (AuthPrincipal) authentication.getPrincipal();
+        var principal = SecurityContextAuth.principalActual();
         return ResponseEntity.ok(Map.of(
                 "email", principal.email(),
                 "usuarioId", principal.usuarioId(),
                 "tenantId", principal.tenantId(),
                 "rol", principal.rol()));
-    }
-
-    private AuthPrincipal principalActual() {
-        var authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null) {
-            throw new ForbiddenException("No autenticado");
-        }
-        Object principal = authentication.getPrincipal();
-        if (!(principal instanceof AuthPrincipal authPrincipal)) {
-            throw new ForbiddenException("No autenticado");
-        }
-        return authPrincipal;
     }
 
     private String extractBearer(String authorization) {

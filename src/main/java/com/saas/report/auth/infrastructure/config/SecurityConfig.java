@@ -9,6 +9,7 @@ import com.saas.report.onboarding.infrastructure.security.SelfServeRateLimitFilt
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -67,7 +68,10 @@ public class SecurityConfig {
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
                         .requestMatchers("/auth/register", "/auth/admin/register")
                         .hasAnyRole("ADMIN", "PLATFORM_ADMIN", "PLATFORM_USER")
+                        .requestMatchers(HttpMethod.POST, "/admin/plans/*/activar", "/admin/plans/*/desactivar")
+                        .hasRole("PLATFORM_ADMIN")
                         .requestMatchers("/admin/**").hasAnyRole("PLATFORM_ADMIN", "PLATFORM_USER")
+                        .requestMatchers(HttpMethod.GET, "/suscripcion/mia").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthorizationFilter, UsernamePasswordAuthenticationFilter.class);

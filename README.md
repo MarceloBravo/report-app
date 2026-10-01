@@ -256,6 +256,29 @@ Para correr la integración contra motores ya levantados en lugar de contenedore
 Si no hay Docker disponible ni se pasan esas URLs, los tests de integración se omiten
 (`[TEST OMITIDO]`) en lugar de romper la build.
 
+### Tests de seguridad
+
+Las reglas de `SecurityConfig` se prueban contra la cadena real
+(`SecurityConfig` + `JwtAuthorizationFilter` + entry point/denied handler) con un slice
+`@WebMvcTest`, sin base de datos ni Docker. La base común es
+`src/test/java/com/saas/report/support/AbstractSecurityMvcTest.java`:
+
+```java
+@WebMvcTest(controllers = MiController.class)
+class MiSecurityTest extends AbstractSecurityMvcTest {
+
+    @Test
+    void viewerNoPuedeVer() throws Exception {
+        mockMvc.perform(autenticadoComo(UsuarioRol.VIEWER, get("/mia")))
+               .andExpect(status().isForbidden());
+    }
+}
+```
+
+La autenticación va por el mismo camino que en producción: se da de alta un `UsuarioToken`
+en el repositorio y se manda la cabecera `Authorization: Bearer`. La base también expone
+`conTokenInvalido`, `conTokenExpirado` y `conTokenRevocado` para los casos 401.
+
 ## 7. Contacto y propiedad
 
 - Equipo/owner: Marcelo Bravo C.

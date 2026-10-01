@@ -4,6 +4,7 @@ import com.saas.report.plan.domain.valueobject.PlanLimiteConsultasMensuales;
 import com.saas.report.plan.domain.valueobject.PlanMaxUsuarios;
 import com.saas.report.plan.domain.valueobject.PlanPrecioUUID;
 import com.saas.report.plan.domain.valueobject.PlanUUID;
+import com.saas.report.shared.exception.InvalidStatusException;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -23,6 +24,12 @@ class PlanTest {
         PlanUUID planId = PlanUUID.generate();
         return new Plan(planId, "GROWTH", "Plan de crecimiento", new PlanMaxUsuarios(10),
                 limite, true, List.of(tramoFijo(planId, new BigDecimal("29.90"))));
+    }
+
+    private Plan planInactivo(PlanLimiteConsultasMensuales limite) {
+        PlanUUID planId = PlanUUID.generate();
+        return new Plan(planId, "GROWTH", "Plan de crecimiento", new PlanMaxUsuarios(10),
+                limite, false, List.of(tramoFijo(planId, new BigDecimal("29.90"))));
     }
 
     @Test
@@ -88,6 +95,46 @@ class PlanTest {
                 new PlanLimiteConsultasMensuales(100), true, List.of(tramoDeOtroPlan)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("mismo plan");
+    }
+
+    @Test
+    void activaYDesactivaElPlan() {
+        Plan plan = plan(new PlanLimiteConsultasMensuales(100));
+
+        plan.desactivar();
+        assertThat(plan.isActivo()).isFalse();
+
+        plan.activar();
+        assertThat(plan.isActivo()).isTrue();
+    }
+
+    @Test
+    void rechazaDesactivarUnPlanYaInactivo() {
+        Plan plan = planInactivo(new PlanLimiteConsultasMensuales(100));
+
+        assertThatThrownBy(plan::desactivar)
+                .isInstanceOf(InvalidStatusException.class);
+    }
+
+    @Test
+    void rechazaActivarUnPlanYaActivo() {
+        Plan plan = plan(new PlanLimiteConsultasMensuales(100));
+
+        assertThatThrownBy(plan::activar)
+                .isInstanceOf(InvalidStatusException.class);
+    }
+
+    @Test
+    void activaYDesactivaNoAlteranLosTramos() {
+        Plan plan = plan(new PlanLimiteConsultasMensuales(100));
+        PlanPrecio tramoOriginal = plan.getPrecios().get(0);
+
+        plan.desactivar();
+        plan.activar();
+
+        assertThat(plan.getPrecios()).hasSize(1);
+        assertThat(plan.getPrecios().get(0).getPlanPrecioId())
+                .isEqualTo(tramoOriginal.getPlanPrecioId());
     }
 
     @Test
