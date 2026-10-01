@@ -11,6 +11,16 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Alta autoservicio de un cliente nuevo.
+ *
+ * <p>Agrupa en una sola operación transaccional el tenant, su suscripción, el
+ * usuario propietario y la conexión a base de datos externa. La ruta es pública:
+ * es el punto de entrada del alta comercial.
+ *
+ * <p>El plan de la suscripción inicial no lo elige el cliente: se toma del plan
+ * gratuito configurado en la aplicación ({@code app.onboarding.free-plan-name}).
+ */
 @RestController
 @RequestMapping("/self-serve")
 public class OnboardingController {
@@ -21,6 +31,16 @@ public class OnboardingController {
         this.onboardClienteUseCase = onboardClienteUseCase;
     }
 
+    /**
+     * Registra un nuevo cliente, su tenant y su suscripción.
+     *
+     * @param request datos del cliente, su usuario propietario y su conexión
+     * @return los identificadores creados (tenant, usuario, suscripción, conexión)
+     * y la URL de verificación de email
+     * @throws TenantSlugAlreadyExistsException si el subdominio ya está en uso
+     * @throws EmailAlreadyExistsException si el email ya está registrado
+     * @throws ResourceNotFoundException si el plan gratuito no está configurado
+     */
     @PostMapping("/registro")
     public ResponseEntity<OnboardingResponse> registrar(@Valid @RequestBody OnboardingRequest request) {
         OnboardingResponse response = onboardClienteUseCase.registrar(request);

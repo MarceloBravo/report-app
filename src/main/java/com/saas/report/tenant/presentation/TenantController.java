@@ -17,6 +17,16 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
 
+/**
+ * Administración de tenants de la plataforma.
+ *
+ * <p>Permite consultar el listado paginado, con o sin filtro de búsqueda, y
+ * gestionar el ciclo de vida del tenant: activación, suspensión y cancelación.
+ *
+ * <p>El listado se expone paginado en la propia URL ({@code /{page}/{size}}) en
+ * lugar de con parámetros de query. Todas las rutas requieren los roles de
+ * plataforma {@code PLATFORM_ADMIN} o {@code PLATFORM_USER}.
+ */
 @RestController
 @RequestMapping("/admin/tenants")
 public class TenantController {
@@ -39,6 +49,13 @@ public class TenantController {
         this.listTenantUseCase = listTenantUseCase;
     }
 
+    /**
+     * Lista los tenants paginados, sin filtro de búsqueda.
+     *
+     * @param page número de página, empezando en 0
+     * @param size cantidad de elementos por página
+     * @return la página de tenants solicitada
+     */
     @GetMapping("/{page}/{size}")
     public ResponseEntity<PageResponse<TenantResponse>> list(
             @PathVariable Integer page,
@@ -47,6 +64,14 @@ public class TenantController {
         return ResponseEntity.ok(PageResponse.from(listTenantUseCase.list(null, page, size)));
     }
 
+    /**
+     * Lista los tenants paginados aplicando un filtro de búsqueda de texto libre.
+     *
+     * @param searchTextString texto a contrastar contra los datos del tenant
+     * @param page            número de página, empezando en 0
+     * @param size            cantidad de elementos por página
+     * @return la página de tenants que coinciden con el filtro
+     */
     @GetMapping("/{page}/{size}/{searchTextString}")
     public ResponseEntity<PageResponse<TenantResponse>> list(
             @PathVariable String searchTextString,
@@ -56,21 +81,52 @@ public class TenantController {
         return ResponseEntity.ok(PageResponse.from(listTenantUseCase.list(searchTextString, page, size)));
     }
 
+    /**
+     * Obtiene un tenant por su identificador.
+     *
+     * @param tenantId identificador del tenant
+     * @return el tenant encontrado
+     * @throws ResourceNotFoundException si el tenant no existe
+     */
     @GetMapping("/{tenantId}")
     public ResponseEntity<TenantResponse> get(@PathVariable UUID tenantId) {
         return ResponseEntity.ok(getTenantUseCase.obtener(new TenantUUID(tenantId)));
     }
 
+    /**
+     * Activa un tenant, devolviéndolo a un estado operativo.
+     *
+     * @param tenantId identificador del tenant
+     * @return el tenant ya activo
+     * @throws ResourceNotFoundException si el tenant no existe
+     * @throws InvalidStatusException si el tenant no admite la activación
+     */
     @PostMapping("/{tenantId}/activate")
     public ResponseEntity<TenantResponse> activate(@PathVariable UUID tenantId) {
         return ResponseEntity.ok(activateTenantUseCase.activar(new TenantUUID(tenantId)));
     }
 
+    /**
+     * Suspende un tenant, pausing su acceso sin cancelar su suscripción.
+     *
+     * @param tenantId identificador del tenant
+     * @return el tenant ya suspendido
+     * @throws ResourceNotFoundException si el tenant no existe
+     * @throws InvalidStatusException si el tenant no admite la suspensión
+     */
     @PostMapping("/{tenantId}/suspend")
     public ResponseEntity<TenantResponse> suspend(@PathVariable UUID tenantId) {
         return ResponseEntity.ok(suspendTenantUseCase.suspender(new TenantUUID(tenantId)));
     }
 
+    /**
+     * Cancela un tenant de forma definitiva.
+     *
+     * @param tenantId identificador del tenant
+     * @return el tenant ya cancelado
+     * @throws ResourceNotFoundException si el tenant no existe
+     * @throws InvalidStatusException si el tenant no admite la cancelación
+     */
     @PostMapping("/{tenantId}/cancel")
     public ResponseEntity<TenantResponse> cancel(@PathVariable UUID tenantId) {
         return ResponseEntity.ok(cancelTenantUseCase.cancelar(new TenantUUID(tenantId)));
