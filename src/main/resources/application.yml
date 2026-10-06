@@ -15,7 +15,11 @@ jwt:
 
 app:
   cors:
-    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:8080}
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200,http://localhost:5173,http://localhost:8080}
+  auth:
+    cookies:
+      secure: ${AUTH_COOKIES_SECURE:false}
+      same-site: ${AUTH_COOKIES_SAME_SITE:Lax}
   encryption:
     key: ${ENCRYPTION_KEY}
   onboarding:

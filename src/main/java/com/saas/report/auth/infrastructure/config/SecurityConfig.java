@@ -2,6 +2,7 @@ package com.saas.report.auth.infrastructure.config;
 
 import com.saas.report.auth.application.TokenService;
 import com.saas.report.auth.domain.token.UsuarioTokenRepository;
+import com.saas.report.auth.infrastructure.security.CustomHeaderCsrfFilter;
 import com.saas.report.auth.infrastructure.security.JwtAuthorizationFilter;
 import com.saas.report.auth.infrastructure.security.RestAccessDeniedHandler;
 import com.saas.report.auth.infrastructure.security.RestAuthenticationEntryPoint;
@@ -43,7 +44,12 @@ public class SecurityConfig {
         this.authenticationEntryPoint = authenticationEntryPoint;
         this.accessDeniedHandler = accessDeniedHandler;
         this.rateLimitFilter = rateLimitFilter;
-        this.allowedOrigins = allowedOriginsValue == null ? new String[0] : allowedOriginsValue.split(",");
+        this.allowedOrigins = allowedOriginsValue == null
+                ? new String[0]
+                : java.util.Arrays.stream(allowedOriginsValue.split(","))
+                        .map(String::trim)
+                        .filter(origin -> !origin.isEmpty())
+                        .toArray(String[]::new);
     }
 
     @Bean
@@ -52,6 +58,7 @@ public class SecurityConfig {
                                                    UsuarioTokenRepository usuarioTokenRepository) throws Exception {
         JwtAuthorizationFilter jwtAuthorizationFilter =
                 new JwtAuthorizationFilter(tokenService, usuarioTokenRepository);
+        CustomHeaderCsrfFilter csrfHeaderFilter = new CustomHeaderCsrfFilter(accessDeniedHandler);
 
         http
                 .cors(Customizer.withDefaults())
@@ -73,6 +80,7 @@ public class SecurityConfig {
                         .requestMatchers("/admin/**").hasAnyRole("PLATFORM_ADMIN", "PLATFORM_USER")
                         .requestMatchers(HttpMethod.GET, "/suscripcion/mia").hasRole("ADMIN")
                         .anyRequest().authenticated())
+                .addFilterBefore(csrfHeaderFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthorizationFilter, UsernamePasswordAuthenticationFilter.class);
 

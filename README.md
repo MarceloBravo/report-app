@@ -26,8 +26,10 @@ Microservicio complementario (conversión NL → SQL con IA, Python/FastAPI):
   (`PLATFORM_ADMIN`, `PLATFORM_USER`) y de tenant (`ADMIN`, `VIEWER`).
 - **Consultas en lenguaje natural**: persiste el historial de consultas, delega la generación del
   SQL al microservicio de IA y limita la ejecución según el plan contratado.
-- **Seguridad**: JWT stateless, cifrado AES-GCM de credenciales en reposo, rate limiting por IP en el
-  endpoint público y verificación de email por token HMAC.
+- **Seguridad**: JWT stateless con sesión en cookies HttpOnly (opción cruda por cabecera `Authorization`),
+  defensa CSRF por `SameSite=Lax` + cabecera personalizada `X-Requested-With`, cifrado AES-GCM de
+  credenciales en reposo, rate limiting por IP en el endpoint público y verificación de email por
+  token HMAC.
 
 Flujo típico de una consulta:
 
@@ -100,9 +102,9 @@ Convenciones transversales:
 
 | Método | Ruta | Acceso | Descripción |
 |---|---|---|---|
-| POST | `/auth/login` | público | Autenticación; devuelve access + refresh token |
-| POST | `/auth/refresh` | público | Renueva el par de tokens |
-| POST | `/auth/logout` | autenticado | Revoca el token actual |
+| POST | `/auth/login[?raw=true]` | público | Autenticación; setea cookies `access_token` + `refresh_token` (HttpOnly); con `raw=true` devuelve además los tokens en el cuerpo (Swagger/curl) |
+| POST | `/auth/refresh` | público | Renueva el par de tokens leyendo la cookie `refresh_token`; no expone tokens en el cuerpo |
+| POST | `/auth/logout` | autenticado | Revoca el token (header o cookie) y limpia las cookies de sesión |
 | GET | `/auth/me` | autenticado | Perfil del principal actual |
 | POST | `/auth/register` | ADMIN/PLATFORM_* | Alta de usuario (rol forzado a `VIEWER`) |
 | POST | `/auth/admin/register` | ADMIN/PLATFORM_* | Alta de usuario con rol explícito |
@@ -122,6 +124,54 @@ Convenciones transversales:
 | GET | `/actuator/**` | público | Salud y métricas |
 
 Documentación interactiva (perfil `dev`): <http://localhost:8080/swagger-ui.html>
+
+### Sesión con cookies
+
+El frontend (Angular) se autentica con cookies HttpOnly gestionadas por el navegador:
+
+- `access_token`: `HttpOnly`, `Path=/`, `Max-Age` = vigencia del access token.
+- `refresh_token`: `HttpOnly`, `Path=/auth`, `Max-Age` = vigencia del refresh token.
+
+`POST /auth/login` setea ambas cookies y responde un cuerpo sin tokens
+(`tokenType`, `expiresIn`, `refreshExpiresIn`). Con `?raw=true` (solo login) se devuelven
+además `accessToken`/`refreshToken` en el cuerpo para Swagger, curl y Postman.
+`POST /auth/refresh` rota ambas cookies; `POST /auth/logout` las borra (`Max-Age=0`).
+
+El filtro JWT es dual: primero lee la cabecera `Authorization: Bearer` y, si no existe,
+la cookie `access_token`.
+
+### Defensa CSRF por cabecera
+
+Además de `SameSite=Lax` y del CORS con orígenes exactos, `CustomHeaderCsrfFilter` exige
+la cabecera `X-Requested-With: XMLHttpRequest` en los métodos inseguros (POST/PUT/PATCH/DELETE)
+cuando la request trae las cookies de sesión, y **siempre** en `POST /auth/login` (cierra el
+login CSRF). Ante una violación responde `403` con el `ErrorResponse` estándar.
+
+- **Frontend Angular** debe enviarla en todas las requests (interceptor global):
+
+```ts
+@Injectable()
+export class CsrfHeaderInterceptor implements HttpInterceptor {
+  intercept(req: HttpRequest<unknown>, next: HttpHandler) {
+    return next.handle(req.clone({
+      setHeaders: { 'X-Requested-With': 'XMLHttpRequest' },
+    }));
+  }
+}
+```
+
+- **curl / Postman sin cookies** no cambian: si no hay cookies de sesión no se exige la
+  cabecera. Para simular el flujo de navegador sí hay que agregarla:
+
+```bash
+curl -X POST http://localhost:8080/auth/login \
+  -H "Content-Type: application/json" \
+  -H "X-Requested-With: XMLHttpRequest" \
+  -d '{"email":"...","password":"..."}'
+```
+
+- **Swagger UI** la envía automáticamente: `CsrfHeaderSwaggerIndexTransformer` inyecta un
+  script en el `index.html` que añade la cabecera a las requests de la UI (solo perfil `dev`).
 
 ## 4. Requisitos
 
@@ -151,7 +201,9 @@ automáticamente mediante `spring.config.import`):
 | `EMAIL_VERIFICATION_EXPIRATION_MILLIS` | no | `86400000` (24 h) | Vigencia del token de verificación |
 | `JWT_ACCESS_TOKEN_EXPIRATION` | no | `900000` (15 min) | Vigencia del access token |
 | `JWT_REFRESH_TOKEN_EXPIRATION` | no | `604800000` (7 días) | Vigencia del refresh token |
-| `CORS_ALLOWED_ORIGINS` | no | `http://localhost:5173,http://localhost:8080` | Orígenes permitidos (separados por coma) |
+| `CORS_ALLOWED_ORIGINS` | no | `http://localhost:4200,http://localhost:5173,http://localhost:8080` | Orígenes permitidos (separados por coma) |
+| `AUTH_COOKIES_SECURE` | no | `false` | Agrega `Secure` a las cookies de sesión (activar en HTTPS/prod) |
+| `AUTH_COOKIES_SAME_SITE` | no | `Lax` | Atributo `SameSite` de las cookies de sesión (`Lax`/`Strict`/`None`) |
 
 Generación de secretos de ejemplo:
 

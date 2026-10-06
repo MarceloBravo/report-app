@@ -1,5 +1,6 @@
 package com.saas.report.support;
 
+import com.saas.report.auth.application.AuthCookieService;
 import com.saas.report.auth.application.TokenService;
 import com.saas.report.auth.domain.token.UsuarioToken;
 import com.saas.report.auth.domain.token.UsuarioTokenRepository;
@@ -22,6 +23,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
+import jakarta.servlet.http.Cookie;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -104,6 +106,18 @@ public abstract class AbstractSecurityMvcTest {
         return conTokenDe(usuarioCon(rol), LocalDateTime.now().plusHours(1), true, request);
     }
 
+    /**
+     * Pide la ruta autenticándose por la cookie {@code access_token}, igual que
+     * el frontend Angular en el navegador. No añade la cabecera
+     * {@code X-Requested-With}, salvo que el test la agregue a mano.
+     */
+    protected MockHttpServletRequestBuilder autenticadoPorCookie(UsuarioRol rol,
+                                                                 MockHttpServletRequestBuilder request) {
+        prepararToken(usuarioCon(rol), LocalDateTime.now().plusHours(1), true);
+        return request.cookie(
+                new Cookie(AuthCookieService.ACCESS_COOKIE, ACCESS_TOKEN));
+    }
+
     /** Pide la ruta con un JWT que el TokenService no reconoce. */
     protected MockHttpServletRequestBuilder conTokenInvalido(MockHttpServletRequestBuilder request) {
         lenient().when(tokenService.esTokenValido(anyString())).thenReturn(false);
@@ -135,10 +149,14 @@ public abstract class AbstractSecurityMvcTest {
                                                       LocalDateTime accessExpiraEn,
                                                       boolean activo,
                                                       MockHttpServletRequestBuilder request) {
+        prepararToken(usuario, accessExpiraEn, activo);
+        return conCabecera(request);
+    }
+
+    private void prepararToken(Usuario usuario, LocalDateTime accessExpiraEn, boolean activo) {
         lenient().when(tokenService.esTokenValido(ACCESS_TOKEN)).thenReturn(true);
         lenient().when(usuarioTokenRepository.findByAccessToken(ACCESS_TOKEN))
                 .thenReturn(Optional.of(registroDe(usuario, accessExpiraEn, activo)));
-        return conCabecera(request);
     }
 
     private MockHttpServletRequestBuilder conCabecera(MockHttpServletRequestBuilder request) {

@@ -1,8 +1,10 @@
 package com.saas.report.auth.presentation;
 
+import com.saas.report.auth.application.AuthCookieService;
 import com.saas.report.auth.application.dto.LoginRequest;
 import com.saas.report.auth.application.dto.RefreshTokenRequest;
 import com.saas.report.auth.application.dto.RegisterRequest;
+import com.saas.report.auth.application.dto.SessionResponse;
 import com.saas.report.auth.application.dto.TokenResponse;
 import com.saas.report.auth.application.usecase.LoginUseCase;
 import com.saas.report.auth.application.usecase.LogoutUseCase;
@@ -15,13 +17,16 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -30,6 +35,11 @@ import java.util.Map;
  * <p>Cubre el login y logout con JWT, la rotación del token de refresco, el
  * registro público de usuarios y el registro desde el panel de administración
  * (donde sí se puede elegir el rol), y la consulta del usuario autenticado.
+ *
+ * <p>Los tokens viajan en cookies {@code HttpOnly} ({@code access_token} y
+ * {@code refresh_token}) para que el frontend no tenga que almacenarlos en
+ * JavaScript. El login acepta {@code ?raw=true} para obtener los tokens en el
+ * cuerpo cuando el cliente no es un navegador (Swagger, curl, Postman).
  *
  * <p>Las rutas de registro público y login son abiertas. El registro en
  * {@code /auth/admin/register} y {@code /auth/me} exigen autenticación, y la
@@ -43,28 +53,45 @@ public class AuthController {
     private final RegisterUseCase registerUseCase;
     private final RefreshTokenUseCase refreshTokenUseCase;
     private final LogoutUseCase logoutUseCase;
+    private final AuthCookieService cookieService;
 
     public AuthController(LoginUseCase loginUseCase,
                           RegisterUseCase registerUseCase,
                           RefreshTokenUseCase refreshTokenUseCase,
-                          LogoutUseCase logoutUseCase) {
+                          LogoutUseCase logoutUseCase,
+                          AuthCookieService cookieService) {
         this.loginUseCase = loginUseCase;
         this.registerUseCase = registerUseCase;
         this.refreshTokenUseCase = refreshTokenUseCase;
         this.logoutUseCase = logoutUseCase;
+        this.cookieService = cookieService;
     }
 
     /**
      * Inicia sesión con email y contraseña.
      *
+     * <p>Emite las cookies de sesión {@code access_token} y {@code refresh_token}
+     * (HttpOnly). El cuerpo de la respuesta no incluye los tokens salvo que se
+     * pidan con {@code ?raw=true}; esa variante está pensada para clientes no
+     * navegador y exige credenciales válidas.
+     *
      * @param request credenciales del usuario
-     * @return el par de tokens (acceso y refresco)
+     * @param raw si es {@code true}, devuelve los tokens además de las cookies
+     * @return datos de la sesión (o el par de tokens si {@code raw})
      * @throws InvalidCredentialsException si las credenciales no son válidas
      */
     @PostMapping("/login")
-    public ResponseEntity<TokenResponse> login(@Valid @RequestBody LoginRequest request) {
-        TokenResponse response = loginUseCase.login(request);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request,
+                                   @RequestParam(name = "raw", required = false) boolean raw) {
+        TokenResponse tokens = loginUseCase.login(request);
+        ResponseEntity.BodyBuilder respuesta = ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE,
+                        cookieService.cookiesDeSesion(tokens).toArray(new String[0]));
+        if (raw) {
+            return respuesta.body(tokens);
+        }
+        return respuesta.body(
+                new SessionResponse(tokens.tokenType(), tokens.expiresIn(), tokens.refreshExpiresIn()));
     }
 
     /**
@@ -106,51 +133,83 @@ public class AuthController {
     }
 
     /**
-     * Renova el token de acceso a partir de un token de refresco válido.
+     * Renueva la sesión a partir del refresh token vigente.
      *
-     * @param request token de refresco emitido en el login
-     * @return un par de tokens nuevo
-     * @throws InvalidCredentialsException si el token de refresco no viene informado
+     * <p>Lee la cookie {@code refresh_token} y, si no viene, el token del cuerpo
+     * (para clientes sin cookies). Emite un par nuevo de cookies con la rotación
+     * correspondiente; los tokens nunca se devuelven en el cuerpo.
+     *
+     * @param request token de refresco en el cuerpo, opcional si hay cookie
+     * @param refreshTokenCookie valor de la cookie {@code refresh_token}
+     * @return datos de la sesión renovada
+     * @throws InvalidCredentialsException si no llega ningún refresh token
      * @throws TokenRevokedException si el token no es válido, ha expirado o ha sido revocado
      */
     @PostMapping("/refresh")
-    public ResponseEntity<TokenResponse> refresh(@Valid @RequestBody RefreshTokenRequest request) {
-        TokenResponse response = refreshTokenUseCase.refrescar(request.refreshToken());
-        return ResponseEntity.ok(response);
+    public ResponseEntity<SessionResponse> refresh(
+            @RequestBody(required = false) RefreshTokenRequest request,
+            @CookieValue(name = AuthCookieService.REFRESH_COOKIE, required = false)
+            String refreshTokenCookie) {
+        String refreshToken = refreshTokenCookie != null && !refreshTokenCookie.isBlank()
+                ? refreshTokenCookie
+                : request != null ? request.refreshToken() : null;
+        TokenResponse tokens = refreshTokenUseCase.refrescar(refreshToken);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE,
+                        cookieService.cookiesDeSesion(tokens).toArray(new String[0]))
+                .body(new SessionResponse(
+                        tokens.tokenType(), tokens.expiresIn(), tokens.refreshExpiresIn()));
     }
 
     /**
-     * Cierra la sesión revocando el token de acceso actual.
+     * Cierra la sesión revocando el token de acceso actual y borrando las
+     * cookies de sesión del navegador.
      *
-     * <p>La cabecera {@code Authorization} es opcional: si no viene o no es un
-     * token {@code Bearer}, la llamada responde igualmente con
-     * {@code 204 NO CONTENT} sin tocar nada.
+     * <p>El token se toma de la cabecera {@code Authorization} o, en su defecto,
+     * de la cookie {@code access_token}. Si no llega ninguno, la llamada sigue
+     * respondiendo con {@code 204 NO CONTENT} sin tocar nada.
      *
      * @param authorization cabecera {@code Authorization} con el token de acceso
+     * @param accessTokenCookie valor de la cookie {@code access_token}
      * @return respuesta vacía con estado {@code 204 NO CONTENT}
      */
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(
-            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
+            @CookieValue(name = AuthCookieService.ACCESS_COOKIE, required = false)
+            String accessTokenCookie) {
         String accessToken = extractBearer(authorization);
-        logoutUseCase.cerrarSesion(accessToken);
+        if (accessToken == null) {
+            accessToken = accessTokenCookie;
+        }
+        if (accessToken != null) {
+            logoutUseCase.cerrarSesion(accessToken);
+        }
         SecurityContextHolder.clearContext();
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.noContent()
+                .header(HttpHeaders.SET_COOKIE,
+                        cookieService.cookiesExpiradas().toArray(new String[0]))
+                .build();
     }
 
     /**
      * Devuelve los datos del usuario autenticado según el token vigente.
+     *
+     * <p>{@code tenantId} es {@code null} para usuarios de plataforma que no
+     * pertenecen a ningún tenant; por eso el mapa se construye con
+     * {@link LinkedHashMap} y no con {@code Map.of}, que prohíbe valores nulos.
      *
      * @return mapa con email, usuarioId, tenantId y rol
      */
     @GetMapping("/me")
     public ResponseEntity<Map<String, Object>> me() {
         var principal = SecurityContextAuth.principalActual();
-        return ResponseEntity.ok(Map.of(
-                "email", principal.email(),
-                "usuarioId", principal.usuarioId(),
-                "tenantId", principal.tenantId(),
-                "rol", principal.rol()));
+        Map<String, Object> cuerpo = new LinkedHashMap<>();
+        cuerpo.put("email", principal.email());
+        cuerpo.put("usuarioId", principal.usuarioId());
+        cuerpo.put("tenantId", principal.tenantId());
+        cuerpo.put("rol", principal.rol());
+        return ResponseEntity.ok(cuerpo);
     }
 
     /**

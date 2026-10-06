@@ -1,11 +1,13 @@
 package com.saas.report.auth.infrastructure.security;
 
+import com.saas.report.auth.application.AuthCookieService;
 import com.saas.report.auth.application.AuthPrincipal;
 import com.saas.report.auth.application.TokenService;
 import com.saas.report.auth.domain.token.UsuarioTokenRepository;
 import com.saas.report.usuarios.domain.usuario.Usuario;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpHeaders;
@@ -35,7 +37,7 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
-        String token = extractBearerToken(request);
+        String token = extractToken(request);
 
         if (token != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             if (tokenService.esTokenValido(token)) {
@@ -74,10 +76,23 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
         return esRutaPublica || esPreflight;
     }
 
-    private String extractBearerToken(HttpServletRequest request) {
+    /**
+     * Resuelve el token de acceso: cabecera {@code Authorization} si existe
+     * (modo tradicional, Swagger/curl) y, en su defecto, la cookie HttpOnly
+     * {@code access_token} que usa el frontend del navegador.
+     */
+    private String extractToken(HttpServletRequest request) {
         String header = request.getHeader(HttpHeaders.AUTHORIZATION);
         if (header != null && header.startsWith(BEARER_PREFIX)) {
             return header.substring(BEARER_PREFIX.length()).trim();
+        }
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if (AuthCookieService.ACCESS_COOKIE.equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
         }
         return null;
     }
