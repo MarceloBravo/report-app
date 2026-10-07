@@ -1,5 +1,6 @@
 package com.saas.report.consulta.presentation;
 
+import com.saas.report.auth.application.AuthPrincipal;
 import com.saas.report.consulta.application.dto.ConsultaRequest;
 import com.saas.report.consulta.application.dto.ConsultaResponse;
 import com.saas.report.consulta.application.dto.ConvertirConsultaRequest;
@@ -10,14 +11,18 @@ import com.saas.report.consulta.application.usecase.RegisterConsultaUseCase;
 import com.saas.report.consulta.domain.exception.LimiteConsultasExcedidoException;
 import com.saas.report.shared.presentation.rest.GlobalExceptionHandler;
 import com.saas.report.tenant.domain.valueobject.TenantUUID;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
@@ -26,6 +31,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.verify;
@@ -62,6 +68,23 @@ class ConsultaControllerTest {
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .setValidator(validator)
                 .build();
+        SecurityContextHolder.clearContext();
+    }
+
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
+    }
+
+    private void authenticate(String tenantId, String usuarioId) {
+        AuthPrincipal principal = new AuthPrincipal("test@test.com", usuarioId, tenantId, "ADMIN");
+        var auth = new UsernamePasswordAuthenticationToken(principal, null,
+                List.of(() -> "ROLE_ADMIN"));
+        SecurityContextHolder.getContext().setAuthentication(auth);
+    }
+
+    private void authenticate() {
+        authenticate(TenantUUID.generate().getValue().toString(), UUID.randomUUID().toString());
     }
 
     private ConsultaResponse response() {
@@ -75,29 +98,55 @@ class ConsultaControllerTest {
     }
 
     private String bodyConvertir() {
-        return "{\"tenantId\":\"" + UUID.randomUUID() + "\",\"usuarioId\":\"" + UUID.randomUUID()
-                + "\",\"preguntaUsuario\":\"¿Cuántas ventas?\"}";
+        return "{\"preguntaUsuario\":\"¿Cuántas ventas?\"}";
     }
 
     @Test
     void convierteConsultaNLASqlYDevuelve200() throws Exception {
-        when(convertirConsultaUseCase.convertir(any(ConvertirConsultaRequest.class))).thenReturn(response());
+        UUID tenantId = TenantUUID.generate().getValue();
+        UUID usuarioId = UUID.randomUUID();
+        authenticate(tenantId.toString(), usuarioId.toString());
+        when(convertirConsultaUseCase.convertir(any(UUID.class), any(UUID.class),
+                any(ConvertirConsultaRequest.class))).thenReturn(response());
 
         mockMvc.perform(post("/consultas/convertir")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(bodyConvertir()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.querySqlGenerada").value("SELECT 1;"));
+
+        ArgumentCaptor<UUID> tenantCaptor = ArgumentCaptor.forClass(UUID.class);
+        ArgumentCaptor<UUID> usuarioCaptor = ArgumentCaptor.forClass(UUID.class);
+        ArgumentCaptor<ConvertirConsultaRequest> requestCaptor =
+                ArgumentCaptor.forClass(ConvertirConsultaRequest.class);
+        verify(convertirConsultaUseCase).convertir(tenantCaptor.capture(), usuarioCaptor.capture(),
+                requestCaptor.capture());
+        assertThat(tenantCaptor.getValue()).isEqualTo(tenantId);
+        assertThat(usuarioCaptor.getValue()).isEqualTo(usuarioId);
+        assertThat(requestCaptor.getValue().preguntaUsuario()).isEqualTo("¿Cuántas ventas?");
+        assertThat(requestCaptor.getValue().dbConnectionId()).isNull();
     }
 
     @Test
     void devuelve400SiLaPreguntaDeConversionEstaVacia() throws Exception {
+        authenticate();
+
         mockMvc.perform(post("/consultas/convertir")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"tenantId\":\"" + UUID.randomUUID() + "\",\"usuarioId\":\""
-                                + UUID.randomUUID() + "\",\"preguntaUsuario\":\"\"}"))
+                        .content("{\"preguntaUsuario\":\"\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400));
+    }
+
+    @Test
+    void devuelve403EnConversionSiNoHaySesion() throws Exception {
+        SecurityContextHolder.clearContext();
+
+        mockMvc.perform(post("/consultas/convertir")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(bodyConvertir()))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403));
     }
 
     @Test

@@ -1,5 +1,6 @@
 package com.saas.report.tenant.domain.valueobject;
 
+import com.saas.report.conexion.domain.valueobject.TenantDbConnectionUUID;
 import com.saas.report.shared.exception.InvalidUUIDException;
 import org.junit.jupiter.api.Test;
 

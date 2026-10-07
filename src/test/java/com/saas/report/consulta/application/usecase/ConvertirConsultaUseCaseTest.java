@@ -20,15 +20,16 @@ import com.saas.report.suscripcion.domain.Suscripcion;
 import com.saas.report.suscripcion.domain.SuscripcionEstado;
 import com.saas.report.suscripcion.domain.SuscripcionRepository;
 import com.saas.report.suscripcion.domain.valueobject.SuscripcionUUID;
-import com.saas.report.tenant.domain.connection.TenantDbConnection;
-import com.saas.report.tenant.domain.connection.TenantDbConnectionRepository;
-import com.saas.report.tenant.domain.connection.TipoConexion;
-import com.saas.report.tenant.domain.schema.ColumnaEsquema;
-import com.saas.report.tenant.domain.schema.EsquemaTenant;
-import com.saas.report.tenant.domain.schema.SchemaExtractor;
-import com.saas.report.tenant.domain.schema.TablaEsquema;
-import com.saas.report.tenant.domain.valueobject.TenantDbConnectionUUID;
+import com.saas.report.conexion.domain.connection.TenantDbConnection;
+import com.saas.report.conexion.domain.connection.TenantDbConnectionRepository;
+import com.saas.report.conexion.domain.connection.TipoConexion;
+import com.saas.report.conexion.domain.schema.ColumnaEsquema;
+import com.saas.report.conexion.domain.schema.EsquemaTenant;
+import com.saas.report.conexion.domain.schema.SchemaExtractor;
+import com.saas.report.conexion.domain.schema.TablaEsquema;
+import com.saas.report.conexion.domain.valueobject.TenantDbConnectionUUID;
 import com.saas.report.tenant.domain.valueobject.TenantUUID;
+import com.saas.report.usuarios.domain.valueobject.UsuarioUUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -88,8 +89,6 @@ class ConvertirConsultaUseCaseTest {
 
     private ConvertirConsultaRequest request() {
         return new ConvertirConsultaRequest(
-                UUID.randomUUID(),
-                UUID.randomUUID(),
                 "¿Cuántas ventas hubo en marzo?",
                 null);
     }
@@ -120,25 +119,28 @@ class ConvertirConsultaUseCaseTest {
     @Test
     void convierteLaPreguntaYSanitizaElSqlGenerado() {
         ConvertirConsultaRequest request = request();
-        TenantUUID tenantId = new TenantUUID(request.tenantId());
+        TenantUUID tenantId = TenantUUID.generate();
+        UUID usuarioId = UUID.randomUUID();
         EsquemaTenant esquema = esquema(tenantId);
 
         when(consultaRepository.countByTenantIdAndFechaConsultaAfter(any(), any(LocalDateTime.class)))
                 .thenReturn(4L);
         when(dbConnectionRepository.findByTenantId(tenantId)).thenReturn(Optional.of(conexion(tenantId)));
         when(schemaExtractor.extraer(any(TenantDbConnection.class))).thenReturn(esquema);
-        when(generadorSqlPort.generarSql(eq(esquema), eq(request.preguntaUsuario()), eq(request.usuarioId())))
+        when(generadorSqlPort.generarSql(eq(esquema), eq(request.preguntaUsuario()), eq(usuarioId)))
                 .thenReturn("  SELECT * FROM ventas  ");
         when(sqlEjecutorPort.ejecutar(any(TenantDbConnection.class), any(String.class)))
                 .thenReturn(List.of(Map.of("monto", 150)));
         when(consultaRepository.save(any(ConsultaHistorial.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        ConsultaResponse response = convertirConsultaUseCase.convertir(request);
+        ConsultaResponse response = convertirConsultaUseCase.convertir(tenantId.getValue(), usuarioId, request);
 
         ArgumentCaptor<ConsultaHistorial> captor = ArgumentCaptor.forClass(ConsultaHistorial.class);
         verify(consultaRepository).save(captor.capture());
         ConsultaHistorial guardada = captor.getValue();
+        assertThat(guardada.getTenantId()).isEqualTo(tenantId);
+        assertThat(guardada.getUsuarioId()).isEqualTo(new UsuarioUUID(usuarioId));
         assertThat(guardada.getQuerySqlGenerada()).isEqualTo("SELECT * FROM ventas");
         assertThat(guardada.getPreguntaUsuario()).isEqualTo(request.preguntaUsuario());
         assertThat(guardada.getConsultasEnPeriodo()).isEqualTo(5);
@@ -150,7 +152,8 @@ class ConvertirConsultaUseCaseTest {
     @Test
     void ejecutaElSqlSanitizadoSobreLaConexionDelTenantYDevuelveLosDatos() {
         ConvertirConsultaRequest request = request();
-        TenantUUID tenantId = new TenantUUID(request.tenantId());
+        TenantUUID tenantId = TenantUUID.generate();
+        UUID usuarioId = UUID.randomUUID();
         TenantDbConnection conexion = conexion(tenantId);
         List<Map<String, Object>> filas = List.of(
                 Map.of("monto", 150),
@@ -165,7 +168,7 @@ class ConvertirConsultaUseCaseTest {
         when(consultaRepository.save(any(ConsultaHistorial.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        ConsultaResponse response = convertirConsultaUseCase.convertir(request);
+        ConsultaResponse response = convertirConsultaUseCase.convertir(tenantId.getValue(), usuarioId, request);
 
         verify(sqlEjecutorPort).ejecutar(conexion, "SELECT monto FROM ventas");
         assertThat(response.data()).isEqualTo(filas);
@@ -176,7 +179,8 @@ class ConvertirConsultaUseCaseTest {
     @Test
     void noEjecutaSqlSiLaGeneracionEsInvalida() {
         ConvertirConsultaRequest request = request();
-        TenantUUID tenantId = new TenantUUID(request.tenantId());
+        TenantUUID tenantId = TenantUUID.generate();
+        UUID usuarioId = UUID.randomUUID();
 
         when(consultaRepository.countByTenantIdAndFechaConsultaAfter(any(), any(LocalDateTime.class)))
                 .thenReturn(0L);
@@ -184,7 +188,7 @@ class ConvertirConsultaUseCaseTest {
         when(schemaExtractor.extraer(any(TenantDbConnection.class))).thenReturn(esquema(tenantId));
         when(generadorSqlPort.generarSql(any(), any(), any())).thenReturn("DELETE FROM ventas");
 
-        assertThatThrownBy(() -> convertirConsultaUseCase.convertir(request))
+        assertThatThrownBy(() -> convertirConsultaUseCase.convertir(tenantId.getValue(), usuarioId, request))
                 .isInstanceOf(SqlInvalidoException.class)
                 .hasMessageContaining("SELECT");
 
@@ -195,7 +199,8 @@ class ConvertirConsultaUseCaseTest {
     @Test
     void rechazaLaConversionSiElSqlNoEsDeSoloLectura() {
         ConvertirConsultaRequest request = request();
-        TenantUUID tenantId = new TenantUUID(request.tenantId());
+        TenantUUID tenantId = TenantUUID.generate();
+        UUID usuarioId = UUID.randomUUID();
 
         when(consultaRepository.countByTenantIdAndFechaConsultaAfter(any(), any(LocalDateTime.class)))
                 .thenReturn(0L);
@@ -203,7 +208,7 @@ class ConvertirConsultaUseCaseTest {
         when(schemaExtractor.extraer(any(TenantDbConnection.class))).thenReturn(esquema(tenantId));
         when(generadorSqlPort.generarSql(any(), any(), any())).thenReturn("DELETE FROM ventas");
 
-        assertThatThrownBy(() -> convertirConsultaUseCase.convertir(request))
+        assertThatThrownBy(() -> convertirConsultaUseCase.convertir(tenantId.getValue(), usuarioId, request))
                 .isInstanceOf(SqlInvalidoException.class)
                 .hasMessageContaining("SELECT");
     }
@@ -211,7 +216,8 @@ class ConvertirConsultaUseCaseTest {
     @Test
     void rechazaCuandoSeExcedeElLimiteDelPlan() {
         ConvertirConsultaRequest request = request();
-        TenantUUID tenantId = new TenantUUID(request.tenantId());
+        TenantUUID tenantId = TenantUUID.generate();
+        UUID usuarioId = UUID.randomUUID();
         Plan plan = planConLimite(5);
 
         when(suscripcionRepository.findByTenantIdAndEstado(tenantId, SuscripcionEstado.ACTIVE))
@@ -220,7 +226,7 @@ class ConvertirConsultaUseCaseTest {
         when(consultaRepository.countByTenantIdAndFechaConsultaAfter(any(), any(LocalDateTime.class)))
                 .thenReturn(5L);
 
-        assertThatThrownBy(() -> convertirConsultaUseCase.convertir(request))
+        assertThatThrownBy(() -> convertirConsultaUseCase.convertir(tenantId.getValue(), usuarioId, request))
                 .isInstanceOf(LimiteConsultasExcedidoException.class)
                 .hasMessageContaining("límite");
     }
@@ -228,14 +234,60 @@ class ConvertirConsultaUseCaseTest {
     @Test
     void rechazaCuandoNoExisteConexionParaElTenant() {
         ConvertirConsultaRequest request = request();
-        TenantUUID tenantId = new TenantUUID(request.tenantId());
+        TenantUUID tenantId = TenantUUID.generate();
+        UUID usuarioId = UUID.randomUUID();
 
         when(consultaRepository.countByTenantIdAndFechaConsultaAfter(any(), any(LocalDateTime.class)))
                 .thenReturn(0L);
         when(dbConnectionRepository.findByTenantId(tenantId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> convertirConsultaUseCase.convertir(request))
+        assertThatThrownBy(() -> convertirConsultaUseCase.convertir(tenantId.getValue(), usuarioId, request))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("conexión");
+    }
+
+    @Test
+    void usaLaConexionExplicitaCuandoPerteneceAlTenant() {
+        TenantUUID tenantId = TenantUUID.generate();
+        UUID usuarioId = UUID.randomUUID();
+        TenantDbConnection propia = conexion(tenantId);
+        ConvertirConsultaRequest request = new ConvertirConsultaRequest(
+                "¿Cuántas ventas hubo en marzo?", propia.getDbConnectionId().getValue());
+
+        when(consultaRepository.countByTenantIdAndFechaConsultaAfter(any(), any(LocalDateTime.class)))
+                .thenReturn(0L);
+        when(dbConnectionRepository.findById(propia.getDbConnectionId())).thenReturn(Optional.of(propia));
+        when(schemaExtractor.extraer(propia)).thenReturn(esquema(tenantId));
+        when(generadorSqlPort.generarSql(any(), any(), any())).thenReturn("SELECT * FROM ventas");
+        when(sqlEjecutorPort.ejecutar(propia, "SELECT * FROM ventas")).thenReturn(List.of(Map.of("monto", 150)));
+        when(consultaRepository.save(any(ConsultaHistorial.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        ConsultaResponse response = convertirConsultaUseCase.convertir(tenantId.getValue(), usuarioId, request);
+
+        verify(schemaExtractor).extraer(propia);
+        verify(dbConnectionRepository, never()).findByTenantId(any());
+        assertThat(response.exitosa()).isTrue();
+    }
+
+    @Test
+    void rechazaLaConexionExplicitaQuePerteneceAOtroTenant() {
+        TenantUUID tenantId = TenantUUID.generate();
+        UUID usuarioId = UUID.randomUUID();
+        TenantDbConnection ajena = conexion(TenantUUID.generate());
+        ConvertirConsultaRequest request = new ConvertirConsultaRequest(
+                "¿Cuántas ventas hubo en marzo?", ajena.getDbConnectionId().getValue());
+
+        when(consultaRepository.countByTenantIdAndFechaConsultaAfter(any(), any(LocalDateTime.class)))
+                .thenReturn(0L);
+        when(dbConnectionRepository.findById(ajena.getDbConnectionId())).thenReturn(Optional.of(ajena));
+
+        assertThatThrownBy(() -> convertirConsultaUseCase.convertir(tenantId.getValue(), usuarioId, request))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("conexión");
+
+        verify(schemaExtractor, never()).extraer(any());
+        verify(sqlEjecutorPort, never()).ejecutar(any(), any());
+        verify(consultaRepository, never()).save(any());
     }
 }

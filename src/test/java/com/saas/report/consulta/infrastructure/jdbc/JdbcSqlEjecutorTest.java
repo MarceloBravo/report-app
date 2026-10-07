@@ -1,10 +1,10 @@
 package com.saas.report.consulta.infrastructure.jdbc;
 
 import com.saas.report.consulta.domain.exception.ErrorEjecucionSqlException;
-import com.saas.report.tenant.domain.connection.CredentialCipher;
-import com.saas.report.tenant.domain.connection.TenantDbConnection;
-import com.saas.report.tenant.domain.connection.TipoConexion;
-import com.saas.report.tenant.domain.valueobject.TenantDbConnectionUUID;
+import com.saas.report.conexion.domain.connection.CredentialCipher;
+import com.saas.report.conexion.domain.connection.TenantDbConnection;
+import com.saas.report.conexion.domain.connection.TipoConexion;
+import com.saas.report.conexion.domain.valueobject.TenantDbConnectionUUID;
 import com.saas.report.tenant.domain.valueobject.TenantUUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -1,6 +1,6 @@
 package com.saas.report.consulta.domain;
 
-import com.saas.report.tenant.domain.connection.TenantDbConnection;
+import com.saas.report.conexion.domain.connection.TenantDbConnection;
 
 import java.util.List;
 import java.util.Map;

@@ -1,8 +1,8 @@
 package com.saas.integration;
 
-import com.saas.report.tenant.domain.schema.ColumnaEsquema;
-import com.saas.report.tenant.domain.schema.EsquemaTenant;
-import com.saas.report.tenant.domain.schema.TablaEsquema;
+import com.saas.report.conexion.domain.schema.ColumnaEsquema;
+import com.saas.report.conexion.domain.schema.EsquemaTenant;
+import com.saas.report.conexion.domain.schema.TablaEsquema;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;

@@ -13,11 +13,11 @@ import com.saas.report.plan.domain.PlanRepository;
 import com.saas.report.shared.exception.ResourceNotFoundException;
 import com.saas.report.suscripcion.domain.SuscripcionEstado;
 import com.saas.report.suscripcion.domain.SuscripcionRepository;
-import com.saas.report.tenant.domain.connection.TenantDbConnection;
-import com.saas.report.tenant.domain.connection.TenantDbConnectionRepository;
-import com.saas.report.tenant.domain.schema.EsquemaTenant;
-import com.saas.report.tenant.domain.schema.SchemaExtractor;
-import com.saas.report.tenant.domain.valueobject.TenantDbConnectionUUID;
+import com.saas.report.conexion.domain.connection.TenantDbConnection;
+import com.saas.report.conexion.domain.connection.TenantDbConnectionRepository;
+import com.saas.report.conexion.domain.schema.EsquemaTenant;
+import com.saas.report.conexion.domain.schema.SchemaExtractor;
+import com.saas.report.conexion.domain.valueobject.TenantDbConnectionUUID;
 import com.saas.report.tenant.domain.valueobject.TenantUUID;
 import com.saas.report.usuarios.domain.valueobject.UsuarioUUID;
 import org.springframework.stereotype.Service;
@@ -57,28 +57,28 @@ public class ConvertirConsultaUseCase {
     }
 
     @Transactional
-    public ConsultaResponse convertir(ConvertirConsultaRequest request) {
+    public ConsultaResponse convertir(UUID tenantId, UUID usuarioId, ConvertirConsultaRequest request) {
         LocalDateTime ahora = LocalDateTime.now();
         LocalDateTime inicioPeriodo = ahora.toLocalDate().withDayOfMonth(1).atStartOfDay();
-        TenantUUID tenantId = new TenantUUID(request.tenantId());
+        TenantUUID tenant = new TenantUUID(tenantId);
 
-        long consultasPrevias = consultaRepository.countByTenantIdAndFechaConsultaAfter(tenantId, inicioPeriodo);
+        long consultasPrevias = consultaRepository.countByTenantIdAndFechaConsultaAfter(tenant, inicioPeriodo);
         Integer consultasEnPeriodo = Math.toIntExact(consultasPrevias + 1);
 
-        validarLimiteMensual(tenantId, consultasEnPeriodo);
+        validarLimiteMensual(tenant, consultasEnPeriodo);
 
-        TenantDbConnection conexion = resolverConexion(tenantId, request.dbConnectionId());
+        TenantDbConnection conexion = resolverConexion(tenant, request.dbConnectionId());
         EsquemaTenant esquema = schemaExtractor.extraer(conexion);
 
-        String sqlGenerado = generadorSqlPort.generarSql(esquema, request.preguntaUsuario(), request.usuarioId());
+        String sqlGenerado = generadorSqlPort.generarSql(esquema, request.preguntaUsuario(), usuarioId);
         String sqlSanitizado = SanitizadorSql.sanitizar(sqlGenerado);
 
         List<Map<String, Object>> resultado = sqlEjecutorPort.ejecutar(conexion, sqlSanitizado);
 
         ConsultaHistorial consulta = new ConsultaHistorial(
                 ConsultaHistorialUUID.generate(),
-                tenantId,
-                new UsuarioUUID(request.usuarioId()),
+                tenant,
+                new UsuarioUUID(usuarioId),
                 request.preguntaUsuario(),
                 sqlSanitizado,
                 ahora,
@@ -93,6 +93,7 @@ public class ConvertirConsultaUseCase {
     private TenantDbConnection resolverConexion(TenantUUID tenantId, UUID dbConnectionId) {
         Optional<TenantDbConnection> conexion = dbConnectionId != null
                 ? dbConnectionRepository.findById(new TenantDbConnectionUUID(dbConnectionId))
+                        .filter(c -> tenantId.equals(c.getTenantId()))
                 : dbConnectionRepository.findByTenantId(tenantId);
 
         return conexion.orElseThrow(() -> new ResourceNotFoundException(

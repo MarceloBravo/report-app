@@ -10,7 +10,7 @@ import com.saas.report.usuarios.domain.valueobject.UsuarioUUID;
 import com.saas.report.plan.domain.PlanRepository;
 import com.saas.report.suscripcion.domain.SuscripcionEstado;
 import com.saas.report.suscripcion.domain.SuscripcionRepository;
-import com.saas.report.tenant.domain.valueobject.TenantDbConnectionUUID;
+import com.saas.report.conexion.domain.valueobject.TenantDbConnectionUUID;
 import com.saas.report.tenant.domain.valueobject.TenantUUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

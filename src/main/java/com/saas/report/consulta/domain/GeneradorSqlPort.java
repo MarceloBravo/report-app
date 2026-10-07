@@ -1,6 +1,6 @@
 package com.saas.report.consulta.domain;
 
-import com.saas.report.tenant.domain.schema.EsquemaTenant;
+import com.saas.report.conexion.domain.schema.EsquemaTenant;
 import java.util.UUID;
 public interface GeneradorSqlPort {
 

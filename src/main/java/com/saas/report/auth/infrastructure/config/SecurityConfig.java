@@ -79,6 +79,11 @@ public class SecurityConfig {
                         .hasRole("PLATFORM_ADMIN")
                         .requestMatchers("/admin/**").hasAnyRole("PLATFORM_ADMIN", "PLATFORM_USER")
                         .requestMatchers(HttpMethod.GET, "/suscripcion/mia").hasRole("ADMIN")
+                        .requestMatchers(request -> request.getParameter("tenantId") != null
+                                && request.getRequestURI().startsWith("/conexiones"))
+                        .hasAnyRole("PLATFORM_ADMIN", "PLATFORM_USER")
+                        .requestMatchers("/conexiones/**")
+                        .hasAnyRole("PLATFORM_ADMIN", "PLATFORM_USER", "ADMIN", "VIEWER")
                         .anyRequest().authenticated())
                 .addFilterBefore(csrfHeaderFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)

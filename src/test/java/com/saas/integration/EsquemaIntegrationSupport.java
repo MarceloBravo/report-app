@@ -1,14 +1,14 @@
 package com.saas.integration;
 
-import com.saas.report.tenant.domain.connection.CredentialCipher;
-import com.saas.report.tenant.domain.connection.TenantDbConnection;
-import com.saas.report.tenant.domain.connection.TipoConexion;
-import com.saas.report.tenant.domain.schema.ColumnaEsquema;
-import com.saas.report.tenant.domain.schema.EsquemaTenant;
-import com.saas.report.tenant.domain.schema.TablaEsquema;
-import com.saas.report.tenant.domain.valueobject.TenantDbConnectionUUID;
+import com.saas.report.conexion.domain.connection.CredentialCipher;
+import com.saas.report.conexion.domain.connection.TenantDbConnection;
+import com.saas.report.conexion.domain.connection.TipoConexion;
+import com.saas.report.conexion.domain.schema.ColumnaEsquema;
+import com.saas.report.conexion.domain.schema.EsquemaTenant;
+import com.saas.report.conexion.domain.schema.TablaEsquema;
+import com.saas.report.conexion.domain.valueobject.TenantDbConnectionUUID;
 import com.saas.report.tenant.domain.valueobject.TenantUUID;
-import com.saas.report.tenant.infrastructure.schema.JdbcSchemaExtractor;
+import com.saas.report.conexion.infrastructure.schema.JdbcSchemaExtractor;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -20,7 +20,7 @@ import java.util.List;
  * Utilidades compartidas por los tests de integracion de extraccion de esquema.
  *
  * <p>Los tests de integracion ejecutan las queries de
- * {@link com.saas.report.tenant.infrastructure.schema.strategy.SchemaQueryProvider}
+ * {@link com.saas.report.conexion.infrastructure.schema.strategy.SchemaQueryProvider}
  * contra motores reales, porque las columnas disponibles en {@code information_schema}
  * difieren entre MySQL y PostgreSQL y un mock de {@code ResultSet} no puede detectarlas.
  */

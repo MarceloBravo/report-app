@@ -1,9 +1,0 @@
-package com.saas.report.tenant.domain.schema;
-
-import com.saas.report.tenant.domain.valueobject.TenantUUID;
-
-import java.time.Instant;
-import java.util.List;
-
-public record EsquemaTenant(TenantUUID tenantId, List<TablaEsquema> tablas, Instant extraidoEn) {
-}
