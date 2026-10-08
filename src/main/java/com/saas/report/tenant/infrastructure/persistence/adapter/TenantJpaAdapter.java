@@ -2,7 +2,7 @@ package com.saas.report.tenant.infrastructure.persistence.adapter;
 
 import com.saas.report.tenant.domain.Tenant;
 import com.saas.report.tenant.domain.TenantRepository;
-import com.saas.report.tenant.domain.valueobject.TenantUUID;
+import com.saas.report.shared.domain.valueobject.TenantUUID;
 import com.saas.report.tenant.infrastructure.persistence.TenantJpaRepository;
 import com.saas.report.tenant.infrastructure.persistence.mapper.TenantMapper;
 import org.springframework.stereotype.Component;

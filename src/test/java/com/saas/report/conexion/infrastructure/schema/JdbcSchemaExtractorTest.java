@@ -6,7 +6,7 @@ import com.saas.report.conexion.domain.connection.TipoConexion;
 import com.saas.report.conexion.domain.schema.EsquemaTenant;
 import com.saas.report.conexion.domain.schema.TablaEsquema;
 import com.saas.report.conexion.domain.valueobject.TenantDbConnectionUUID;
-import com.saas.report.tenant.domain.valueobject.TenantUUID;
+import com.saas.report.shared.domain.valueobject.TenantUUID;
 import com.saas.report.conexion.infrastructure.schema.strategy.MySqlSchemaQueryProviderStrategy;
 import com.saas.report.conexion.infrastructure.schema.strategy.PostgresqlSchemaQueryProviderStrategy;
 import org.junit.jupiter.api.Test;

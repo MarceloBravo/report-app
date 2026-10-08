@@ -1,10 +1,10 @@
 package com.saas.report.auth.infrastructure.security;
 
 import com.saas.report.auth.application.AuthCookieService;
-import com.saas.report.auth.application.AuthPrincipal;
+import com.saas.report.shared.security.AuthPrincipal;
 import com.saas.report.auth.application.TokenService;
 import com.saas.report.auth.domain.token.UsuarioTokenRepository;
-import com.saas.report.usuarios.domain.usuario.Usuario;
+import com.saas.report.auth.domain.usuario.AuthUser;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -43,16 +43,16 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
             if (tokenService.esTokenValido(token)) {
                 usuarioTokenRepository.findByAccessToken(token).ifPresent(registro -> {
                     if (registro.estaActivo() && !registro.estaExpiradoAccessToken()) {
-                        Usuario usuario = registro.getUsuario();
+                        AuthUser usuario = registro.getUsuario();
                         var authorities = List.of(
-                                new SimpleGrantedAuthority("ROLE_" + usuario.getRol().name()));
+                                new SimpleGrantedAuthority("ROLE_" + usuario.rol()));
                         AuthPrincipal principal = new AuthPrincipal(
-                                usuario.getEmail(),
-                                usuario.getUsuarioId().getValue().toString(),
-                                usuario.getTenantId() != null
-                                        ? usuario.getTenantId().getValue().toString()
+                                usuario.email(),
+                                usuario.id().toString(),
+                                usuario.tenantId() != null
+                                        ? usuario.tenantId().toString()
                                         : null,
-                                usuario.getRol().name());
+                                usuario.rol());
 
                         var authentication = new UsernamePasswordAuthenticationToken(
                                 principal, null, authorities);

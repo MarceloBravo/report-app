@@ -11,7 +11,7 @@ import com.saas.report.consulta.application.usecase.RegisterConsultaUseCase;
 import com.saas.report.consulta.domain.valueobject.ConsultaHistorialUUID;
 import com.saas.report.shared.exception.ForbiddenException;
 import com.saas.report.shared.presentation.rest.SecurityContextAuth;
-import com.saas.report.tenant.domain.valueobject.TenantUUID;
+import com.saas.report.shared.domain.valueobject.TenantUUID;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

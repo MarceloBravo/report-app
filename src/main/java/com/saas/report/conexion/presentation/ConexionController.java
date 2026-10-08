@@ -1,6 +1,6 @@
 package com.saas.report.conexion.presentation;
 
-import com.saas.report.auth.application.AuthPrincipal;
+import com.saas.report.shared.security.AuthPrincipal;
 import com.saas.report.conexion.application.dto.ConexionDetailResponse;
 import com.saas.report.conexion.application.dto.ConexionListResponse;
 import com.saas.report.conexion.application.usecase.GetConexionUseCase;
@@ -10,7 +10,7 @@ import com.saas.report.identity.domain.user.UsuarioRol;
 import com.saas.report.shared.exception.ForbiddenException;
 import com.saas.report.shared.exception.ResourceNotFoundException;
 import com.saas.report.shared.presentation.rest.SecurityContextAuth;
-import com.saas.report.tenant.domain.valueobject.TenantUUID;
+import com.saas.report.shared.domain.valueobject.TenantUUID;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;

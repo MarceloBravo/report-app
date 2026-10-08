@@ -1,14 +1,14 @@
 package com.saas.report.conexion.presentation;
 
-import com.saas.report.auth.application.AuthPrincipal;
+import com.saas.report.shared.security.AuthPrincipal;
 import com.saas.report.conexion.application.dto.ConexionDetailResponse;
 import com.saas.report.conexion.application.dto.ConexionListResponse;
 import com.saas.report.conexion.application.usecase.GetConexionUseCase;
 import com.saas.report.conexion.application.usecase.ListConexionesUseCase;
 import com.saas.report.conexion.domain.valueobject.TenantDbConnectionUUID;
 import com.saas.report.shared.exception.ResourceNotFoundException;
-import com.saas.report.shared.presentation.rest.GlobalExceptionHandler;
-import com.saas.report.tenant.domain.valueobject.TenantUUID;
+import com.saas.report.config.exception.GlobalExceptionHandler;
+import com.saas.report.shared.domain.valueobject.TenantUUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

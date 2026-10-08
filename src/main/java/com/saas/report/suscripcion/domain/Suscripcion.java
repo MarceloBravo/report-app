@@ -6,7 +6,7 @@ import com.saas.report.plan.domain.Plan;
 import com.saas.report.plan.domain.PlanPrecio;
 import com.saas.report.plan.domain.valueobject.PlanUUID;
 import com.saas.report.shared.exception.InvalidStatusException;
-import com.saas.report.tenant.domain.valueobject.TenantUUID;
+import com.saas.report.shared.domain.valueobject.TenantUUID;
 
 import java.time.LocalDate;
 import java.time.Period;

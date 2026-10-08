@@ -1,8 +1,8 @@
 package com.saas.report.usuarios.application.usecase;
 
-import com.saas.report.auth.application.AuthPrincipal;
+import com.saas.report.usuarios.application.dto.CreadorPor;
 import com.saas.report.usuarios.application.dto.UsuarioRequest;
-import com.saas.report.usuarios.domain.exception.EmailAlreadyExistsException;
+import com.saas.report.shared.exception.EmailAlreadyExistsException;
 import com.saas.report.usuarios.domain.usuario.Usuario;
 import com.saas.report.usuarios.domain.usuario.UsuarioRepository;
 import com.saas.report.identity.domain.user.UsuarioRol;
@@ -44,8 +44,8 @@ class CreateUsuarioUseCaseTest {
         return new UsuarioRequest(UUID.randomUUID(), "Ana", "ana@empresa.com", "secreto123", null, true);
     }
 
-    private AuthPrincipal creador(UsuarioRol rol) {
-        return new AuthPrincipal("jefe@saas.com", "u1", null, rol.name());
+    private CreadorPor creador(UsuarioRol rol) {
+        return new CreadorPor("jefe@saas.com", rol.name());
     }
 
     @Test

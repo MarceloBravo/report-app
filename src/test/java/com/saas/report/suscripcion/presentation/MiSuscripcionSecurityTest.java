@@ -1,5 +1,6 @@
 package com.saas.report.suscripcion.presentation;
 
+import com.saas.report.auth.domain.usuario.AuthUser;
 import com.saas.report.identity.domain.user.UsuarioRol;
 import com.saas.report.plan.application.dto.PlanPrecioResponse;
 import com.saas.report.plan.application.dto.PlanResponse;
@@ -7,13 +8,10 @@ import com.saas.report.suscripcion.application.dto.MiSuscripcionResponse;
 import com.saas.report.suscripcion.application.dto.SuscripcionResponse;
 import com.saas.report.suscripcion.application.usecase.GetMiSuscripcionUseCase;
 import com.saas.report.suscripcion.domain.SuscripcionEstado;
+import com.saas.report.shared.domain.valueobject.TenantUUID;
 import com.saas.report.support.AbstractSecurityMvcTest;
-import com.saas.report.tenant.domain.valueobject.TenantUUID;
-import com.saas.report.usuarios.domain.usuario.Usuario;
-import com.saas.report.usuarios.domain.valueobject.UsuarioUUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
@@ -95,11 +93,9 @@ class MiSuscripcionSecurityTest extends AbstractSecurityMvcTest {
     @Test
     @DisplayName("Un ADMIN sin tenant en su principal recibe 403 y no ejecuta el caso de uso")
     void adminSinTenantRecibeForbidden() throws Exception {
-        Usuario adminSinTenant = Mockito.mock(Usuario.class);
-        when(adminSinTenant.getRol()).thenReturn(UsuarioRol.ADMIN);
-        when(adminSinTenant.getUsuarioId()).thenReturn(UsuarioUUID.generate());
-        when(adminSinTenant.getEmail()).thenReturn("sin-tenant@test.com");
-        when(adminSinTenant.getTenantId()).thenReturn(null);
+        AuthUser adminSinTenant = new AuthUser(
+                UUID.randomUUID(), "sin-tenant@test.com", "Admin sin tenant",
+                UsuarioRol.ADMIN.name(), null);
 
         mockMvc.perform(conTokenDe(adminSinTenant, get("/suscripcion/mia")))
                 .andExpect(status().isForbidden());

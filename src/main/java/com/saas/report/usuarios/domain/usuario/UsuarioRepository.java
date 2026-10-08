@@ -1,6 +1,6 @@
 package com.saas.report.usuarios.domain.usuario;
 
-import com.saas.report.usuarios.domain.valueobject.UsuarioUUID;
+import com.saas.report.shared.domain.valueobject.UsuarioUUID;
 import com.saas.report.identity.domain.user.UsuarioRol;
 
 import org.springframework.data.domain.Page;

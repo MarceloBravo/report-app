@@ -22,7 +22,7 @@ import com.saas.report.conexion.domain.connection.TenantDbConnection;
 import com.saas.report.conexion.domain.connection.TenantDbConnectionRepository;
 import com.saas.report.conexion.domain.connection.TipoConexion;
 import com.saas.report.tenant.domain.exception.TenantSlugAlreadyExistsException;
-import com.saas.report.usuarios.domain.exception.EmailAlreadyExistsException;
+import com.saas.report.shared.exception.EmailAlreadyExistsException;
 import com.saas.report.usuarios.domain.emailverificacion.EmailVerificationTokenService;
 import com.saas.report.usuarios.domain.usuario.Usuario;
 import com.saas.report.usuarios.domain.usuario.UsuarioRepository;

@@ -1,7 +1,7 @@
 package com.saas.report.usuarios.infrastructure.security;
 
 import com.saas.report.usuarios.domain.emailverificacion.EmailVerificationTokenService;
-import com.saas.report.usuarios.domain.valueobject.UsuarioUUID;
+import com.saas.report.shared.domain.valueobject.UsuarioUUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -11,6 +11,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.Base64;
 import java.util.Locale;
+import java.util.UUID;
 
 @Component
 public class HmacEmailVerificationTokenService implements EmailVerificationTokenService {
@@ -89,6 +90,25 @@ public class HmacEmailVerificationTokenService implements EmailVerificationToken
                     ("email-verification:" + base64Key).getBytes(StandardCharsets.UTF_8));
         } catch (java.security.NoSuchAlgorithmException e) {
             throw new IllegalStateException("SHA-256 no disponible", e);
+        }
+    }
+
+    @Override
+    public Boolean esValido(UUID usuarioId, String token) {
+        try {
+            UsuarioUUID idExtraido = verificar(token);
+            return idExtraido.equals(new UsuarioUUID(usuarioId));
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    @Override
+    public UsuarioUUID extraerUsuarioId(String token) {
+        try {
+            return verificar(token);
+        } catch (IllegalArgumentException e) {
+            return null;
         }
     }
 }

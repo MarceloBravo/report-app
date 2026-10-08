@@ -2,7 +2,7 @@ package com.saas.report.conexion.domain.connection;
 
 import com.saas.report.shared.exception.InvalidIntegerValue;
 import com.saas.report.conexion.domain.valueobject.TenantDbConnectionUUID;
-import com.saas.report.tenant.domain.valueobject.TenantUUID;
+import com.saas.report.shared.domain.valueobject.TenantUUID;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;

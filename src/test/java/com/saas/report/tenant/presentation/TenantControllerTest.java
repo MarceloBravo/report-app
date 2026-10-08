@@ -1,6 +1,6 @@
 package com.saas.report.tenant.presentation;
 
-import com.saas.report.shared.presentation.rest.GlobalExceptionHandler;
+import com.saas.report.config.exception.GlobalExceptionHandler;
 import com.saas.report.tenant.application.dto.TenantResponse;
 import com.saas.report.tenant.application.usecase.ActivateTenantUseCase;
 import com.saas.report.tenant.application.usecase.CancelTenantUseCase;

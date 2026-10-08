@@ -2,10 +2,10 @@ package com.saas.report.usuarios.application.usecase;
 
 import com.saas.report.usuarios.domain.usuario.Usuario;
 import com.saas.report.usuarios.domain.usuario.UsuarioRepository;
-import com.saas.report.usuarios.domain.valueobject.UsuarioUUID;
+import com.saas.report.shared.domain.valueobject.UsuarioUUID;
 import com.saas.report.shared.exception.ResourceNotFoundException;
 import com.saas.report.identity.domain.user.UsuarioRol;
-import com.saas.report.tenant.domain.valueobject.TenantUUID;
+import com.saas.report.shared.domain.valueobject.TenantUUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

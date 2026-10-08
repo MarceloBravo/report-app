@@ -25,4 +25,16 @@ public enum UsuarioRol {
             case VIEWER -> false;
         };
     }
+
+    public boolean puedeModificar(UsuarioRol otroRol) {
+        if (otroRol == null) {
+            return false;
+        }
+        return switch (this) {
+            case PLATFORM_ADMIN -> true;
+            case PLATFORM_USER -> otroRol == ADMIN || otroRol == VIEWER;
+            case ADMIN -> otroRol == VIEWER;
+            case VIEWER -> false;
+        };
+    }
 }

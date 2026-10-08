@@ -10,7 +10,7 @@ import com.saas.report.plan.application.usecase.GetPlanUseCase;
 import com.saas.report.plan.application.usecase.ListPlansUseCase;
 import com.saas.report.plan.domain.exception.PlanNombreAlreadyExistsException;
 import com.saas.report.shared.exception.InvalidStatusException;
-import com.saas.report.shared.presentation.rest.GlobalExceptionHandler;
+import com.saas.report.config.exception.GlobalExceptionHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

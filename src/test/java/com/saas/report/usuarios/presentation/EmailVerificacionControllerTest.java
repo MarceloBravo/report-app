@@ -1,6 +1,6 @@
 package com.saas.report.usuarios.presentation;
 
-import com.saas.report.shared.presentation.rest.GlobalExceptionHandler;
+import com.saas.report.config.exception.GlobalExceptionHandler;
 import com.saas.report.usuarios.application.usecase.VerificarEmailUseCase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

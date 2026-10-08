@@ -1,4 +1,4 @@
-package com.saas.report.shared.presentation.rest;
+package com.saas.report.config.exception;
 
 import com.saas.report.auth.domain.exception.InvalidCredentialsException;
 import com.saas.report.auth.domain.exception.TokenRevokedException;
@@ -7,12 +7,12 @@ import com.saas.report.consulta.domain.exception.ProveedorIaNoDisponibleExceptio
 import com.saas.report.plan.domain.exception.PlanNombreAlreadyExistsException;
 import com.saas.report.shared.exception.DomainException;
 import com.saas.report.shared.exception.ForbiddenException;
-import com.saas.report.shared.presentation.dto.ErrorResponse;
-import com.saas.report.suscripcion.domain.exception.SuscripcionAlreadyActiveException;
-import com.saas.report.usuarios.domain.exception.EmailAlreadyExistsException;
 import com.saas.report.shared.exception.InvalidStatusException;
 import com.saas.report.shared.exception.ResourceNotFoundException;
+import com.saas.report.shared.presentation.dto.ErrorResponse;
+import com.saas.report.suscripcion.domain.exception.SuscripcionAlreadyActiveException;
 import com.saas.report.tenant.domain.exception.TenantSlugAlreadyExistsException;
+import com.saas.report.shared.exception.EmailAlreadyExistsException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -51,7 +51,7 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.CONFLICT, ex.getMessage(), request);
     }
 
-@ExceptionHandler(PlanNombreAlreadyExistsException.class)
+    @ExceptionHandler(PlanNombreAlreadyExistsException.class)
     public ResponseEntity<ErrorResponse> handlePlanNombreExists(PlanNombreAlreadyExistsException ex,
                                                                 HttpServletRequest request) {
         return build(HttpStatus.CONFLICT, ex.getMessage(), request);
@@ -105,7 +105,7 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
     }
 
-@ExceptionHandler(MethodArgumentNotValidException.class)
+    @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException ex,
                                                            HttpServletRequest request) {
         String message = ex.getBindingResult().getFieldErrors().stream()

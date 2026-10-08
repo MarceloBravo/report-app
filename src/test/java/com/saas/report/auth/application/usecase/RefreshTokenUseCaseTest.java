@@ -7,11 +7,8 @@ import com.saas.report.auth.domain.exception.InvalidCredentialsException;
 import com.saas.report.auth.domain.exception.TokenRevokedException;
 import com.saas.report.auth.domain.token.UsuarioToken;
 import com.saas.report.auth.domain.token.UsuarioTokenRepository;
-import com.saas.report.identity.domain.user.UsuarioRol;
+import com.saas.report.auth.domain.usuario.AuthUser;
 import com.saas.report.auth.domain.valueobject.UsuarioTokenUUID;
-import com.saas.report.usuarios.domain.usuario.Usuario;
-import com.saas.report.usuarios.domain.valueobject.UsuarioUUID;
-import com.saas.report.tenant.domain.valueobject.TenantUUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -48,9 +46,8 @@ class RefreshTokenUseCaseTest {
         refreshTokenUseCase = new RefreshTokenUseCase(tokenService, usuarioTokenRepository, tokenIssuer);
     }
 
-    private Usuario usuario() {
-        return new Usuario(UsuarioUUID.generate(), TenantUUID.generate(), "Ana", "ana@empresa.com",
-                "hash", UsuarioRol.VIEWER, true);
+    private AuthUser usuario() {
+        return new AuthUser(UUID.randomUUID(), "ana@empresa.com", "Ana", "VIEWER", UUID.randomUUID());
     }
 
     private UsuarioToken tokenActivo() {
@@ -61,7 +58,7 @@ class RefreshTokenUseCaseTest {
 
     @Test
     void revocaElRegistroActualYEmiteNuevosTokens() {
-        Usuario usuario = usuario();
+        AuthUser usuario = usuario();
         UsuarioToken registro = new UsuarioToken(UsuarioTokenUUID.generate(), usuario,
                 "access-token", REFRESH, LocalDateTime.now(), LocalDateTime.now().plusMinutes(15),
                 LocalDateTime.now().plusDays(7), true);

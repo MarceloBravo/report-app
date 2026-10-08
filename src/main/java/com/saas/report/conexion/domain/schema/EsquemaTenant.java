@@ -1,6 +1,6 @@
 package com.saas.report.conexion.domain.schema;
 
-import com.saas.report.tenant.domain.valueobject.TenantUUID;
+import com.saas.report.shared.domain.valueobject.TenantUUID;
 
 import java.time.Instant;
 import java.util.List;

@@ -4,7 +4,7 @@ import com.saas.report.shared.exception.ResourceNotFoundException;
 import com.saas.report.tenant.application.dto.TenantResponse;
 import com.saas.report.tenant.domain.Tenant;
 import com.saas.report.tenant.domain.TenantRepository;
-import com.saas.report.tenant.domain.valueobject.TenantUUID;
+import com.saas.report.shared.domain.valueobject.TenantUUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

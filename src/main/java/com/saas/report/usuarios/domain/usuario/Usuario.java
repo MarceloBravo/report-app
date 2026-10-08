@@ -1,13 +1,13 @@
 package com.saas.report.usuarios.domain.usuario;
 
-import com.saas.report.usuarios.domain.valueobject.UsuarioUUID;
+import com.saas.report.shared.domain.valueobject.UsuarioUUID;
 import com.saas.report.identity.domain.user.UsuarioRol;
-import com.saas.report.tenant.domain.valueobject.TenantUUID;
+import com.saas.report.shared.domain.valueobject.TenantUUID;
 
 public class Usuario {
 
     private final UsuarioUUID usuarioId;
-    private final TenantUUID tenantId;
+    private TenantUUID tenantId;
     private String nombre;
     private String email;
     private String password;
@@ -76,57 +76,59 @@ public class Usuario {
         return activo;
     }
 
-    public boolean esAdmin() {
-        return this.rol == UsuarioRol.ADMIN;
+    public boolean isActivo() {
+        return activo;
     }
 
-    public boolean esRolPlataforma() {
-        return this.rol.esRolPlataforma();
-    }
-
-    public boolean esAdminPlataforma() {
-        return this.rol == UsuarioRol.PLATFORM_ADMIN;
-    }
-
-    public void cambiarRol(UsuarioRol nuevoRol) {
-        validarCompatibilidadTenant(nuevoRol, this.tenantId);
-        this.rol = nuevoRol;
-    }
-
-    public void cambiarNombre(String nuevoNombre) {
-        if (nuevoNombre == null || nuevoNombre.isBlank()) {
-            throw new IllegalArgumentException("El nombre no puede estar vacío");
-        }
-        this.nombre = nuevoNombre;
-    }
-
-    public void cambiarEmail(String nuevoEmail) {
-        if (nuevoEmail == null || nuevoEmail.isBlank()) {
-            throw new IllegalArgumentException("El email no puede estar vacío");
-        }
-        this.email = nuevoEmail;
-    }
-
-    public void cambiarPassword(String nuevoPassword) {
-        if (nuevoPassword == null || nuevoPassword.isBlank()) {
-            throw new IllegalArgumentException("La contraseña no puede estar vacía");
-        }
-        this.password = nuevoPassword;
-    }
-
-    public void cambiarEstado(boolean nuevoEstado) {
-        this.activo = nuevoEstado;
-    }
-
-    public void deshabilitar() {
-        this.activo = false;
+    public boolean isEmailVerificado() {
+        return emailVerificado;
     }
 
     public boolean getEmailVerificado() {
         return emailVerificado;
     }
 
-    public void marcarEmailComoVerificado() {
+    public boolean esAdmin() {
+        return this.rol == UsuarioRol.ADMIN;
+    }
+
+    public void actualizarNombre(String nombre) {
+        if (nombre == null || nombre.isBlank()) {
+            throw new IllegalArgumentException("El nombre no puede estar vacío");
+        }
+        this.nombre = nombre;
+    }
+
+    public void actualizarEmail(String email) {
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("El email no puede estar vacío");
+        }
+        this.email = email;
+    }
+
+    public void actualizarPassword(String password) {
+        if (password == null || password.isBlank()) {
+            throw new IllegalArgumentException("La contraseña no puede estar vacía");
+        }
+        this.password = password;
+    }
+
+    public void actualizarEstado(boolean activo) {
+        this.activo = activo;
+    }
+
+    public void cambiarRol(UsuarioRol nuevoRol, TenantUUID nuevoTenantId) {
+        validarCompatibilidadTenant(nuevoRol, nuevoTenantId);
+        this.rol = nuevoRol;
+        this.tenantId = nuevoTenantId;
+    }
+
+    public void cambiarTenant(TenantUUID nuevoTenantId) {
+        validarCompatibilidadTenant(this.rol, nuevoTenantId);
+        this.tenantId = nuevoTenantId;
+    }
+
+    public void verificarEmail() {
         this.emailVerificado = true;
     }
 

@@ -1,14 +1,14 @@
 package com.saas.report.auth.application;
 
-import com.saas.report.usuarios.domain.usuario.Usuario;
+import com.saas.report.auth.domain.usuario.AuthUser;
 
 import java.time.LocalDateTime;
 
 public interface TokenService {
 
-    String generateAccessToken(Usuario usuario);
+    String generateAccessToken(AuthUser usuario);
 
-    String generateRefreshToken(Usuario usuario);
+    String generateRefreshToken(AuthUser usuario);
 
     boolean esTokenValido(String token);
 

@@ -1,15 +1,15 @@
 package com.saas.report.suscripcion.presentation;
 
-import com.saas.report.auth.application.AuthPrincipal;
+import com.saas.report.shared.security.AuthPrincipal;
 import com.saas.report.plan.application.dto.PlanResponse;
 import com.saas.report.shared.exception.ResourceNotFoundException;
-import com.saas.report.shared.presentation.rest.GlobalExceptionHandler;
+import com.saas.report.config.exception.GlobalExceptionHandler;
 import com.saas.report.suscripcion.application.dto.MiSuscripcionResponse;
 import com.saas.report.suscripcion.application.dto.SuscripcionResponse;
 import com.saas.report.suscripcion.application.dto.SuscripcionResponse.SuscripcionHistorialPrecioResponse;
 import com.saas.report.suscripcion.application.usecase.GetMiSuscripcionUseCase;
 import com.saas.report.suscripcion.domain.SuscripcionEstado;
-import com.saas.report.tenant.domain.valueobject.TenantUUID;
+import com.saas.report.shared.domain.valueobject.TenantUUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

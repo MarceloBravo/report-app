@@ -1,7 +1,7 @@
 package com.saas.report.suscripcion.domain;
 
 import com.saas.report.suscripcion.domain.valueobject.SuscripcionUUID;
-import com.saas.report.tenant.domain.valueobject.TenantUUID;
+import com.saas.report.shared.domain.valueobject.TenantUUID;
 
 import java.util.List;
 import java.util.Optional;

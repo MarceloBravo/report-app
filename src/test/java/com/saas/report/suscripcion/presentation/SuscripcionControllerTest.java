@@ -1,6 +1,6 @@
 package com.saas.report.suscripcion.presentation;
 
-import com.saas.report.shared.presentation.rest.GlobalExceptionHandler;
+import com.saas.report.config.exception.GlobalExceptionHandler;
 import com.saas.report.suscripcion.application.dto.ActualizarPlanRequest;
 import com.saas.report.suscripcion.application.dto.SuscripcionRequest;
 import com.saas.report.suscripcion.application.dto.SuscripcionResponse;

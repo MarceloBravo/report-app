@@ -1,7 +1,7 @@
 package com.saas.report.tenant.domain;
 
 import com.saas.report.shared.exception.InvalidStatusException;
-import com.saas.report.tenant.domain.valueobject.TenantUUID;
+import com.saas.report.shared.domain.valueobject.TenantUUID;
 
 import java.time.LocalDateTime;
 

@@ -1,7 +1,7 @@
 package com.saas.report.consulta.domain;
 
 import com.saas.report.consulta.domain.valueobject.ConsultaHistorialUUID;
-import com.saas.report.tenant.domain.valueobject.TenantUUID;
+import com.saas.report.shared.domain.valueobject.TenantUUID;
 
 import org.springframework.data.domain.Page;
 

@@ -9,7 +9,7 @@ import com.saas.report.plan.domain.valueobject.PlanUUID;
 import com.saas.report.shared.exception.InvalidStatusException;
 import com.saas.report.suscripcion.domain.valueobject.SuscripcionHistorialPrecioUUID;
 import com.saas.report.suscripcion.domain.valueobject.SuscripcionUUID;
-import com.saas.report.tenant.domain.valueobject.TenantUUID;
+import com.saas.report.shared.domain.valueobject.TenantUUID;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;

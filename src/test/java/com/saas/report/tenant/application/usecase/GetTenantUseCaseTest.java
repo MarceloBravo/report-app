@@ -5,7 +5,7 @@ import com.saas.report.tenant.application.dto.TenantResponse;
 import com.saas.report.tenant.domain.Tenant;
 import com.saas.report.tenant.domain.TenantEstado;
 import com.saas.report.tenant.domain.TenantRepository;
-import com.saas.report.tenant.domain.valueobject.TenantUUID;
+import com.saas.report.shared.domain.valueobject.TenantUUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

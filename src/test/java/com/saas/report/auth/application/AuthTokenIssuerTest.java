@@ -3,10 +3,7 @@ package com.saas.report.auth.application;
 import com.saas.report.auth.application.dto.TokenResponse;
 import com.saas.report.auth.domain.token.UsuarioToken;
 import com.saas.report.auth.domain.token.UsuarioTokenRepository;
-import com.saas.report.identity.domain.user.UsuarioRol;
-import com.saas.report.usuarios.domain.usuario.Usuario;
-import com.saas.report.usuarios.domain.valueobject.UsuarioUUID;
-import com.saas.report.tenant.domain.valueobject.TenantUUID;
+import com.saas.report.auth.domain.usuario.AuthUser;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,6 +12,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
@@ -38,8 +36,8 @@ class AuthTokenIssuerTest {
 
     @Test
     void emiteTokensYPersisteElRegistro() {
-        Usuario usuario = new Usuario(UsuarioUUID.generate(), TenantUUID.generate(), "Ana",
-                "ana@empresa.com", "hash", UsuarioRol.VIEWER, true);
+        AuthUser usuario = new AuthUser(UUID.randomUUID(), "ana@empresa.com", "Ana",
+                "VIEWER", UUID.randomUUID());
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime accessExp = now.plusMinutes(15);
         LocalDateTime refreshExp = now.plusDays(7);

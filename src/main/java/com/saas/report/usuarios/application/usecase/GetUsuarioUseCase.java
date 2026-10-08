@@ -1,11 +1,13 @@
 package com.saas.report.usuarios.application.usecase;
 
+import com.saas.report.shared.domain.valueobject.UsuarioUUID;
+import com.saas.report.shared.exception.ResourceNotFoundException;
 import com.saas.report.usuarios.domain.usuario.Usuario;
 import com.saas.report.usuarios.domain.usuario.UsuarioRepository;
-import com.saas.report.usuarios.domain.valueobject.UsuarioUUID;
-import com.saas.report.shared.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.UUID;
 
 @Service
 public class GetUsuarioUseCase {
@@ -17,8 +19,14 @@ public class GetUsuarioUseCase {
     }
 
     @Transactional(readOnly = true)
-    public Usuario execute(UsuarioUUID usuarioId) {
-        return usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con ID: " + usuarioId.getValue()));
+    public Usuario execute(UUID id) {
+        return usuarioRepository.findById(new UsuarioUUID(id))
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + id));
+    }
+
+    @Transactional(readOnly = true)
+    public Usuario execute(UsuarioUUID id) {
+        return usuarioRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + id.getValue()));
     }
 }

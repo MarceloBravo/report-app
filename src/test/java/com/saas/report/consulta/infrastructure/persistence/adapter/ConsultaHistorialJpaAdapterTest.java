@@ -3,7 +3,7 @@ package com.saas.report.consulta.infrastructure.persistence.adapter;
 import com.saas.report.consulta.domain.ConsultaHistorial;
 import com.saas.report.consulta.infrastructure.persistence.ConsultaHistorialJpaEntity;
 import com.saas.report.consulta.infrastructure.persistence.ConsultaHistorialJpaRepository;
-import com.saas.report.tenant.domain.valueobject.TenantUUID;
+import com.saas.report.shared.domain.valueobject.TenantUUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

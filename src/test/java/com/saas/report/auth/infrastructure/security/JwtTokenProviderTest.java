@@ -1,13 +1,12 @@
 package com.saas.report.auth.infrastructure.security;
 
+import com.saas.report.auth.domain.usuario.AuthUser;
 import com.saas.report.identity.domain.user.UsuarioRol;
-import com.saas.report.usuarios.domain.usuario.Usuario;
-import com.saas.report.usuarios.domain.valueobject.UsuarioUUID;
-import com.saas.report.tenant.domain.valueobject.TenantUUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -23,29 +22,29 @@ class JwtTokenProviderTest {
         provider = new JwtTokenProvider(SECRET, 900000, 604800000);
     }
 
-    private Usuario usuario() {
-        return new Usuario(UsuarioUUID.generate(), TenantUUID.generate(), "Ana", "ana@empresa.com",
-                "hash", UsuarioRol.ADMIN, true);
+    private AuthUser usuario() {
+        return new AuthUser(UUID.randomUUID(), "ana@empresa.com", "Ana",
+                UsuarioRol.ADMIN.name(), UUID.randomUUID());
     }
 
     @Test
     void generaAccessTokenConClaimsEsperados() {
-        Usuario u = usuario();
+        AuthUser u = usuario();
 
         String token = provider.generateAccessToken(u);
 
         assertThat(provider.esTokenValido(token)).isTrue();
         assertThat(provider.esRefreshToken(token)).isFalse();
-        assertThat(provider.extraerEmail(token)).isEqualTo(u.getEmail());
-        assertThat(provider.extraerUsuarioId(token)).isEqualTo(u.getUsuarioId().getValue().toString());
-        assertThat(provider.extraerTenantId(token)).isEqualTo(u.getTenantId().getValue().toString());
+        assertThat(provider.extraerEmail(token)).isEqualTo(u.email());
+        assertThat(provider.extraerUsuarioId(token)).isEqualTo(u.id().toString());
+        assertThat(provider.extraerTenantId(token)).isEqualTo(u.tenantId().toString());
         assertThat(provider.extraerRol(token)).isEqualTo(UsuarioRol.ADMIN.name());
     }
 
     @Test
     void generaAccessTokenParaUsuarioPlataformaSinTenant() {
-        Usuario u = new Usuario(UsuarioUUID.generate(), null, "Pam", "pam@saas.com",
-                "hash", UsuarioRol.PLATFORM_ADMIN, true);
+        AuthUser u = new AuthUser(UUID.randomUUID(), "pam@saas.com", "Pam",
+                UsuarioRol.PLATFORM_ADMIN.name(), null);
 
         String token = provider.generateAccessToken(u);
 
@@ -56,13 +55,13 @@ class JwtTokenProviderTest {
 
     @Test
     void generaRefreshTokenIdentificable() {
-        Usuario u = usuario();
+        AuthUser u = usuario();
 
         String token = provider.generateRefreshToken(u);
 
         assertThat(provider.esTokenValido(token)).isTrue();
         assertThat(provider.esRefreshToken(token)).isTrue();
-        assertThat(provider.extraerEmail(token)).isEqualTo(u.getEmail());
+        assertThat(provider.extraerEmail(token)).isEqualTo(u.email());
     }
 
     @Test
@@ -74,7 +73,7 @@ class JwtTokenProviderTest {
 
     @Test
     void expiraAccessTokenSegunDuracionConfigurada() {
-        Usuario u = usuario();
+        AuthUser u = usuario();
 
         String token = provider.generateAccessToken(u);
 

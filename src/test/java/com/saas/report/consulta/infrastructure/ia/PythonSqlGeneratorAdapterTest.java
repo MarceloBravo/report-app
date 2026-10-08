@@ -5,7 +5,7 @@ import com.saas.report.consulta.domain.exception.SqlInvalidoException;
 import com.saas.report.conexion.domain.schema.ColumnaEsquema;
 import com.saas.report.conexion.domain.schema.EsquemaTenant;
 import com.saas.report.conexion.domain.schema.TablaEsquema;
-import com.saas.report.tenant.domain.valueobject.TenantUUID;
+import com.saas.report.shared.domain.valueobject.TenantUUID;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import org.junit.jupiter.api.AfterEach;

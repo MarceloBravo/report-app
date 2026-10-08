@@ -1,7 +1,7 @@
 package com.saas.report.auth.presentation;
 
 import com.saas.report.auth.application.AuthCookieService;
-import com.saas.report.auth.application.AuthPrincipal;
+import com.saas.report.shared.security.AuthPrincipal;
 import com.saas.report.auth.application.dto.LoginRequest;
 import com.saas.report.auth.application.dto.RefreshTokenRequest;
 import com.saas.report.auth.application.dto.RegisterRequest;
@@ -12,7 +12,7 @@ import com.saas.report.auth.application.usecase.RefreshTokenUseCase;
 import com.saas.report.auth.application.usecase.RegisterUseCase;
 import com.saas.report.auth.domain.exception.InvalidCredentialsException;
 import com.saas.report.identity.domain.user.UsuarioRol;
-import com.saas.report.shared.presentation.rest.GlobalExceptionHandler;
+import com.saas.report.config.exception.GlobalExceptionHandler;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;

@@ -1,68 +1,110 @@
-# TODO / Próximos pasos
+# TODO — Módulos 100% independientes (consulta, tenant, suscripcion, plan, usuarios)
 
-Trabajo pendiente del microservicio `report`. El estado de "qué hace hoy el código" está en el
-[README.md](README.md); este archivo solo lista lo que falta o quedó a medias.
+**Definición de "100% independiente":** un módulo solo puede importar `shared` (kernel) e `identity`.
+Ninguna dependencia directa módulo→módulo de negocio. Coste total estimado: **~45 archivos a refactorizar, ~7 a crear, 0 a eliminar (solo imports), ~20 tests afectados.**
 
-## Propuesto (de los próximos pasos sugeridos del README anterior)
+Regla de decisión aplicable a cada dependencia:
 
-- [ ] Crear un módulo Maven independiente `report-identity` para producir un artefacto compartido
-      consumible por otros servicios.
-- [ ] Añadir README y contrato de API (interfaces públicas) al Shared Kernel `identity` para
-      gobernanza de cambios.
-- [ ] Escribir pruebas de integración que cubran el flujo de creación/registro de usuarios y
-      validación de roles.
+| Tipo de dependencia | Solución | Coste |
+|---|---|---|
+| Excepciones/helpers compartidos | Se queda en `shared` (ya es el kernel) | 0 |
+| Value Objects de identidad (TenantUUID, UsuarioUUID) | Mover a `shared/domain/valueobject` | Bajo (mecánico) |
+| Repositorios/dominio de otro módulo | Puerto + adaptador en infrastructure | Alto |
+| Entidad JPA ajena (@JoinColumn) | Columna UUID plana, sin join a entidad externa | Medio |
+| Clase de otro módulo en la firma de un use case | DTO propio en su lugar | Bajo |
+| `shared` importando módulos (ciclo) | Sacar `GlobalExceptionHandler`/`SecurityContextAuth` de shared | Medio |
 
-## Sendero de arquitectura (Shared Kernel `identity`)
+---
 
-- [ ] Convertir `UsuarioRol` en entidad `Role` si los roles pasan a ser dinámicos (CRUD), con
-      repositorio y migración de datos.
-- [ ] Versionar el módulo `identity` si se publica como artefacto Maven.
+## 1. plan — COSTE: 0
 
-## Onboarding y seguridad
+Ya es independiente: sus 12 imports cruzados (8 archivos) son solo hacia `shared`.
 
-- [ ] Implementar el envío real del correo de verificación (agregar `spring-boot-starter-mail` y
-      configurar SMTP; hoy solo se genera y devuelve la URL).
-- [ ] Persistir la verificación de email (token consumido, expiración) de forma explícita en base
-      de datos si se requiere auditoría.
+- [ ] Sin cambios (o verificar con test ArchUnit, ver fase 5)
 
-## Módulo `consulta` (NL → SQL)
+## 2. tenant — COSTE: 0
 
-- [ ] Caché del esquema por tenant/conexión (la extracción existe, la caché no).
-- [ ] Integrar el agente consultor del microservicio Python (hoy solo se genera SQL).
-- [ ] Completar la validación y el sanitado de SQL antes de ejecutarlo contra la BD del cliente.
+Ya es independiente: sus 9 imports cruzados (9 archivos) son solo hacia `shared`.
 
-## Base de datos y migraciones
+- [ ] Sin cambios
 
-- [ ] Incorporar Flyway o Liquibase: hoy el esquema se genera con `ddl-auto: update` (dev) /
-      `validate` (prod) y solo hay una semilla SQL en `src/main/resources/db/`.
-- [ ] Aplicar las decisiones de RLS documentadas en `docs/Arquitectura_Base_de_Datos_v2.md`.
+## 3. usuarios — COSTE: ~8 archivos refactorizar, 0 crear
 
-## Calidad y pruebas
+30 imports cruzados. Tres problemas:
 
-- [ ] Test de carga de contexto (`@SpringBootTest`) y de `GlobalExceptionHandler`.
-- [ ] Tests de los filtros de seguridad (`JwtAuthorizationFilter`, `SelfServeRateLimitFilter`),
-      `SecurityConfig`, `AesCredentialCipher` y los adaptadores/mapeadores JPA.
-- [ ] Configurar CI (no existe `.github/workflows/`) con `./mvnw verify`.
+**a) Fuga de infraestructura a tenant (refactor obligatorio)**
+- [ ] `usuarios/infrastructure/persistence/UsuarioJpaEntity.java` — `@JoinColumn TenantJpaEntity` → columna `tenant_id` UUID plana (3 imports)
+- [ ] `usuarios/infrastructure/persistence/adapter/UsuarioJpaAdapter.java` — eliminar `TenantJpaRepository` y `getReferenceById` (usar el UUID directo)
+- [ ] `usuarios/infrastructure/persistence/mapper/UsuarioMapper.java` — dejar de usar `TenantMapper`/`TenantJpaEntity`, mapear UUID directo
 
-## Higiene del repositorio
+**b) Depende de auth en application (refactor obligatorio)**
+- [ ] `usuarios/application/usecase/CreateUsuarioUseCase.java` — recibe `AuthPrincipal` → cambiar por DTO propio (ej. `record CreadorPor(String email, String rol)`) o mover `AuthPrincipal` a shared
+- [ ] `usuarios/presentation/UsuarioController.java` — punto de llamada (1 línea)
 
-- [ ] Eliminar el árbol duplicado `bin/` (copia completa del proyecto) y
-      `docs/refactorizacion-arquitectura-clean-ddd copy.md` (idéntico al original).
-- [ ] Actualizar `docs/ESTRUCTURA_ARCHIVOS.md` y el README de `identity`
-      (referencian clases y roles que ya no existen).
-- [ ] Añadir `LICENSE` y `CHANGELOG.md`.
+**c) UsuarioRol de identity (decisión)**
+- [ ] Opción A (recomendada): `identity` cuenta como kernel → 0 cambios (11 archivos)
+- [ ] Opción B: mover `UsuarioRol` a `shared` → 11 archivos de usuarios + ~15 de otros módulos (mecánico)
 
-## Notas importantes
+## 4. suscripcion — COSTE: ~9 archivos refactorizar, 2 crear
 
-- El paquete `identity` actúa como Shared Kernel y debe mantenerse pequeño y estable. Cualquier
-  cambio público en él debe documentarse; si en el futuro se publica como artefacto Maven, hay que
-  versionar el módulo (`src/main/java/com/saas/report/identity/domain/user/UsuarioRol.java`).
-- Si los roles pasan a ser dinámicos (gestión CRUD), habría que convertir `UsuarioRol` en una
-  entidad `Role` dentro del mismo módulo `identity`, con repositorio y migración de datos.
-- El alta administrativa de tenants fue removida: `/admin/tenants` solo permite consultar y cambiar
-  el estado (activar / suspender / cancelar).
-- La verificación de email genera y devuelve el enlace, pero el envío de correo no está implementado
-  (no hay `spring-boot-starter-mail`); la URL se construye con `FRONTEND_BASE_URL` y se incluye en
-  la respuesta de `POST /self-serve/registro`.
-- `docs/ESTRUCTURA_ARCHIVOS.md` y el README de `identity` tienen secciones desactualizadas respecto
-  al código actual; el código es la fuente de verdad.
+35 imports cruzados: 17 a `plan` (7 archivos), 6 a `tenant` (4), 12 a `shared` (ok).
+
+**a) VOs → shared (mecánico)**
+- [ ] Mover `TenantUUID` y `UsuarioUUID` a `shared/domain/valueobject` → actualiza imports en suscripcion (4), consulta (8), usuarios (5), conexion (6), auth (1), onboarding (1) ≈ **25 archivos**
+
+**b) Depende del dominio/repositorio de plan (el caro)**
+- [ ] `suscripcion/domain/Suscripcion.java` — usa `Plan`, `PlanPrecio`, `PlanUUID` → definir puerto `PlanGateway` en suscripcion (devuelve DTO propio) **[CREAR]**
+- [ ] `suscripcion/domain/SuscripcionHistorialPrecio.java` — `PlanPrecioUUID` → mover VO a shared o usar UUID crudo
+- [ ] `suscripcion/application/usecase/CreateSuscripcionUseCase.java` — `PlanRepository` → `PlanGateway`
+- [ ] `suscripcion/application/usecase/GetMiSuscripcionUseCase.java` — igual
+- [ ] `suscripcion/application/usecase/UpdateSuscripcionPlanUseCase.java` — igual
+- [ ] `suscripcion/application/dto/MiSuscripcionResponse.java` — `Plan`/`PlanResponse` de plan → DTO propio
+- [ ] `suscripcion/infrastructure/persistence/mapper/SuscripcionMapper.java` — `PlanUUID`/`PlanPrecioUUID`
+- [ ] Adaptador `PlanJpaGateway` que sí importa plan **[CREAR]** (la dependencia migra a infrastructure)
+- [ ] Tests: `CreateSuscripcionUseCaseTest`, `GetMiSuscripcionUseCaseTest`, `UpdateSuscripcionPlanUseCaseTest`
+
+**Alternativa de menor coste:** tratar `plan` como kernel compartido → 0 cambios (recomendado si plan no va a evolucionar independiente).
+
+## 5. consulta — COSTE: ~14 archivos refactorizar, 3 crear
+
+43 imports cruzados (16 archivos): 6 a plan/suscripcion, 8 a tenant, 4 a usuarios, 8 a conexion.
+
+**a) Límite mensual acoplado a plan+suscripcion (obligatorio)**
+- [ ] `consulta/application/usecase/ConvertirConsultaUseCase.java` — `PlanRepository` + `SuscripcionRepository` + `SuscripcionEstado` → puerto `ValidadorLimiteConsultasPort` **[CREAR]**
+- [ ] `consulta/application/usecase/RegisterConsultaUseCase.java` — igual (4 imports)
+- [ ] Adaptador en infrastructure que importa plan/suscripcion **[CREAR]**
+
+**b) VOs → shared (mecánico, cubierto por 4a)**
+- [ ] `consulta/domain/ConsultaHistorial.java` (TenantUUID, UsuarioUUID)
+- [ ] `consulta/domain/ConsultaHistorialRepository.java` (TenantUUID)
+- [ ] `consulta/application/usecase/ListConsultasUseCase.java`, `ConvertirConsultaUseCase.java`, `RegisterConsultaUseCase.java`
+- [ ] `consulta/infrastructure/persistence/.../ConsultaHistorialMapper.java`, `ConsultaHistorialJpaAdapter.java`
+- [ ] `consulta/presentation/ConsultaController.java`
+
+**c) Depende de conexion (8 archivos) — decisión de diseño**
+- [ ] Opción A (recomendada): `conexion` es kernel técnico → 0 cambios
+- [ ] Opción B: puertos con tipos propios → refactoring de `GeneradorSqlPort`, `SqlEjecutorPort`, `PythonSqlGeneratorAdapter`, `JdbcSqlEjecutor`, 2 use cases ≈ **10 archivos + 1 DTO de esquema** (alto)
+
+**d) Tests afectados:** `ConvertirConsultaUseCaseTest`, `ListConsultasUseCaseTest`, `RegisterConsultaUseCaseTest` (si existe), `ConsultaHistorialTest`, `ConsultaControllerTest`
+
+---
+
+## Fase transversal (obligatoria, rompe ciclos en `shared`)
+
+- [ ] **GlobalExceptionHandler** (`shared/presentation/rest/`) importa excepciones de 6 módulos → moverlo a un paquete de composición (ej. `com.saas.report.config`) o crear un `@RestControllerAdvice` por módulo **[REUBICAR o CREAR ×6]**
+  - Afecta: 7+ tests que lo importan
+- [ ] **SecurityContextAuth** (`shared/presentation/rest/`) importa `AuthPrincipal` (auth) y `TenantUUID` (tenant) → trasladar ambos a shared, o reducir su API a tipos de `shared`/JDK **[REFACTORIZAR]**
+- [ ] Mover `TenantUUID` y `UsuarioUUID` a `shared/domain/valueobject` **[CREAR ×2 / MOVER ×2]** ≈ 25 imports
+
+## Verificación
+
+- [ ] Añadir test de arquitectura con ArchUnit (recomendado): `noDependenciasEntreModulos()` que falle si `com.saas.report.X` importa `com.saas.report.Y` con X,Y de negocio y Y ∉ {shared, identity} **[CREAR]**
+- [ ] `mvn test` en verde tras cada fase
+
+## Orden sugerido
+
+1. Fase transversal (GlobalExceptionHandler, SecurityContextAuth, VOs a shared) — desbloquea todo lo demás
+2. usuarios (a + b) — pequeño e independiente
+3. consulta (a) — puerto de límite
+4. suscripcion (b) — puerto de plan (o declarar plan kernel)
+5. ArchUnit como red de seguridad permanente

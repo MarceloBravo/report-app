@@ -6,7 +6,7 @@ import com.saas.report.shared.exception.ResourceNotFoundException;
 import com.saas.report.suscripcion.application.dto.MiSuscripcionResponse;
 import com.saas.report.suscripcion.domain.Suscripcion;
 import com.saas.report.suscripcion.domain.SuscripcionRepository;
-import com.saas.report.tenant.domain.valueobject.TenantUUID;
+import com.saas.report.shared.domain.valueobject.TenantUUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

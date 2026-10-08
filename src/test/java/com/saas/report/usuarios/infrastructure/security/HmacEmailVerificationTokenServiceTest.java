@@ -1,6 +1,6 @@
 package com.saas.report.usuarios.infrastructure.security;
 
-import com.saas.report.usuarios.domain.valueobject.UsuarioUUID;
+import com.saas.report.shared.domain.valueobject.UsuarioUUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

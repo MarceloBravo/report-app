@@ -3,7 +3,7 @@ package com.saas.report.consulta.application.usecase;
 import com.saas.report.consulta.application.dto.ConsultaResponse;
 import com.saas.report.consulta.domain.ConsultaHistorial;
 import com.saas.report.consulta.domain.ConsultaHistorialRepository;
-import com.saas.report.tenant.domain.valueobject.TenantUUID;
+import com.saas.report.shared.domain.valueobject.TenantUUID;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

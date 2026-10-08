@@ -1,6 +1,6 @@
 package com.saas.report.consulta.presentation;
 
-import com.saas.report.auth.application.AuthPrincipal;
+import com.saas.report.shared.security.AuthPrincipal;
 import com.saas.report.consulta.application.dto.ConsultaRequest;
 import com.saas.report.consulta.application.dto.ConsultaResponse;
 import com.saas.report.consulta.application.dto.ConvertirConsultaRequest;
@@ -9,8 +9,8 @@ import com.saas.report.consulta.application.usecase.GetConsultaUseCase;
 import com.saas.report.consulta.application.usecase.ListConsultasUseCase;
 import com.saas.report.consulta.application.usecase.RegisterConsultaUseCase;
 import com.saas.report.consulta.domain.exception.LimiteConsultasExcedidoException;
-import com.saas.report.shared.presentation.rest.GlobalExceptionHandler;
-import com.saas.report.tenant.domain.valueobject.TenantUUID;
+import com.saas.report.config.exception.GlobalExceptionHandler;
+import com.saas.report.shared.domain.valueobject.TenantUUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

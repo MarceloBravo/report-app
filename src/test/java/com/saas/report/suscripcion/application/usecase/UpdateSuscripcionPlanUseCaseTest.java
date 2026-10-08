@@ -16,7 +16,7 @@ import com.saas.report.suscripcion.domain.SuscripcionHistorialPrecio;
 import com.saas.report.suscripcion.domain.SuscripcionRepository;
 import com.saas.report.suscripcion.domain.valueobject.SuscripcionHistorialPrecioUUID;
 import com.saas.report.suscripcion.domain.valueobject.SuscripcionUUID;
-import com.saas.report.tenant.domain.valueobject.TenantUUID;
+import com.saas.report.shared.domain.valueobject.TenantUUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

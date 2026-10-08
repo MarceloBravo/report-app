@@ -1,7 +1,7 @@
 package com.saas.report.conexion.domain.connection;
 
 import com.saas.report.conexion.domain.valueobject.TenantDbConnectionUUID;
-import com.saas.report.tenant.domain.valueobject.TenantUUID;
+import com.saas.report.shared.domain.valueobject.TenantUUID;
 
 import java.util.List;
 import java.util.Optional;

@@ -1,8 +1,8 @@
 package com.saas.report.shared.presentation.rest;
 
-import com.saas.report.auth.application.AuthPrincipal;
+import com.saas.report.shared.security.AuthPrincipal;
 import com.saas.report.shared.exception.ForbiddenException;
-import com.saas.report.tenant.domain.valueobject.TenantUUID;
+import com.saas.report.shared.domain.valueobject.TenantUUID;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.UUID;

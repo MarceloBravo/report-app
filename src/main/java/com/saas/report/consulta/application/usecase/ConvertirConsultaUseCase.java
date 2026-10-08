@@ -7,19 +7,16 @@ import com.saas.report.consulta.domain.ConsultaHistorial;
 import com.saas.report.consulta.domain.ConsultaHistorialRepository;
 import com.saas.report.consulta.domain.GeneradorSqlPort;
 import com.saas.report.consulta.domain.SqlEjecutorPort;
-import com.saas.report.consulta.domain.exception.LimiteConsultasExcedidoException;
+import com.saas.report.consulta.domain.ValidadorLimiteConsultasPort;
 import com.saas.report.consulta.domain.valueobject.ConsultaHistorialUUID;
-import com.saas.report.plan.domain.PlanRepository;
 import com.saas.report.shared.exception.ResourceNotFoundException;
-import com.saas.report.suscripcion.domain.SuscripcionEstado;
-import com.saas.report.suscripcion.domain.SuscripcionRepository;
 import com.saas.report.conexion.domain.connection.TenantDbConnection;
 import com.saas.report.conexion.domain.connection.TenantDbConnectionRepository;
 import com.saas.report.conexion.domain.schema.EsquemaTenant;
 import com.saas.report.conexion.domain.schema.SchemaExtractor;
 import com.saas.report.conexion.domain.valueobject.TenantDbConnectionUUID;
-import com.saas.report.tenant.domain.valueobject.TenantUUID;
-import com.saas.report.usuarios.domain.valueobject.UsuarioUUID;
+import com.saas.report.shared.domain.valueobject.TenantUUID;
+import com.saas.report.shared.domain.valueobject.UsuarioUUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,27 +30,24 @@ import java.util.Map;
 public class ConvertirConsultaUseCase {
 
     private final ConsultaHistorialRepository consultaRepository;
-    private final SuscripcionRepository suscripcionRepository;
-    private final PlanRepository planRepository;
     private final TenantDbConnectionRepository dbConnectionRepository;
     private final SchemaExtractor schemaExtractor;
     private final GeneradorSqlPort generadorSqlPort;
     private final SqlEjecutorPort sqlEjecutorPort;
+    private final ValidadorLimiteConsultasPort validadorLimiteConsultasPort;
 
     public ConvertirConsultaUseCase(ConsultaHistorialRepository consultaRepository,
-                                    SuscripcionRepository suscripcionRepository,
-                                    PlanRepository planRepository,
                                     TenantDbConnectionRepository dbConnectionRepository,
                                     SchemaExtractor schemaExtractor,
                                     GeneradorSqlPort generadorSqlPort,
-                                    SqlEjecutorPort sqlEjecutorPort) {
+                                    SqlEjecutorPort sqlEjecutorPort,
+                                    ValidadorLimiteConsultasPort validadorLimiteConsultasPort) {
         this.consultaRepository = consultaRepository;
-        this.suscripcionRepository = suscripcionRepository;
-        this.planRepository = planRepository;
         this.dbConnectionRepository = dbConnectionRepository;
         this.schemaExtractor = schemaExtractor;
         this.generadorSqlPort = generadorSqlPort;
         this.sqlEjecutorPort = sqlEjecutorPort;
+        this.validadorLimiteConsultasPort = validadorLimiteConsultasPort;
     }
 
     @Transactional
@@ -65,7 +59,7 @@ public class ConvertirConsultaUseCase {
         long consultasPrevias = consultaRepository.countByTenantIdAndFechaConsultaAfter(tenant, inicioPeriodo);
         Integer consultasEnPeriodo = Math.toIntExact(consultasPrevias + 1);
 
-        validarLimiteMensual(tenant, consultasEnPeriodo);
+        validadorLimiteConsultasPort.validarLimiteMensual(tenant, consultasEnPeriodo);
 
         TenantDbConnection conexion = resolverConexion(tenant, request.dbConnectionId());
         EsquemaTenant esquema = schemaExtractor.extraer(conexion);
@@ -98,18 +92,5 @@ public class ConvertirConsultaUseCase {
 
         return conexion.orElseThrow(() -> new ResourceNotFoundException(
                 "No se encontró una conexión de base de datos para el tenant " + tenantId.getValue() + "."));
-    }
-
-    private void validarLimiteMensual(TenantUUID tenantId, Integer consultasEnPeriodo) {
-        suscripcionRepository.findByTenantIdAndEstado(tenantId, SuscripcionEstado.ACTIVE)
-                .flatMap(suscripcion -> planRepository.findById(suscripcion.getPlanId()))
-                .ifPresent(plan -> {
-                    if (!plan.permiteConsultas(consultasEnPeriodo)) {
-                        throw new LimiteConsultasExcedidoException(
-                                "El plan " + plan.getNombrePlan()
-                                        + " ha superado su límite mensual de consultas ("
-                                        + plan.getLimiteConsultasMensuales().getValue() + ").");
-                    }
-                });
     }
 }

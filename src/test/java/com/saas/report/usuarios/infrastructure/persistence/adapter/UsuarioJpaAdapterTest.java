@@ -1,9 +1,6 @@
 package com.saas.report.usuarios.infrastructure.persistence.adapter;
 
 import com.saas.report.identity.domain.user.UsuarioRol;
-import com.saas.report.tenant.domain.TenantEstado;
-import com.saas.report.tenant.infrastructure.persistence.TenantJpaEntity;
-import com.saas.report.tenant.infrastructure.persistence.TenantJpaRepository;
 import com.saas.report.usuarios.domain.usuario.Usuario;
 import com.saas.report.usuarios.infrastructure.persistence.UsuarioJpaEntity;
 import com.saas.report.usuarios.infrastructure.persistence.UsuarioJpaRepository;
@@ -18,7 +15,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -35,30 +31,17 @@ class UsuarioJpaAdapterTest {
     @Mock
     private UsuarioJpaRepository repository;
 
-    @Mock
-    private TenantJpaRepository tenantRepository;
-
     private UsuarioJpaAdapter adapter;
 
     @BeforeEach
     void setUp() {
-        adapter = new UsuarioJpaAdapter(repository, tenantRepository);
-    }
-
-    private TenantJpaEntity tenant() {
-        TenantJpaEntity tenant = new TenantJpaEntity();
-        tenant.setTenantId(UUID.randomUUID());
-        tenant.setNombreEmpresa("Acme");
-        tenant.setSubdominioSlug("acme-" + UUID.randomUUID().toString().substring(0, 8));
-        tenant.setEstado(TenantEstado.ACTIVE);
-        tenant.setFechaRegistro(LocalDateTime.now());
-        return tenant;
+        adapter = new UsuarioJpaAdapter(repository);
     }
 
     private UsuarioJpaEntity entity() {
         UsuarioJpaEntity entity = new UsuarioJpaEntity();
         entity.setUsuarioId(UUID.randomUUID());
-        entity.setTenant(tenant());
+        entity.setTenantId(UUID.randomUUID());
         entity.setNombre("Ana");
         entity.setEmail("ana@empresa.com");
         entity.setPasswordHash("hash");
@@ -104,34 +87,12 @@ class UsuarioJpaAdapterTest {
     }
 
     @Test
-    void normalizaPageYNulosAPaginaCero() {
+    void sinPaginaNiTamanoDevuelveResultadoNoPaginado() {
         when(repository.findAllByFiltros(any(), any(), any(Pageable.class))).thenReturn(Page.empty());
 
         adapter.findAll(null, null, null, null);
 
-        Pageable pageable = pageableCapturado();
-        assertThat(pageable.getPageNumber()).isZero();
-        assertThat(pageable.getPageSize()).isEqualTo(10);
-    }
-
-    @Test
-    void normalizaPaginaYTamanoNegativos() {
-        when(repository.findAllByFiltros(any(), any(), any(Pageable.class))).thenReturn(Page.empty());
-
-        adapter.findAll(null, null, -5, -1);
-
-        Pageable pageable = pageableCapturado();
-        assertThat(pageable.getPageNumber()).isZero();
-        assertThat(pageable.getPageSize()).isEqualTo(10);
-    }
-
-    @Test
-    void limitaElTamanoMaximoDePagina() {
-        when(repository.findAllByFiltros(any(), any(), any(Pageable.class))).thenReturn(Page.empty());
-
-        adapter.findAll(null, null, 0, 5000);
-
-        assertThat(pageableCapturado().getPageSize()).isEqualTo(200);
+        assertThat(pageableCapturado().isUnpaged()).isTrue();
     }
 
     @Test

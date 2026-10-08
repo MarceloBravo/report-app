@@ -4,14 +4,11 @@ import com.saas.report.consulta.application.dto.ConsultaRequest;
 import com.saas.report.consulta.application.dto.ConsultaResponse;
 import com.saas.report.consulta.domain.ConsultaHistorial;
 import com.saas.report.consulta.domain.ConsultaHistorialRepository;
-import com.saas.report.consulta.domain.exception.LimiteConsultasExcedidoException;
+import com.saas.report.consulta.domain.ValidadorLimiteConsultasPort;
 import com.saas.report.consulta.domain.valueobject.ConsultaHistorialUUID;
-import com.saas.report.usuarios.domain.valueobject.UsuarioUUID;
-import com.saas.report.plan.domain.PlanRepository;
-import com.saas.report.suscripcion.domain.SuscripcionEstado;
-import com.saas.report.suscripcion.domain.SuscripcionRepository;
+import com.saas.report.shared.domain.valueobject.UsuarioUUID;
 import com.saas.report.conexion.domain.valueobject.TenantDbConnectionUUID;
-import com.saas.report.tenant.domain.valueobject.TenantUUID;
+import com.saas.report.shared.domain.valueobject.TenantUUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,15 +18,12 @@ import java.time.LocalDateTime;
 public class RegisterConsultaUseCase {
 
     private final ConsultaHistorialRepository consultaRepository;
-    private final SuscripcionRepository suscripcionRepository;
-    private final PlanRepository planRepository;
+    private final ValidadorLimiteConsultasPort validadorLimiteConsultasPort;
 
     public RegisterConsultaUseCase(ConsultaHistorialRepository consultaRepository,
-                                   SuscripcionRepository suscripcionRepository,
-                                   PlanRepository planRepository) {
+                                   ValidadorLimiteConsultasPort validadorLimiteConsultasPort) {
         this.consultaRepository = consultaRepository;
-        this.suscripcionRepository = suscripcionRepository;
-        this.planRepository = planRepository;
+        this.validadorLimiteConsultasPort = validadorLimiteConsultasPort;
     }
 
     @Transactional
@@ -41,7 +35,7 @@ public class RegisterConsultaUseCase {
         long consultasPrevias = consultaRepository.countByTenantIdAndFechaConsultaAfter(tenantId, inicioPeriodo);
         Integer consultasEnPeriodo = Math.toIntExact(consultasPrevias + 1);
 
-        validarLimiteMensual(tenantId, consultasEnPeriodo);
+        validadorLimiteConsultasPort.validarLimiteMensual(tenantId, consultasEnPeriodo);
 
         ConsultaHistorial consulta = new ConsultaHistorial(
                 ConsultaHistorialUUID.generate(),
@@ -56,18 +50,5 @@ public class RegisterConsultaUseCase {
                 consultasEnPeriodo);
 
         return ConsultaResponse.from(consultaRepository.save(consulta));
-    }
-
-    private void validarLimiteMensual(TenantUUID tenantId, Integer consultasEnPeriodo) {
-        suscripcionRepository.findByTenantIdAndEstado(tenantId, SuscripcionEstado.ACTIVE)
-                .flatMap(suscripcion -> planRepository.findById(suscripcion.getPlanId()))
-                .ifPresent(plan -> {
-                    if (!plan.permiteConsultas(consultasEnPeriodo)) {
-                        throw new LimiteConsultasExcedidoException(
-                                "El plan " + plan.getNombrePlan()
-                                        + " ha superado su límite mensual de consultas ("
-                                        + plan.getLimiteConsultasMensuales().getValue() + ").");
-                    }
-                });
     }
 }

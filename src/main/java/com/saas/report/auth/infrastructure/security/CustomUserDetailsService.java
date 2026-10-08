@@ -1,7 +1,7 @@
 package com.saas.report.auth.infrastructure.security;
 
-import com.saas.report.usuarios.domain.usuario.Usuario;
-import com.saas.report.usuarios.domain.usuario.UsuarioRepository;
+import com.saas.report.auth.domain.usuario.AuthCredentials;
+import com.saas.report.auth.domain.usuario.UsuarioAuthRepository;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -14,22 +14,22 @@ import java.util.List;
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
-    private final UsuarioRepository usuarioRepository;
+    private final UsuarioAuthRepository usuarioAuthRepository;
 
-    public CustomUserDetailsService(UsuarioRepository usuarioRepository) {
-        this.usuarioRepository = usuarioRepository;
+    public CustomUserDetailsService(UsuarioAuthRepository usuarioAuthRepository) {
+        this.usuarioAuthRepository = usuarioAuthRepository;
     }
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        Usuario usuario = usuarioRepository.findByEmail(email)
+        AuthCredentials usuario = usuarioAuthRepository.buscarCredenciales(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + email));
 
         return User.builder()
-                .username(usuario.getEmail())
-                .password(usuario.getPassword())
-                .authorities(List.of(new SimpleGrantedAuthority("ROLE_" + usuario.getRol().name())))
-                .disabled(!usuario.getActivo())
+                .username(usuario.email())
+                .password(usuario.passwordHash())
+                .authorities(List.of(new SimpleGrantedAuthority("ROLE_" + usuario.rol())))
+                .disabled(!usuario.activo())
                 .accountLocked(false)
                 .accountExpired(false)
                 .credentialsExpired(false)

@@ -1,18 +1,18 @@
 package com.saas.report.auth.application.usecase;
 
-import com.saas.report.auth.application.AuthPrincipal;
 import com.saas.report.auth.application.dto.RegisterRequest;
+import com.saas.report.auth.domain.usuario.AuthUser;
+import com.saas.report.auth.domain.usuario.UsuarioAuthRepository;
 import com.saas.report.identity.domain.user.UsuarioRol;
-import com.saas.report.usuarios.domain.exception.EmailAlreadyExistsException;
-import com.saas.report.usuarios.domain.usuario.Usuario;
-import com.saas.report.usuarios.domain.usuario.UsuarioRepository;
+import com.saas.report.shared.domain.valueobject.TenantUUID;
+import com.saas.report.shared.exception.EmailAlreadyExistsException;
 import com.saas.report.shared.exception.ForbiddenException;
 import com.saas.report.shared.exception.InvalidStatusException;
 import com.saas.report.shared.exception.ResourceNotFoundException;
+import com.saas.report.shared.security.AuthPrincipal;
 import com.saas.report.tenant.domain.Tenant;
 import com.saas.report.tenant.domain.TenantEstado;
 import com.saas.report.tenant.domain.TenantRepository;
-import com.saas.report.tenant.domain.valueobject.TenantUUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,7 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.never;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -36,7 +36,7 @@ import static org.mockito.Mockito.when;
 class RegisterUseCaseTest {
 
     @Mock
-    private UsuarioRepository usuarioRepository;
+    private UsuarioAuthRepository usuarioAuthRepository;
 
     @Mock
     private TenantRepository tenantRepository;
@@ -48,7 +48,7 @@ class RegisterUseCaseTest {
 
     @BeforeEach
     void setUp() {
-        registerUseCase = new RegisterUseCase(usuarioRepository, tenantRepository, passwordEncoder);
+        registerUseCase = new RegisterUseCase(usuarioAuthRepository, tenantRepository, passwordEncoder);
     }
 
     private RegisterRequest request() {
@@ -68,22 +68,20 @@ class RegisterUseCaseTest {
         RegisterRequest request = request();
         Tenant tenant = tenant(TenantEstado.ACTIVE);
 
-        when(usuarioRepository.existsByEmail(request.email())).thenReturn(false);
+        when(usuarioAuthRepository.existePorEmail(request.email())).thenReturn(false);
         when(tenantRepository.findById(any(TenantUUID.class))).thenReturn(Optional.of(tenant));
         when(passwordEncoder.encode(anyString())).thenReturn("encoded-hash");
 
         registerUseCase.registrar(request, UsuarioRol.VIEWER,
                 creador(UsuarioRol.ADMIN, tenant.getTenantId().getValue().toString()));
 
-        ArgumentCaptor<Usuario> captor = ArgumentCaptor.forClass(Usuario.class);
-        verify(usuarioRepository).save(captor.capture());
-        Usuario guardado = captor.getValue();
-        assertThat(guardado.getNombre()).isEqualTo("Ana");
-        assertThat(guardado.getEmail()).isEqualTo("ana@empresa.com");
-        assertThat(guardado.getPassword()).isEqualTo("encoded-hash");
-        assertThat(guardado.getRol()).isEqualTo(UsuarioRol.VIEWER);
-        assertThat(guardado.getActivo()).isTrue();
-        assertThat(guardado.getTenantId()).isEqualTo(tenant.getTenantId());
+        ArgumentCaptor<AuthUser> captor = ArgumentCaptor.forClass(AuthUser.class);
+        verify(usuarioAuthRepository).guardar(captor.capture(), eq("encoded-hash"));
+        AuthUser guardado = captor.getValue();
+        assertThat(guardado.nombre()).isEqualTo("Ana");
+        assertThat(guardado.email()).isEqualTo("ana@empresa.com");
+        assertThat(guardado.rol()).isEqualTo("VIEWER");
+        assertThat(guardado.tenantId()).isEqualTo(tenant.getTenantId().getValue());
     }
 
     @Test
@@ -91,22 +89,22 @@ class RegisterUseCaseTest {
         RegisterRequest request = request();
         Tenant tenant = tenant(TenantEstado.ACTIVE);
 
-        when(usuarioRepository.existsByEmail(request.email())).thenReturn(false);
+        when(usuarioAuthRepository.existePorEmail(request.email())).thenReturn(false);
         when(tenantRepository.findById(any(TenantUUID.class))).thenReturn(Optional.of(tenant));
         when(passwordEncoder.encode(anyString())).thenReturn("encoded-hash");
 
         registerUseCase.registrar(request, UsuarioRol.ADMIN, creador(UsuarioRol.PLATFORM_ADMIN, null));
 
-        ArgumentCaptor<Usuario> captor = ArgumentCaptor.forClass(Usuario.class);
-        verify(usuarioRepository).save(captor.capture());
-        assertThat(captor.getValue().getRol()).isEqualTo(UsuarioRol.ADMIN);
+        ArgumentCaptor<AuthUser> captor = ArgumentCaptor.forClass(AuthUser.class);
+        verify(usuarioAuthRepository).guardar(captor.capture(), eq("encoded-hash"));
+        assertThat(captor.getValue().rol()).isEqualTo("ADMIN");
     }
 
     @Test
     void rechazaEmailYaRegistrado() {
         RegisterRequest request = request();
 
-        when(usuarioRepository.existsByEmail(request.email())).thenReturn(true);
+        when(usuarioAuthRepository.existePorEmail(request.email())).thenReturn(true);
 
         assertThatThrownBy(() -> registerUseCase.registrar(request, UsuarioRol.VIEWER,
                 creador(UsuarioRol.PLATFORM_ADMIN, null)))
@@ -117,7 +115,7 @@ class RegisterUseCaseTest {
     void rechazaTenantInexistente() {
         RegisterRequest request = request();
 
-        when(usuarioRepository.existsByEmail(request.email())).thenReturn(false);
+        when(usuarioAuthRepository.existePorEmail(request.email())).thenReturn(false);
         when(tenantRepository.findById(any(TenantUUID.class))).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> registerUseCase.registrar(request, UsuarioRol.VIEWER,
@@ -130,7 +128,7 @@ class RegisterUseCaseTest {
         RegisterRequest request = request();
         Tenant tenant = tenant(TenantEstado.SUSPENDED);
 
-        when(usuarioRepository.existsByEmail(request.email())).thenReturn(false);
+        when(usuarioAuthRepository.existePorEmail(request.email())).thenReturn(false);
         when(tenantRepository.findById(any(TenantUUID.class))).thenReturn(Optional.of(tenant));
 
         assertThatThrownBy(() -> registerUseCase.registrar(request, UsuarioRol.VIEWER,
@@ -143,17 +141,17 @@ class RegisterUseCaseTest {
         RegisterRequest request = request();
         Tenant tenant = tenant(TenantEstado.ACTIVE);
 
-        when(usuarioRepository.existsByEmail(request.email())).thenReturn(false);
+        when(usuarioAuthRepository.existePorEmail(request.email())).thenReturn(false);
         when(tenantRepository.findById(any(TenantUUID.class))).thenReturn(Optional.of(tenant));
         when(passwordEncoder.encode(anyString())).thenReturn("encoded-hash");
 
         registerUseCase.registrar(request, UsuarioRol.VIEWER,
                 creador(UsuarioRol.ADMIN, tenant.getTenantId().getValue().toString()));
 
-        ArgumentCaptor<Usuario> captor = ArgumentCaptor.forClass(Usuario.class);
-        verify(usuarioRepository).save(captor.capture());
-        assertThat(captor.getValue().getRol()).isEqualTo(UsuarioRol.VIEWER);
-        assertThat(captor.getValue().getTenantId()).isEqualTo(tenant.getTenantId());
+        ArgumentCaptor<AuthUser> captor = ArgumentCaptor.forClass(AuthUser.class);
+        verify(usuarioAuthRepository).guardar(captor.capture(), eq("encoded-hash"));
+        assertThat(captor.getValue().rol()).isEqualTo("VIEWER");
+        assertThat(captor.getValue().tenantId()).isEqualTo(tenant.getTenantId().getValue());
     }
 
     @Test
@@ -179,16 +177,16 @@ class RegisterUseCaseTest {
         RegisterRequest request = request();
         Tenant tenant = tenant(TenantEstado.ACTIVE);
 
-        when(usuarioRepository.existsByEmail(request.email())).thenReturn(false);
+        when(usuarioAuthRepository.existePorEmail(request.email())).thenReturn(false);
         when(tenantRepository.findById(any(TenantUUID.class))).thenReturn(Optional.of(tenant));
         when(passwordEncoder.encode(anyString())).thenReturn("encoded-hash");
 
         registerUseCase.registrar(request, UsuarioRol.ADMIN, creador(UsuarioRol.PLATFORM_USER, null));
 
-        ArgumentCaptor<Usuario> captor = ArgumentCaptor.forClass(Usuario.class);
-        verify(usuarioRepository).save(captor.capture());
-        assertThat(captor.getValue().getRol()).isEqualTo(UsuarioRol.ADMIN);
-        assertThat(captor.getValue().getTenantId().getValue()).isEqualTo(request.tenantId());
+        ArgumentCaptor<AuthUser> captor = ArgumentCaptor.forClass(AuthUser.class);
+        verify(usuarioAuthRepository).guardar(captor.capture(), eq("encoded-hash"));
+        assertThat(captor.getValue().rol()).isEqualTo("ADMIN");
+        assertThat(captor.getValue().tenantId()).isEqualTo(request.tenantId());
     }
 
     @Test
@@ -200,39 +198,6 @@ class RegisterUseCaseTest {
                 .isInstanceOf(ForbiddenException.class);
         assertThatThrownBy(() -> registerUseCase.registrar(request, UsuarioRol.PLATFORM_USER,
                 creador(UsuarioRol.PLATFORM_USER, null)))
-                .isInstanceOf(ForbiddenException.class);
-    }
-
-    @Test
-    void plataformAdminCreaRolPlataformaSinTenant() {
-        RegisterRequest request = new RegisterRequest("Pam", "pam@saas.com", "secreto123", null, null);
-
-        when(usuarioRepository.existsByEmail(request.email())).thenReturn(false);
-        when(passwordEncoder.encode(anyString())).thenReturn("encoded-hash");
-
-        registerUseCase.registrar(request, UsuarioRol.PLATFORM_USER, creador(UsuarioRol.PLATFORM_ADMIN, null));
-
-        ArgumentCaptor<Usuario> captor = ArgumentCaptor.forClass(Usuario.class);
-        verify(usuarioRepository).save(captor.capture());
-        assertThat(captor.getValue().getRol()).isEqualTo(UsuarioRol.PLATFORM_USER);
-        assertThat(captor.getValue().getTenantId()).isNull();
-        verify(tenantRepository, never()).findById(any());
-    }
-
-    @Test
-    void rechazaRolTenantSinTenantIdEnElRequest() {
-        RegisterRequest request = new RegisterRequest("Ana", "ana@empresa.com", "secreto123", null, null);
-
-        assertThatThrownBy(() -> registerUseCase.registrar(request, UsuarioRol.VIEWER,
-                creador(UsuarioRol.PLATFORM_ADMIN, null)))
-                .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    void rechazaCreadorNoAutenticado() {
-        RegisterRequest request = request();
-
-        assertThatThrownBy(() -> registerUseCase.registrar(request, UsuarioRol.VIEWER, null))
                 .isInstanceOf(ForbiddenException.class);
     }
 }

@@ -6,6 +6,7 @@ import com.saas.report.consulta.domain.ConsultaHistorial;
 import com.saas.report.consulta.domain.ConsultaHistorialRepository;
 import com.saas.report.consulta.domain.GeneradorSqlPort;
 import com.saas.report.consulta.domain.SqlEjecutorPort;
+import com.saas.report.consulta.domain.ValidadorLimiteConsultasPort;
 import com.saas.report.consulta.domain.exception.LimiteConsultasExcedidoException;
 import com.saas.report.consulta.domain.exception.SqlInvalidoException;
 import com.saas.report.plan.domain.Plan;
@@ -28,8 +29,8 @@ import com.saas.report.conexion.domain.schema.EsquemaTenant;
 import com.saas.report.conexion.domain.schema.SchemaExtractor;
 import com.saas.report.conexion.domain.schema.TablaEsquema;
 import com.saas.report.conexion.domain.valueobject.TenantDbConnectionUUID;
-import com.saas.report.tenant.domain.valueobject.TenantUUID;
-import com.saas.report.usuarios.domain.valueobject.UsuarioUUID;
+import com.saas.report.shared.domain.valueobject.TenantUUID;
+import com.saas.report.shared.domain.valueobject.UsuarioUUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -78,13 +79,16 @@ class ConvertirConsultaUseCaseTest {
     @Mock
     private SqlEjecutorPort sqlEjecutorPort;
 
+    @Mock
+    private ValidadorLimiteConsultasPort validadorLimiteConsultasPort;
+
     private ConvertirConsultaUseCase convertirConsultaUseCase;
 
     @BeforeEach
     void setUp() {
         convertirConsultaUseCase = new ConvertirConsultaUseCase(
-                consultaRepository, suscripcionRepository, planRepository,
-                dbConnectionRepository, schemaExtractor, generadorSqlPort, sqlEjecutorPort);
+                consultaRepository, dbConnectionRepository, schemaExtractor,
+                generadorSqlPort, sqlEjecutorPort, validadorLimiteConsultasPort);
     }
 
     private ConvertirConsultaRequest request() {
@@ -218,13 +222,11 @@ class ConvertirConsultaUseCaseTest {
         ConvertirConsultaRequest request = request();
         TenantUUID tenantId = TenantUUID.generate();
         UUID usuarioId = UUID.randomUUID();
-        Plan plan = planConLimite(5);
 
-        when(suscripcionRepository.findByTenantIdAndEstado(tenantId, SuscripcionEstado.ACTIVE))
-                .thenReturn(Optional.of(suscripcionActiva(plan.getPlanId())));
-        when(planRepository.findById(plan.getPlanId())).thenReturn(Optional.of(plan));
         when(consultaRepository.countByTenantIdAndFechaConsultaAfter(any(), any(LocalDateTime.class)))
                 .thenReturn(5L);
+        org.mockito.Mockito.doThrow(new LimiteConsultasExcedidoException("Se excedió el límite del plan"))
+                .when(validadorLimiteConsultasPort).validarLimiteMensual(any(), any());
 
         assertThatThrownBy(() -> convertirConsultaUseCase.convertir(tenantId.getValue(), usuarioId, request))
                 .isInstanceOf(LimiteConsultasExcedidoException.class)

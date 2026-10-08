@@ -2,7 +2,7 @@ package com.saas.report.tenant.infrastructure.persistence.mapper;
 
 import com.saas.report.tenant.domain.Tenant;
 import com.saas.report.tenant.domain.TenantEstado;
-import com.saas.report.tenant.domain.valueobject.TenantUUID;
+import com.saas.report.shared.domain.valueobject.TenantUUID;
 import com.saas.report.tenant.infrastructure.persistence.TenantJpaEntity;
 import org.junit.jupiter.api.Test;
 

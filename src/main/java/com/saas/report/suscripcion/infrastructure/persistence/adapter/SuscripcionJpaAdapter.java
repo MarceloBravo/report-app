@@ -6,7 +6,7 @@ import com.saas.report.suscripcion.domain.SuscripcionRepository;
 import com.saas.report.suscripcion.domain.valueobject.SuscripcionUUID;
 import com.saas.report.suscripcion.infrastructure.persistence.SuscripcionJpaRepository;
 import com.saas.report.suscripcion.infrastructure.persistence.mapper.SuscripcionMapper;
-import com.saas.report.tenant.domain.valueobject.TenantUUID;
+import com.saas.report.shared.domain.valueobject.TenantUUID;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 

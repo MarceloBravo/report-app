@@ -1,18 +1,17 @@
 package com.saas.report.auth.application.usecase;
 
-import com.saas.report.auth.application.AuthPrincipal;
 import com.saas.report.auth.application.dto.RegisterRequest;
+import com.saas.report.auth.domain.usuario.AuthUser;
+import com.saas.report.auth.domain.usuario.UsuarioAuthRepository;
 import com.saas.report.identity.domain.user.UsuarioRol;
+import com.saas.report.shared.domain.valueobject.TenantUUID;
+import com.saas.report.shared.exception.EmailAlreadyExistsException;
 import com.saas.report.shared.exception.ForbiddenException;
 import com.saas.report.shared.exception.InvalidStatusException;
 import com.saas.report.shared.exception.ResourceNotFoundException;
+import com.saas.report.shared.security.AuthPrincipal;
 import com.saas.report.tenant.domain.Tenant;
 import com.saas.report.tenant.domain.TenantRepository;
-import com.saas.report.tenant.domain.valueobject.TenantUUID;
-import com.saas.report.usuarios.domain.exception.EmailAlreadyExistsException;
-import com.saas.report.usuarios.domain.usuario.Usuario;
-import com.saas.report.usuarios.domain.usuario.UsuarioRepository;
-import com.saas.report.usuarios.domain.valueobject.UsuarioUUID;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,21 +21,21 @@ import java.util.UUID;
 @Service
 public class RegisterUseCase {
 
-    private final UsuarioRepository usuarioRepository;
+    private final UsuarioAuthRepository usuarioAuthRepository;
     private final TenantRepository tenantRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public RegisterUseCase(UsuarioRepository usuarioRepository,
+    public RegisterUseCase(UsuarioAuthRepository usuarioAuthRepository,
                            TenantRepository tenantRepository,
                            PasswordEncoder passwordEncoder) {
-        this.usuarioRepository = usuarioRepository;
+        this.usuarioAuthRepository = usuarioAuthRepository;
         this.tenantRepository = tenantRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
     @Transactional
     public void registrar(RegisterRequest request, UsuarioRol rol, AuthPrincipal creador) {
-        if (usuarioRepository.existsByEmail(request.email())) {
+        if (usuarioAuthRepository.existePorEmail(request.email())) {
             throw new EmailAlreadyExistsException("El email '" + request.email() + "' ya está registrado");
         }
 
@@ -48,16 +47,14 @@ public class RegisterUseCase {
         TenantUUID tenantId = resolverTenantId(request, rol, rolCreador, creador);
         validarTenantActivo(tenantId);
 
-        Usuario usuario = new Usuario(
-                UsuarioUUID.generate(),
-                tenantId,
-                request.nombre(),
+        AuthUser usuario = new AuthUser(
+                UUID.randomUUID(),
                 request.email(),
-                passwordEncoder.encode(request.password()),
-                rol,
-                true);
+                request.nombre(),
+                rol.name(),
+                tenantId != null ? tenantId.getValue() : null);
 
-        usuarioRepository.save(usuario);
+        usuarioAuthRepository.guardar(usuario, passwordEncoder.encode(request.password()));
     }
 
     private UsuarioRol rolCreador(AuthPrincipal creador) {

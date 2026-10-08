@@ -1,7 +1,7 @@
 package com.saas.report.auth.infrastructure.security;
 
 import com.saas.report.auth.application.TokenService;
-import com.saas.report.usuarios.domain.usuario.Usuario;
+import com.saas.report.auth.domain.usuario.AuthUser;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -53,31 +53,31 @@ public class JwtTokenProvider implements TokenService {
     }
 
     @Override
-    public String generateAccessToken(Usuario usuario) {
+    public String generateAccessToken(AuthUser usuario) {
         Instant now = Instant.now();
         Instant expiry = now.plusMillis(accessExpirationMillis);
         var builder = Jwts.builder()
                 .id(UUID.randomUUID().toString())
-                .subject(usuario.getEmail())
-                .claim("userId", usuario.getUsuarioId().getValue().toString())
-                .claim("rol", usuario.getRol().name())
+                .subject(usuario.email())
+                .claim("userId", usuario.id().toString())
+                .claim("rol", usuario.rol())
                 .claim("typ", "access")
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(expiry))
                 .signWith(key);
-        if (usuario.getTenantId() != null) {
-            builder.claim("tenantId", usuario.getTenantId().getValue().toString());
+        if (usuario.tenantId() != null) {
+            builder.claim("tenantId", usuario.tenantId().toString());
         }
         return builder.compact();
     }
 
     @Override
-    public String generateRefreshToken(Usuario usuario) {
+    public String generateRefreshToken(AuthUser usuario) {
         Instant now = Instant.now();
         Instant expiry = now.plusMillis(refreshExpirationMillis);
         return Jwts.builder()
                 .id(UUID.randomUUID().toString())
-                .subject(usuario.getEmail())
+                .subject(usuario.email())
                 .claim("typ", "refresh")
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(expiry))

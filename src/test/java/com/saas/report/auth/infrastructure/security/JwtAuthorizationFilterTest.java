@@ -1,15 +1,13 @@
 package com.saas.report.auth.infrastructure.security;
 
 import com.saas.report.auth.application.AuthCookieService;
-import com.saas.report.auth.application.AuthPrincipal;
+import com.saas.report.shared.security.AuthPrincipal;
 import com.saas.report.auth.application.TokenService;
 import com.saas.report.auth.domain.token.UsuarioToken;
 import com.saas.report.auth.domain.token.UsuarioTokenRepository;
+import com.saas.report.auth.domain.usuario.AuthUser;
 import com.saas.report.auth.domain.valueobject.UsuarioTokenUUID;
 import com.saas.report.identity.domain.user.UsuarioRol;
-import com.saas.report.tenant.domain.valueobject.TenantUUID;
-import com.saas.report.usuarios.domain.usuario.Usuario;
-import com.saas.report.usuarios.domain.valueobject.UsuarioUUID;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,6 +19,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -118,14 +117,12 @@ class JwtAuthorizationFilterTest {
 
     private UsuarioToken usuarioToken(String token, boolean activo, LocalDateTime expiraEn) {
         LocalDateTime creacion = LocalDateTime.now().minusMinutes(5);
-        Usuario usuario = new Usuario(
-                UsuarioUUID.generate(),
-                TenantUUID.generate(),
-                "Usuario de Prueba",
+        AuthUser usuario = new AuthUser(
+                UUID.randomUUID(),
                 "prueba-admin@test.com",
-                "clave-de-prueba",
-                UsuarioRol.ADMIN,
-                true);
+                "Usuario de Prueba",
+                UsuarioRol.ADMIN.name(),
+                UUID.randomUUID());
         return new UsuarioToken(
                 UsuarioTokenUUID.generate(),
                 usuario,

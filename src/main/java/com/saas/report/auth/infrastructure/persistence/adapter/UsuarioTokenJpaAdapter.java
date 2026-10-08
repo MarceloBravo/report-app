@@ -5,7 +5,6 @@ import com.saas.report.auth.domain.token.UsuarioTokenRepository;
 import com.saas.report.auth.infrastructure.persistence.UsuarioTokenJpaEntity;
 import com.saas.report.auth.infrastructure.persistence.UsuarioTokenJpaRepository;
 import com.saas.report.auth.infrastructure.persistence.mapper.UsuarioTokenMapper;
-import com.saas.report.usuarios.infrastructure.persistence.UsuarioJpaRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,11 +14,9 @@ import java.util.Optional;
 public class UsuarioTokenJpaAdapter implements UsuarioTokenRepository {
 
     private final UsuarioTokenJpaRepository repository;
-    private final UsuarioJpaRepository usuarioRepository;
 
-    public UsuarioTokenJpaAdapter(UsuarioTokenJpaRepository repository, UsuarioJpaRepository usuarioRepository) {
+    public UsuarioTokenJpaAdapter(UsuarioTokenJpaRepository repository) {
         this.repository = repository;
-        this.usuarioRepository = usuarioRepository;
     }
 
     @Override
@@ -37,8 +34,7 @@ public class UsuarioTokenJpaAdapter implements UsuarioTokenRepository {
     @Override
     @Transactional
     public UsuarioToken save(UsuarioToken token) {
-        var usuarioJpa = usuarioRepository.getReferenceById(token.getUsuario().getUsuarioId().getValue());
-        UsuarioTokenJpaEntity entity = UsuarioTokenMapper.toJpa(token, usuarioJpa);
+        UsuarioTokenJpaEntity entity = UsuarioTokenMapper.toJpa(token);
         return UsuarioTokenMapper.toDomain(repository.save(entity));
     }
 }

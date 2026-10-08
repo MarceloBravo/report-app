@@ -4,15 +4,13 @@ import com.saas.report.auth.application.AuthCookieService;
 import com.saas.report.auth.application.TokenService;
 import com.saas.report.auth.domain.token.UsuarioToken;
 import com.saas.report.auth.domain.token.UsuarioTokenRepository;
+import com.saas.report.auth.domain.usuario.AuthUser;
 import com.saas.report.auth.domain.valueobject.UsuarioTokenUUID;
 import com.saas.report.auth.infrastructure.config.SecurityConfig;
 import com.saas.report.auth.infrastructure.security.RestAccessDeniedHandler;
 import com.saas.report.auth.infrastructure.security.RestAuthenticationEntryPoint;
 import com.saas.report.identity.domain.user.UsuarioRol;
 import com.saas.report.onboarding.infrastructure.security.SelfServeRateLimiter;
-import com.saas.report.tenant.domain.valueobject.TenantUUID;
-import com.saas.report.usuarios.domain.usuario.Usuario;
-import com.saas.report.usuarios.domain.valueobject.UsuarioUUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
@@ -26,6 +24,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import jakarta.servlet.http.Cookie;
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
@@ -140,12 +139,12 @@ public abstract class AbstractSecurityMvcTest {
      * montar principals imposibles con el constructor de {@link Usuario}, como
      * un ADMIN de tenant sin tenant asociado.
      */
-    protected MockHttpServletRequestBuilder conTokenDe(Usuario usuario,
+    protected MockHttpServletRequestBuilder conTokenDe(AuthUser usuario,
                                                       MockHttpServletRequestBuilder request) {
         return conTokenDe(usuario, LocalDateTime.now().plusHours(1), true, request);
     }
 
-    private MockHttpServletRequestBuilder conTokenDe(Usuario usuario,
+    private MockHttpServletRequestBuilder conTokenDe(AuthUser usuario,
                                                       LocalDateTime accessExpiraEn,
                                                       boolean activo,
                                                       MockHttpServletRequestBuilder request) {
@@ -153,7 +152,7 @@ public abstract class AbstractSecurityMvcTest {
         return conCabecera(request);
     }
 
-    private void prepararToken(Usuario usuario, LocalDateTime accessExpiraEn, boolean activo) {
+    private void prepararToken(AuthUser usuario, LocalDateTime accessExpiraEn, boolean activo) {
         lenient().when(tokenService.esTokenValido(ACCESS_TOKEN)).thenReturn(true);
         lenient().when(usuarioTokenRepository.findByAccessToken(ACCESS_TOKEN))
                 .thenReturn(Optional.of(registroDe(usuario, accessExpiraEn, activo)));
@@ -164,19 +163,16 @@ public abstract class AbstractSecurityMvcTest {
     }
 
     /** Usuario del rol pedido; los roles de tenant reciben un tenant y los de plataforma, ninguno. */
-    protected Usuario usuarioCon(UsuarioRol rol) {
-        TenantUUID tenantId = rol.esRolTenant() ? TenantUUID.generate() : null;
-        return new Usuario(
-                UsuarioUUID.generate(),
-                tenantId,
-                "Usuario de Prueba",
+    protected AuthUser usuarioCon(UsuarioRol rol) {
+        return new AuthUser(
+                UUID.randomUUID(),
                 "prueba-" + rol.name().toLowerCase() + "@test.com",
-                "clave-de-prueba",
-                rol,
-                true);
+                "Usuario de Prueba",
+                rol.name(),
+                rol.esRolTenant() ? UUID.randomUUID() : null);
     }
 
-    private UsuarioToken registroDe(Usuario usuario, LocalDateTime accessExpiraEn, boolean activo) {
+    private UsuarioToken registroDe(AuthUser usuario, LocalDateTime accessExpiraEn, boolean activo) {
         LocalDateTime ahora = LocalDateTime.now();
         // UsuarioToken exige que la expiración no sea anterior a la creación.
         LocalDateTime creacion = accessExpiraEn.isBefore(ahora)

@@ -19,7 +19,15 @@ public class ListUsuariosUseCase {
 
     @Transactional(readOnly = true)
     public Page<UsuarioResponse> listar(UsuarioRol rol, Boolean activo, Integer page, Integer size) {
-        Page<Usuario> usuarios = usuarioRepository.findAll(rol, activo, page, size);
+        //Pageable pageable = PageRequest.of(page, size);
+        Page<Usuario> usuarios = usuarioRepository.findAll(rol != null ? rol : null, activo, page, size);
+        return usuarios.map(UsuarioResponse::from);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<UsuarioResponse> execute(String rol, Boolean activo, Integer page, Integer size) {
+        UsuarioRol filtroRol = rol != null ? UsuarioRol.valueOf(rol) : null;
+        Page<Usuario> usuarios = usuarioRepository.findAll(filtroRol != null ? filtroRol : null, activo, page, size);
         return usuarios.map(UsuarioResponse::from);
     }
 }

@@ -1,0 +1,1 @@
+package com.saas.report.shared.security;public record AuthPrincipal(        String email,        String usuarioId,        String tenantId,        String rol) {}

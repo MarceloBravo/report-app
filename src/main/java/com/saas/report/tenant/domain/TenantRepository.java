@@ -1,6 +1,6 @@
 package com.saas.report.tenant.domain;
 
-import com.saas.report.tenant.domain.valueobject.TenantUUID;
+import com.saas.report.shared.domain.valueobject.TenantUUID;
 
 import org.springframework.data.domain.Page;
 

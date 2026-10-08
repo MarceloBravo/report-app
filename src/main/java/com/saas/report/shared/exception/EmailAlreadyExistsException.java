@@ -1,6 +1,4 @@
-package com.saas.report.usuarios.domain.exception;
-
-import com.saas.report.shared.exception.DomainException;
+package com.saas.report.shared.exception;
 
 public class EmailAlreadyExistsException extends DomainException {
 

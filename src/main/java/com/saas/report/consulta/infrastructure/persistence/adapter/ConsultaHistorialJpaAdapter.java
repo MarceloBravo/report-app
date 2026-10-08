@@ -5,7 +5,7 @@ import com.saas.report.consulta.domain.ConsultaHistorialRepository;
 import com.saas.report.consulta.domain.valueobject.ConsultaHistorialUUID;
 import com.saas.report.consulta.infrastructure.persistence.ConsultaHistorialJpaRepository;
 import com.saas.report.consulta.infrastructure.persistence.mapper.ConsultaHistorialMapper;
-import com.saas.report.tenant.domain.valueobject.TenantUUID;
+import com.saas.report.shared.domain.valueobject.TenantUUID;
 
 import com.saas.report.shared.helpers.PaginationHelper;
 

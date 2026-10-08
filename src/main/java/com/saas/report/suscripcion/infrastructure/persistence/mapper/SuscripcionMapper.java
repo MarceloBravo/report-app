@@ -8,7 +8,7 @@ import com.saas.report.suscripcion.domain.valueobject.SuscripcionHistorialPrecio
 import com.saas.report.suscripcion.domain.valueobject.SuscripcionUUID;
 import com.saas.report.suscripcion.infrastructure.persistence.SuscripcionHistorialPrecioJpaEntity;
 import com.saas.report.suscripcion.infrastructure.persistence.SuscripcionJpaEntity;
-import com.saas.report.tenant.domain.valueobject.TenantUUID;
+import com.saas.report.shared.domain.valueobject.TenantUUID;
 
 import java.util.ArrayList;
 

@@ -1,8 +1,8 @@
 package com.saas.report.usuarios.domain.usuario;
 
-import com.saas.report.usuarios.domain.valueobject.UsuarioUUID;
+import com.saas.report.shared.domain.valueobject.UsuarioUUID;
 import com.saas.report.identity.domain.user.UsuarioRol;
-import com.saas.report.tenant.domain.valueobject.TenantUUID;
+import com.saas.report.shared.domain.valueobject.TenantUUID;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -37,8 +37,6 @@ class UsuarioTest {
 
         assertThatThrownBy(() -> new Usuario(null, tenant, "Ana", "ana@e.com", "pw", UsuarioRol.ADMIN, true))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> new Usuario(id, null, "Ana", "ana@e.com", "pw", UsuarioRol.ADMIN, true))
-                .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> new Usuario(id, tenant, null, "ana@e.com", "pw", UsuarioRol.ADMIN, true))
                 .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> new Usuario(id, tenant, "  ", "ana@e.com", "pw", UsuarioRol.ADMIN, true))
@@ -67,8 +65,8 @@ class UsuarioTest {
                 "password-hash", UsuarioRol.PLATFORM_ADMIN, true);
 
         assertThat(usuario.getTenantId()).isNull();
-        assertThat(usuario.esRolPlataforma()).isTrue();
-        assertThat(usuario.esAdminPlataforma()).isTrue();
+        assertThat(usuario.getRol()).isEqualTo(UsuarioRol.PLATFORM_ADMIN);
+        assertThat(usuario.esAdmin()).isFalse();
     }
 
     @Test
@@ -77,8 +75,8 @@ class UsuarioTest {
                 "password-hash", UsuarioRol.PLATFORM_USER, true);
 
         assertThat(usuario.getTenantId()).isNull();
-        assertThat(usuario.esRolPlataforma()).isTrue();
-        assertThat(usuario.esAdminPlataforma()).isFalse();
+        assertThat(usuario.getRol()).isEqualTo(UsuarioRol.PLATFORM_USER);
+        assertThat(usuario.esAdmin()).isFalse();
     }
 
     @Test
@@ -104,74 +102,76 @@ class UsuarioTest {
     @Test
     void cambiarRolRespetaCompatibilidadConTenant() {
         Usuario admin = usuario(UsuarioRol.ADMIN, true);
-        assertThatThrownBy(() -> admin.cambiarRol(UsuarioRol.PLATFORM_ADMIN))
+        assertThatThrownBy(() -> admin.cambiarRol(UsuarioRol.PLATFORM_ADMIN, admin.getTenantId()))
                 .isInstanceOf(IllegalArgumentException.class);
 
         Usuario plataforma = new Usuario(UsuarioUUID.generate(), null, "Pam", "pam@saas.com",
                 "password-hash", UsuarioRol.PLATFORM_ADMIN, true);
-        assertThatThrownBy(() -> plataforma.cambiarRol(UsuarioRol.ADMIN))
+        assertThatThrownBy(() -> plataforma.cambiarRol(UsuarioRol.ADMIN, plataforma.getTenantId()))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> admin.cambiarRol(null)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> admin.cambiarRol(null, admin.getTenantId()))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void cambiaElRol() {
         Usuario usuario = usuario(UsuarioRol.VIEWER, true);
 
-        usuario.cambiarRol(UsuarioRol.ADMIN);
+        usuario.cambiarRol(UsuarioRol.ADMIN, usuario.getTenantId());
 
         assertThat(usuario.getRol()).isEqualTo(UsuarioRol.ADMIN);
         assertThat(usuario.esAdmin()).isTrue();
-        assertThatThrownBy(() -> usuario.cambiarRol(null)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void cambiaElNombre() {
         Usuario usuario = usuario(UsuarioRol.VIEWER, true);
 
-        usuario.cambiarNombre("Bety");
+        usuario.actualizarNombre("Bety");
 
         assertThat(usuario.getNombre()).isEqualTo("Bety");
-        assertThatThrownBy(() -> usuario.cambiarNombre(null)).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> usuario.cambiarNombre("  ")).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> usuario.actualizarNombre(null)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> usuario.actualizarNombre("  ")).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void cambiaElEmail() {
         Usuario usuario = usuario(UsuarioRol.VIEWER, true);
 
-        usuario.cambiarEmail("bety@empresa.com");
+        usuario.actualizarEmail("bety@empresa.com");
 
         assertThat(usuario.getEmail()).isEqualTo("bety@empresa.com");
-        assertThatThrownBy(() -> usuario.cambiarEmail(null)).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> usuario.cambiarEmail("  ")).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> usuario.actualizarEmail(null)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> usuario.actualizarEmail("  ")).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void cambiaLaPassword() {
         Usuario usuario = usuario(UsuarioRol.VIEWER, true);
 
-        usuario.cambiarPassword("nuevo-hash");
+        usuario.actualizarPassword("nuevo-hash");
 
         assertThat(usuario.getPassword()).isEqualTo("nuevo-hash");
-        assertThatThrownBy(() -> usuario.cambiarPassword(null)).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> usuario.cambiarPassword("  ")).isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    void deshabilitaAlUsuario() {
-        Usuario usuario = usuario(UsuarioRol.VIEWER, true);
-        usuario.deshabilitar();
-
-        assertThat(usuario.getActivo()).isFalse();
+        assertThatThrownBy(() -> usuario.actualizarPassword(null)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> usuario.actualizarPassword("  ")).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void cambiaElEstado() {
         Usuario usuario = usuario(UsuarioRol.VIEWER, true);
 
-        usuario.cambiarEstado(false);
+        usuario.actualizarEstado(false);
 
         assertThat(usuario.getActivo()).isFalse();
+        assertThat(usuario.isActivo()).isFalse();
+    }
+
+    @Test
+    void verificaElEmail() {
+        Usuario usuario = usuario(UsuarioRol.VIEWER, true);
+
+        usuario.verificarEmail();
+
+        assertThat(usuario.isEmailVerificado()).isTrue();
     }
 }

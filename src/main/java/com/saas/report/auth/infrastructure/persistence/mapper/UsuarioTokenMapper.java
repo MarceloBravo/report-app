@@ -1,20 +1,24 @@
 package com.saas.report.auth.infrastructure.persistence.mapper;
 
 import com.saas.report.auth.domain.token.UsuarioToken;
+import com.saas.report.auth.domain.usuario.AuthUser;
 import com.saas.report.auth.domain.valueobject.UsuarioTokenUUID;
 import com.saas.report.auth.infrastructure.persistence.UsuarioTokenJpaEntity;
-import com.saas.report.usuarios.infrastructure.persistence.UsuarioJpaEntity;
-import com.saas.report.usuarios.infrastructure.persistence.mapper.UsuarioMapper;
 
 public final class UsuarioTokenMapper {
 
     private UsuarioTokenMapper() {
     }
 
-    public static UsuarioTokenJpaEntity toJpa(UsuarioToken token, UsuarioJpaEntity usuarioJpa) {
+    public static UsuarioTokenJpaEntity toJpa(UsuarioToken token) {
         UsuarioTokenJpaEntity entity = new UsuarioTokenJpaEntity();
         entity.setTokenId(token.getTokenId().getValue());
-        entity.setUsuario(usuarioJpa);
+        AuthUser usuario = token.getUsuario();
+        entity.setUsuarioId(usuario.id());
+        entity.setUsuarioEmail(usuario.email());
+        entity.setUsuarioNombre(usuario.nombre());
+        entity.setUsuarioRol(usuario.rol());
+        entity.setUsuarioTenantId(usuario.tenantId());
         entity.setAccessToken(token.getAccessToken());
         entity.setRefreshToken(token.getRefreshToken());
         entity.setFechaCreacion(token.getFechaCreacion());
@@ -25,8 +29,14 @@ public final class UsuarioTokenMapper {
     }
 
     public static UsuarioToken toDomain(UsuarioTokenJpaEntity entity) {
+        AuthUser usuario = new AuthUser(
+                entity.getUsuarioId(),
+                entity.getUsuarioEmail(),
+                entity.getUsuarioNombre(),
+                entity.getUsuarioRol(),
+                entity.getUsuarioTenantId());
         return new UsuarioToken(new UsuarioTokenUUID(entity.getTokenId()),
-                UsuarioMapper.toDomain(entity.getUsuario()),
+                usuario,
                 entity.getAccessToken(), entity.getRefreshToken(),
                 entity.getFechaCreacion(), entity.getAccessTokenExpiraEn(),
                 entity.getRefreshTokenExpiraEn(), entity.getActivo());

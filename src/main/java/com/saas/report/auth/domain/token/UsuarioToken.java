@@ -1,14 +1,14 @@
 package com.saas.report.auth.domain.token;
 
+import com.saas.report.auth.domain.usuario.AuthUser;
 import com.saas.report.auth.domain.valueobject.UsuarioTokenUUID;
-import com.saas.report.usuarios.domain.usuario.Usuario;
 
 import java.time.LocalDateTime;
 
 public class UsuarioToken {
 
     private final UsuarioTokenUUID tokenId;
-    private final Usuario usuario;
+    private final AuthUser usuario;
     private final String accessToken;
     private final String refreshToken;
     private final LocalDateTime fechaCreacion;
@@ -16,7 +16,7 @@ public class UsuarioToken {
     private final LocalDateTime refreshTokenExpiraEn;
     private boolean activo;
 
-    public UsuarioToken(UsuarioTokenUUID tokenId, Usuario usuario, String accessToken, String refreshToken,
+    public UsuarioToken(UsuarioTokenUUID tokenId, AuthUser usuario, String accessToken, String refreshToken,
                         LocalDateTime fechaCreacion, LocalDateTime accessTokenExpiraEn,
                         LocalDateTime refreshTokenExpiraEn, boolean activo) {
         if (tokenId == null) {
@@ -54,7 +54,7 @@ public class UsuarioToken {
         return tokenId;
     }
 
-    public Usuario getUsuario() {
+    public AuthUser getUsuario() {
         return usuario;
     }
 

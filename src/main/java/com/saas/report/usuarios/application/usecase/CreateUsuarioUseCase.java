@@ -1,14 +1,14 @@
 package com.saas.report.usuarios.application.usecase;
 
-import com.saas.report.auth.application.AuthPrincipal;
+import com.saas.report.identity.domain.user.UsuarioRol;
+import com.saas.report.shared.domain.valueobject.TenantUUID;
+import com.saas.report.shared.exception.ForbiddenException;
+import com.saas.report.usuarios.application.dto.CreadorPor;
 import com.saas.report.usuarios.application.dto.UsuarioRequest;
-import com.saas.report.usuarios.domain.exception.EmailAlreadyExistsException;
+import com.saas.report.shared.exception.EmailAlreadyExistsException;
 import com.saas.report.usuarios.domain.usuario.Usuario;
 import com.saas.report.usuarios.domain.usuario.UsuarioRepository;
-import com.saas.report.usuarios.domain.valueobject.UsuarioUUID;
-import com.saas.report.identity.domain.user.UsuarioRol;
-import com.saas.report.shared.exception.ForbiddenException;
-import com.saas.report.tenant.domain.valueobject.TenantUUID;
+import com.saas.report.shared.domain.valueobject.UsuarioUUID;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,7 +25,7 @@ public class CreateUsuarioUseCase {
     }
 
     @Transactional
-    public Usuario execute(UsuarioRequest request, AuthPrincipal creador) {
+    public Usuario execute(UsuarioRequest request, CreadorPor creador) {
         if (usuarioRepository.existsByEmail(request.email())) {
             throw new EmailAlreadyExistsException("El email '" + request.email() + "' ya está registrado");
         }
@@ -50,7 +50,7 @@ public class CreateUsuarioUseCase {
         return usuarioRepository.save(usuario);
     }
 
-    private UsuarioRol rolCreador(AuthPrincipal creador) {
+    private UsuarioRol rolCreador(CreadorPor creador) {
         if (creador == null || creador.rol() == null) {
             throw new ForbiddenException("No autenticado");
         }

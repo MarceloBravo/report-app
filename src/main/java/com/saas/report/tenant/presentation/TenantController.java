@@ -7,7 +7,7 @@ import com.saas.report.tenant.application.usecase.CancelTenantUseCase;
 import com.saas.report.tenant.application.usecase.GetTenantUseCase;
 import com.saas.report.tenant.application.usecase.SuspendTenantUseCase;
 import com.saas.report.tenant.application.usecase.ListTenantUseCase;
-import com.saas.report.tenant.domain.valueobject.TenantUUID;
+import com.saas.report.shared.domain.valueobject.TenantUUID;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;

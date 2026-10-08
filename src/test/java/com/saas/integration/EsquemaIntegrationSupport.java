@@ -7,7 +7,7 @@ import com.saas.report.conexion.domain.schema.ColumnaEsquema;
 import com.saas.report.conexion.domain.schema.EsquemaTenant;
 import com.saas.report.conexion.domain.schema.TablaEsquema;
 import com.saas.report.conexion.domain.valueobject.TenantDbConnectionUUID;
-import com.saas.report.tenant.domain.valueobject.TenantUUID;
+import com.saas.report.shared.domain.valueobject.TenantUUID;
 import com.saas.report.conexion.infrastructure.schema.JdbcSchemaExtractor;
 
 import javax.sql.DataSource;
