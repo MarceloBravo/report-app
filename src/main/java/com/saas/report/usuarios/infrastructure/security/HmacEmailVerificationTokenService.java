@@ -17,7 +17,6 @@ import java.util.UUID;
 public class HmacEmailVerificationTokenService implements EmailVerificationTokenService {
 
     private static final String HMAC_ALGORITHM = "HmacSHA256";
-    private static final int HASH_BITS = 256;
 
     private final byte[] key;
     private final long expirationMillis;
