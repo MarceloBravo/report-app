@@ -47,7 +47,8 @@ public class RegisterConsultaUseCase {
                 request.exitosa(),
                 request.registrosCount(),
                 request.dbConnectionId() != null ? new TenantDbConnectionUUID(request.dbConnectionId()) : null,
-                consultasEnPeriodo);
+                consultasEnPeriodo,
+                null);
 
         return ConsultaResponse.from(consultaRepository.save(consulta));
     }

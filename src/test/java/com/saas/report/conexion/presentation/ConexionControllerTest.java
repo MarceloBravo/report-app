@@ -79,13 +79,14 @@ class ConexionControllerTest {
     @Test
     void listaLasConexionesDelTenant() throws Exception {
         when(listConexionesUseCase.listar(any(TenantUUID.class)))
-                .thenReturn(List.of(new ConexionListResponse(CONEXION_ID, "ventas", "public")));
+                .thenReturn(List.of(new ConexionListResponse(CONEXION_ID, "ventas", "public", "PostgreSQL")));
 
         mockMvc.perform(get("/conexiones"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].dbConnectionId").value(CONEXION_ID.toString()))
                 .andExpect(jsonPath("$[0].dbName").value("ventas"))
-                .andExpect(jsonPath("$[0].schemaName").value("public"));
+                .andExpect(jsonPath("$[0].schemaName").value("public"))
+                .andExpect(jsonPath("$[0].motorBd").value("PostgreSQL"));
 
         verify(listConexionesUseCase).listar(new TenantUUID(TENANT_ID));
     }
@@ -93,14 +94,15 @@ class ConexionControllerTest {
     @Test
     void devuelveElDetalleDeUnaConexion() throws Exception {
         when(getConexionUseCase.obtener(any(TenantUUID.class), any(TenantDbConnectionUUID.class)))
-                .thenReturn(new ConexionDetailResponse(CONEXION_ID, "db.acme.com", "ventas", "public"));
+                .thenReturn(new ConexionDetailResponse(CONEXION_ID, "db.acme.com", "ventas", "public", "PostgreSQL"));
 
         mockMvc.perform(get("/conexiones/" + CONEXION_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.dbConnectionId").value(CONEXION_ID.toString()))
                 .andExpect(jsonPath("$.host").value("db.acme.com"))
                 .andExpect(jsonPath("$.dbName").value("ventas"))
-                .andExpect(jsonPath("$.schemaName").value("public"));
+                .andExpect(jsonPath("$.schemaName").value("public"))
+                .andExpect(jsonPath("$.motorBd").value("PostgreSQL"));
 
         verify(getConexionUseCase).obtener(new TenantUUID(TENANT_ID), new TenantDbConnectionUUID(CONEXION_ID));
     }
@@ -139,7 +141,7 @@ class ConexionControllerTest {
     void listaLasConexionesDelTenantIndicadoSiElRolEsDePlataforma() throws Exception {
         autenticarComoPlataforma();
         when(listConexionesUseCase.listar(any(TenantUUID.class)))
-                .thenReturn(List.of(new ConexionListResponse(CONEXION_ID, "ventas", "public")));
+                .thenReturn(List.of(new ConexionListResponse(CONEXION_ID, "ventas", "public", "PostgreSQL")));
 
         mockMvc.perform(get("/conexiones").param("tenantId", OTRO_TENANT_ID.toString()))
                 .andExpect(status().isOk())
@@ -164,7 +166,7 @@ class ConexionControllerTest {
     void devuelveElDetalleDeLaConexionDelTenantIndicadoSiElRolEsDePlataforma() throws Exception {
         autenticarComoPlataforma();
         when(getConexionUseCase.obtener(any(TenantUUID.class), any(TenantDbConnectionUUID.class)))
-                .thenReturn(new ConexionDetailResponse(CONEXION_ID, "db.acme.com", "ventas", "public"));
+                .thenReturn(new ConexionDetailResponse(CONEXION_ID, "db.acme.com", "ventas", "public", "PostgreSQL"));
 
         mockMvc.perform(get("/conexiones/" + CONEXION_ID).param("tenantId", OTRO_TENANT_ID.toString()))
                 .andExpect(status().isOk())

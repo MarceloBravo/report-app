@@ -1,7 +1,10 @@
 package com.saas.report.consulta.infrastructure.persistence;
 
+import com.saas.report.shared.domain.valueobject.MotorBaseDatos;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
@@ -52,4 +55,8 @@ public class ConsultaHistorialJpaEntity {
 
     @Column(name = "consultas_en_periodo", nullable = false)
     private Integer consultasEnPeriodo;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "motor_bd")
+    private MotorBaseDatos motorBd;
 }

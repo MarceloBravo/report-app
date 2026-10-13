@@ -3,6 +3,7 @@ package com.saas.report.consulta.domain;
 import com.saas.report.consulta.domain.valueobject.ConsultaHistorialUUID;
 import com.saas.report.shared.exception.InvalidIntegerValue;
 import com.saas.report.shared.domain.valueobject.UsuarioUUID;
+import com.saas.report.shared.domain.valueobject.MotorBaseDatos;
 import com.saas.report.conexion.domain.valueobject.TenantDbConnectionUUID;
 import com.saas.report.shared.domain.valueobject.TenantUUID;
 
@@ -20,11 +21,12 @@ public class ConsultaHistorial {
     private final Integer registrosCount;
     private final TenantDbConnectionUUID dbConnectionId;
     private final Integer consultasEnPeriodo;
+    private final MotorBaseDatos motorBd;
 
     public ConsultaHistorial(ConsultaHistorialUUID consultaId, TenantUUID tenantId, UsuarioUUID usuarioId,
                              String preguntaUsuario, String querySqlGenerada, LocalDateTime fechaConsulta,
                              Boolean exitosa, Integer registrosCount, TenantDbConnectionUUID dbConnectionId,
-                             Integer consultasEnPeriodo) {
+                             Integer consultasEnPeriodo, MotorBaseDatos motorBd) {
         if (consultaId == null) {
             throw new IllegalArgumentException("El ID de la consulta no puede ser nulo");
         }
@@ -53,6 +55,7 @@ public class ConsultaHistorial {
         this.registrosCount = registrosCount;
         this.dbConnectionId = dbConnectionId;
         this.consultasEnPeriodo = consultasEnPeriodo;
+        this.motorBd = motorBd;
     }
 
     public ConsultaHistorialUUID getConsultaId() {
@@ -93,6 +96,10 @@ public class ConsultaHistorial {
 
     public Integer getConsultasEnPeriodo() {
         return consultasEnPeriodo;
+    }
+
+    public MotorBaseDatos getMotorBd() {
+        return motorBd;
     }
 
     public boolean fueExitosa() {

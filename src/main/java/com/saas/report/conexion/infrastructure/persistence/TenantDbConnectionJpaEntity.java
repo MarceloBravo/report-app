@@ -1,5 +1,6 @@
 package com.saas.report.conexion.infrastructure.persistence;
 
+import com.saas.report.shared.domain.valueobject.MotorBaseDatos;
 import com.saas.report.conexion.domain.connection.TipoConexion;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -48,4 +49,8 @@ public class TenantDbConnectionJpaEntity {
 
     @Column(name = "schema_name")
     private String schemaName;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "motor_bd")
+    private MotorBaseDatos motorBd;
 }

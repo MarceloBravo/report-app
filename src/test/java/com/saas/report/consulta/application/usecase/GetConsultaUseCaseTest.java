@@ -37,7 +37,7 @@ class GetConsultaUseCaseTest {
     private ConsultaHistorial consulta() {
         return new ConsultaHistorial(ConsultaHistorialUUID.generate(), TenantUUID.generate(),
                 UsuarioUUID.generate(), "¿Cuántas ventas?", "SELECT 1;", LocalDateTime.now(),
-                true, 5, null, 1);
+                true, 5, null, 1, null);
     }
 
     @Test

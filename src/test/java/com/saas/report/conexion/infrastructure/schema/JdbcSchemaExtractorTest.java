@@ -1,6 +1,7 @@
 package com.saas.report.conexion.infrastructure.schema;
 
 import com.saas.report.conexion.domain.connection.CredentialCipher;
+import com.saas.report.shared.domain.valueobject.MotorBaseDatos;
 import com.saas.report.conexion.domain.connection.TenantDbConnection;
 import com.saas.report.conexion.domain.connection.TipoConexion;
 import com.saas.report.conexion.domain.schema.EsquemaTenant;
@@ -54,7 +55,7 @@ class JdbcSchemaExtractorTest {
         TenantDbConnection conexion = new TenantDbConnection(
                 TenantDbConnectionUUID.generate(), tenantId,
                 "localhost", 5432, "report_db", "report_ro", "CIFRADO:secreto",
-                TipoConexion.INTERNAL_SCHEMA, "public");
+                TipoConexion.INTERNAL_SCHEMA, "public", MotorBaseDatos.POSTGRESQL);
 
         when(appDataSource.getConnection()).thenReturn(connection);
         when(connection.getMetaData()).thenReturn(databaseMetaData);
@@ -99,7 +100,7 @@ class JdbcSchemaExtractorTest {
 
     @Test
     void usaLaQueryDeLaEstrategiaDePostgresql() throws Exception {
-        TenantDbConnection conexion = conexionCon(TipoConexion.INTERNAL_SCHEMA, "public");
+        TenantDbConnection conexion = conexionCon(TipoConexion.INTERNAL_SCHEMA, "public", MotorBaseDatos.POSTGRESQL);
 
         prepararConexion("PostgreSQL");
         when(connection.prepareStatement(anyString())).thenReturn(statement);
@@ -116,7 +117,7 @@ class JdbcSchemaExtractorTest {
 
     @Test
     void usaLaQueryDeLaEstrategiaDeMysql() throws Exception {
-        TenantDbConnection conexion = conexionCon(TipoConexion.INTERNAL_SCHEMA, "reporte");
+        TenantDbConnection conexion = conexionCon(TipoConexion.INTERNAL_SCHEMA, "reporte", MotorBaseDatos.MYSQL);
 
         prepararConexion("MySQL");
         when(connection.prepareStatement(anyString())).thenReturn(statement);
@@ -132,7 +133,7 @@ class JdbcSchemaExtractorTest {
 
     @Test
     void fallaConIllegalStateExceptionCuandoElMotorNoEsSoportado() throws Exception {
-        TenantDbConnection conexion = conexionCon(TipoConexion.INTERNAL_SCHEMA, "public");
+        TenantDbConnection conexion = conexionCon(TipoConexion.INTERNAL_SCHEMA, "public", MotorBaseDatos.POSTGRESQL);
 
         prepararConexion("Oracle");
 
@@ -141,14 +142,28 @@ class JdbcSchemaExtractorTest {
         assertThatThrownBy(() -> extractor.extraer(conexion))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("No se pudo extraer el esquema de la BD del tenant 'report_db'")
-                .hasRootCauseMessage("Unsupported database type: Oracle");
+                .hasRootCauseMessage("Motor de base de datos no soportado: Oracle");
     }
 
-    private TenantDbConnection conexionCon(TipoConexion tipo, String schema) {
+    @Test
+    void fallaCuandoElMotorConfiguradoNoCoincideConLaBase() throws Exception {
+        TenantDbConnection conexion = conexionCon(TipoConexion.INTERNAL_SCHEMA, "public", MotorBaseDatos.MYSQL);
+
+        prepararConexion("PostgreSQL");
+
+        JdbcSchemaExtractor extractor = new JdbcSchemaExtractor(credentialCipher, appDataSource);
+
+        assertThatThrownBy(() -> extractor.extraer(conexion))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("No se pudo extraer el esquema de la BD del tenant 'report_db'")
+                .hasRootCauseMessage("El motor de base de datos configurado (MYSQL) no coincide con el de la base conectada (POSTGRESQL)");
+    }
+
+    private TenantDbConnection conexionCon(TipoConexion tipo, String schema, MotorBaseDatos motorBd) {
         return new TenantDbConnection(
                 TenantDbConnectionUUID.generate(), TenantUUID.generate(),
                 "localhost", 3306, "report_db", "report_ro", "CIFRADO:secreto",
-                tipo, schema);
+                tipo, schema, motorBd);
     }
 
     private void prepararConexion(String dbProduct) throws SQLException {

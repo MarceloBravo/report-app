@@ -18,6 +18,7 @@ import com.saas.report.tenant.domain.Tenant;
 import com.saas.report.tenant.domain.TenantEstado;
 import com.saas.report.tenant.domain.TenantRepository;
 import com.saas.report.conexion.domain.connection.CredentialCipher;
+import com.saas.report.shared.domain.valueobject.MotorBaseDatos;
 import com.saas.report.conexion.domain.connection.TenantDbConnection;
 import com.saas.report.conexion.domain.connection.TenantDbConnectionRepository;
 import com.saas.report.conexion.domain.connection.TipoConexion;
@@ -105,7 +106,7 @@ class OnboardClienteUseCaseTest {
                 new OnboardingRequest.ClienteRequest("Acme", "acme"),
                 new OnboardingRequest.UsuarioNuevoRequest("Juan", "juan@acme.com", "password123"),
                 new OnboardingRequest.ConexionRequest("db.acme.com", 5432, "ventas",
-                        "report_ro", "secreto", "public"));
+                        "report_ro", "secreto", "public", MotorBaseDatos.POSTGRESQL));
     }
 
     @Test
@@ -155,6 +156,7 @@ class OnboardClienteUseCaseTest {
         assertThat(conexion.getSchemaName()).isEqualTo("public");
         assertThat(conexion.getDbPasswordEncrypted()).isEqualTo("CIFRADO:secreto");
         assertThat(conexion.getDbUser()).isEqualTo("report_ro");
+        assertThat(conexion.getMotorBd()).isEqualTo(MotorBaseDatos.POSTGRESQL);
     }
 
     @Test
@@ -171,7 +173,7 @@ class OnboardClienteUseCaseTest {
         OnboardingRequest req = new OnboardingRequest(
                 request().cliente(), request().usuario(),
                 new OnboardingRequest.ConexionRequest("db.acme.com", 5432, "ventas",
-                        "report_ro", "secreto", null));
+                        "report_ro", "secreto", null, MotorBaseDatos.POSTGRESQL));
 
         onboardClienteUseCase.registrar(req);
 

@@ -6,6 +6,7 @@ import com.saas.report.conexion.domain.connection.TenantDbConnectionRepository;
 import com.saas.report.conexion.domain.valueobject.TenantDbConnectionUUID;
 import com.saas.report.shared.exception.ResourceNotFoundException;
 import com.saas.report.shared.domain.valueobject.TenantUUID;
+import com.saas.report.shared.presentation.mapper.MotorBaseDatosPresenter;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,6 +45,7 @@ public class GetConexionUseCase {
                 connection.getDbConnectionId().getValue(),
                 connection.getHost(),
                 connection.getDbName(),
-                connection.getSchemaName());
+                connection.getSchemaName(),
+                MotorBaseDatosPresenter.nombreAMostrar(connection.getMotorBd()));
     }
 }

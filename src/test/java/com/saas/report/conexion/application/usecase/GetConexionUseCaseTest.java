@@ -1,6 +1,7 @@
 package com.saas.report.conexion.application.usecase;
 
 import com.saas.report.conexion.application.dto.ConexionDetailResponse;
+import com.saas.report.shared.domain.valueobject.MotorBaseDatos;
 import com.saas.report.conexion.domain.connection.TenantDbConnection;
 import com.saas.report.conexion.domain.connection.TenantDbConnectionRepository;
 import com.saas.report.conexion.domain.connection.TipoConexion;
@@ -49,6 +50,7 @@ class GetConexionUseCaseTest {
         assertThat(response.host()).isEqualTo("db.acme.com");
         assertThat(response.dbName()).isEqualTo("ventas");
         assertThat(response.schemaName()).isEqualTo("public");
+        assertThat(response.motorBd()).isEqualTo("PostgreSQL");
     }
 
     @Test
@@ -71,6 +73,6 @@ class GetConexionUseCaseTest {
 
     private TenantDbConnection conexion(TenantUUID tenantId, String host, String dbName, String schemaName) {
         return new TenantDbConnection(CONEXION_ID, tenantId, host, 5432, dbName,
-                "report_app", "enc:clave", TipoConexion.EXTERNAL_DB, schemaName);
+                "report_app", "enc:clave", TipoConexion.EXTERNAL_DB, schemaName, MotorBaseDatos.POSTGRESQL);
     }
 }

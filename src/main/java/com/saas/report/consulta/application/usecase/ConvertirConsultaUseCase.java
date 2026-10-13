@@ -79,7 +79,8 @@ public class ConvertirConsultaUseCase {
                 true,
                 resultado.size(),
                 conexion.getDbConnectionId(),
-                consultasEnPeriodo);
+                consultasEnPeriodo,
+                conexion.getMotorBd());
 
         return ConsultaResponse.from(consultaRepository.save(consulta), resultado);
     }

@@ -2,6 +2,7 @@ package com.saas.report.conexion.domain.connection;
 
 import com.saas.report.shared.exception.InvalidIntegerValue;
 import com.saas.report.conexion.domain.valueobject.TenantDbConnectionUUID;
+import com.saas.report.shared.domain.valueobject.MotorBaseDatos;
 import com.saas.report.shared.domain.valueobject.TenantUUID;
 import org.junit.jupiter.api.Test;
 
@@ -16,7 +17,7 @@ class TenantDbConnectionTest {
 
     private TenantDbConnection conexionExterna() {
         return new TenantDbConnection(TenantDbConnectionUUID.generate(), tenantUuid(), "db.example.com", 5432,
-                "ventas", "report_app", "enc:clave", TipoConexion.EXTERNAL_DB, null);
+                "ventas", "report_app", "enc:clave", TipoConexion.EXTERNAL_DB, null, MotorBaseDatos.POSTGRESQL);
     }
 
     @Test
@@ -24,7 +25,7 @@ class TenantDbConnectionTest {
         TenantUUID tenantId = tenantUuid();
         TenantDbConnectionUUID id = TenantDbConnectionUUID.generate();
         TenantDbConnection conexion = new TenantDbConnection(id, tenantId, "db.example.com", 5432,
-                "ventas", "report_app", "enc:clave", TipoConexion.EXTERNAL_DB, "public");
+                "ventas", "report_app", "enc:clave", TipoConexion.EXTERNAL_DB, "public", MotorBaseDatos.POSTGRESQL);
 
         assertThat(conexion.getDbConnectionId()).isEqualTo(id);
         assertThat(conexion.getTenantId()).isEqualTo(tenantId);
@@ -35,6 +36,7 @@ class TenantDbConnectionTest {
         assertThat(conexion.getDbPasswordEncrypted()).isEqualTo("enc:clave");
         assertThat(conexion.getTipoConexion()).isEqualTo(TipoConexion.EXTERNAL_DB);
         assertThat(conexion.getSchemaName()).isEqualTo("public");
+        assertThat(conexion.getMotorBd()).isEqualTo(MotorBaseDatos.POSTGRESQL);
     }
 
     @Test
@@ -42,34 +44,37 @@ class TenantDbConnectionTest {
         TenantUUID tenantId = tenantUuid();
 
         assertThatThrownBy(() -> new TenantDbConnection(null, tenantId, "host", 5432, "db", "u", "p",
-                TipoConexion.EXTERNAL_DB, null))
+                TipoConexion.EXTERNAL_DB, null, MotorBaseDatos.POSTGRESQL))
                 .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> new TenantDbConnection(TenantDbConnectionUUID.generate(), null, "host", 5432,
-                "db", "u", "p", TipoConexion.EXTERNAL_DB, null))
+                "db", "u", "p", TipoConexion.EXTERNAL_DB, null, MotorBaseDatos.POSTGRESQL))
                 .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> new TenantDbConnection(TenantDbConnectionUUID.generate(), tenantId, null, 5432,
-                "db", "u", "p", TipoConexion.EXTERNAL_DB, null))
+                "db", "u", "p", TipoConexion.EXTERNAL_DB, null, MotorBaseDatos.POSTGRESQL))
                 .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> new TenantDbConnection(TenantDbConnectionUUID.generate(), tenantId, "  ", 5432,
-                "db", "u", "p", TipoConexion.EXTERNAL_DB, null))
+                "db", "u", "p", TipoConexion.EXTERNAL_DB, null, MotorBaseDatos.POSTGRESQL))
                 .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> new TenantDbConnection(TenantDbConnectionUUID.generate(), tenantId, "host", null,
-                "db", "u", "p", TipoConexion.EXTERNAL_DB, null))
+                "db", "u", "p", TipoConexion.EXTERNAL_DB, null, MotorBaseDatos.POSTGRESQL))
                 .isInstanceOf(InvalidIntegerValue.class);
         assertThatThrownBy(() -> new TenantDbConnection(TenantDbConnectionUUID.generate(), tenantId, "host", 0,
-                "db", "u", "p", TipoConexion.EXTERNAL_DB, null))
+                "db", "u", "p", TipoConexion.EXTERNAL_DB, null, MotorBaseDatos.POSTGRESQL))
                 .isInstanceOf(InvalidIntegerValue.class);
         assertThatThrownBy(() -> new TenantDbConnection(TenantDbConnectionUUID.generate(), tenantId, "host", 65536,
-                "db", "u", "p", TipoConexion.EXTERNAL_DB, null))
+                "db", "u", "p", TipoConexion.EXTERNAL_DB, null, MotorBaseDatos.POSTGRESQL))
                 .isInstanceOf(InvalidIntegerValue.class);
         assertThatThrownBy(() -> new TenantDbConnection(TenantDbConnectionUUID.generate(), tenantId, "host", 5432,
-                null, "u", "p", TipoConexion.EXTERNAL_DB, null))
+                null, "u", "p", TipoConexion.EXTERNAL_DB, null, MotorBaseDatos.POSTGRESQL))
                 .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> new TenantDbConnection(TenantDbConnectionUUID.generate(), tenantId, "host", 5432,
-                "db", "  ", "p", TipoConexion.EXTERNAL_DB, null))
+                "db", "  ", "p", TipoConexion.EXTERNAL_DB, null, MotorBaseDatos.POSTGRESQL))
                 .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> new TenantDbConnection(TenantDbConnectionUUID.generate(), tenantId, "host", 5432,
-                "db", "u", "p", null, null))
+                "db", "u", "p", null, null, MotorBaseDatos.POSTGRESQL))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new TenantDbConnection(TenantDbConnectionUUID.generate(), tenantId, "host", 5432,
+                "db", "u", "p", TipoConexion.EXTERNAL_DB, null, null))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -78,16 +83,27 @@ class TenantDbConnectionTest {
         assertThat(conexionExterna().esConexionExterna()).isTrue();
 
         TenantDbConnection interna = new TenantDbConnection(TenantDbConnectionUUID.generate(), tenantUuid(),
-                "localhost", 5432, "report", "app", "p", TipoConexion.INTERNAL_SCHEMA, "esquema");
+                "localhost", 5432, "report", "app", "p", TipoConexion.INTERNAL_SCHEMA, "esquema",
+                MotorBaseDatos.POSTGRESQL);
         assertThat(interna.esConexionExterna()).isFalse();
     }
 
     @Test
     void construyeElStringDeConexion() {
         TenantDbConnection conexion = new TenantDbConnection(TenantDbConnectionUUID.generate(), tenantUuid(),
-                "db.example.com", 5432, "ventas", "u", "p", TipoConexion.EXTERNAL_DB, null);
+                "db.example.com", 5432, "ventas", "u", "p", TipoConexion.EXTERNAL_DB, null,
+                MotorBaseDatos.POSTGRESQL);
 
         assertThat(conexion.getConnectionString()).isEqualTo("jdbc:postgresql://db.example.com:5432/ventas");
+    }
+
+    @Test
+    void construyeElStringDeConexionParaMysql() {
+        TenantDbConnection conexion = new TenantDbConnection(TenantDbConnectionUUID.generate(), tenantUuid(),
+                "db.example.com", 3306, "ventas", "u", "p", TipoConexion.EXTERNAL_DB, "ventas",
+                MotorBaseDatos.MYSQL);
+
+        assertThat(conexion.getConnectionString()).isEqualTo("jdbc:mysql://db.example.com:3306/ventas");
     }
 
     @Test

@@ -1,5 +1,6 @@
 package com.saas.report.conexion.infrastructure.persistence.mapper;
 
+import com.saas.report.shared.domain.valueobject.MotorBaseDatos;
 import com.saas.report.conexion.domain.connection.TenantDbConnection;
 import com.saas.report.conexion.domain.connection.TipoConexion;
 import com.saas.report.conexion.domain.valueobject.TenantDbConnectionUUID;
@@ -22,6 +23,7 @@ public final class TenantDbConnectionMapper {
         entity.setDbPasswordEncrypted(connection.getDbPasswordEncrypted());
         entity.setTipoConexion(connection.getTipoConexion());
         entity.setSchemaName(connection.getSchemaName());
+        entity.setMotorBd(connection.getMotorBd());
         return entity;
     }
 
@@ -35,6 +37,7 @@ public final class TenantDbConnectionMapper {
                 entity.getDbUser(),
                 entity.getDbPasswordEncrypted(),
                 entity.getTipoConexion() != null ? entity.getTipoConexion() : TipoConexion.EXTERNAL_DB,
-                entity.getSchemaName());
+                entity.getSchemaName(),
+                entity.getMotorBd() != null ? entity.getMotorBd() : MotorBaseDatos.POSTGRESQL);
     }
 }

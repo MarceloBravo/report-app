@@ -1,6 +1,7 @@
 package com.saas.integration;
 
 import com.saas.report.conexion.domain.connection.CredentialCipher;
+import com.saas.report.shared.domain.valueobject.MotorBaseDatos;
 import com.saas.report.conexion.domain.connection.TenantDbConnection;
 import com.saas.report.conexion.domain.connection.TipoConexion;
 import com.saas.report.conexion.domain.schema.ColumnaEsquema;
@@ -37,12 +38,12 @@ public final class EsquemaIntegrationSupport {
         return new JdbcSchemaExtractor(credentialCipherSinUso(), dataSource);
     }
 
-    public static TenantDbConnection conexionInterna(String dbName, String schemaName) {
+    public static TenantDbConnection conexionInterna(String dbName, String schemaName, MotorBaseDatos motorBd) {
         return new TenantDbConnection(
                 TenantDbConnectionUUID.generate(),
                 TenantUUID.generate(),
                 "localhost", 5432, dbName, "saas", "CIFRADO:no-se-usa",
-                TipoConexion.INTERNAL_SCHEMA, schemaName);
+                TipoConexion.INTERNAL_SCHEMA, schemaName, motorBd);
     }
 
     public static void ejecutarDdl(DataSource dataSource, String... sentencias) {

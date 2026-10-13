@@ -40,7 +40,7 @@ class ListConsultasUseCaseTest {
     private ConsultaHistorial consulta(String pregunta, int periodo) {
         return new ConsultaHistorial(ConsultaHistorialUUID.generate(), TenantUUID.generate(),
                 UsuarioUUID.generate(), pregunta, "SELECT 1;", LocalDateTime.now(), true, 5,
-                TenantDbConnectionUUID.generate(), periodo);
+                TenantDbConnectionUUID.generate(), periodo, null);
     }
 
     @Test

@@ -47,7 +47,8 @@ class OnboardingControllerTest {
         return "{\"cliente\":{\"nombreEmpresa\":\"Acme\",\"subdominioSlug\":\"acme\"},"
                 + "\"usuario\":{\"nombre\":\"Juan\",\"email\":\"juan@acme.com\",\"password\":\"password123\"},"
                 + "\"conexion\":{\"host\":\"db.acme.com\",\"puerto\":5432,\"dbName\":\"ventas\","
-                + "\"dbUser\":\"report_ro\",\"dbPassword\":\"secreto\",\"schemaName\":\"public\"}}";
+                + "\"dbUser\":\"report_ro\",\"dbPassword\":\"secreto\",\"schemaName\":\"public\","
+                + "\"motorBd\":\"POSTGRESQL\"}}";
     }
 
     @Test

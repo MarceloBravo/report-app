@@ -1,5 +1,6 @@
 package com.saas.integration;
 
+import com.saas.report.shared.domain.valueobject.MotorBaseDatos;
 import com.saas.report.conexion.domain.schema.ColumnaEsquema;
 import com.saas.report.conexion.domain.schema.EsquemaTenant;
 import com.saas.report.conexion.domain.schema.TablaEsquema;
@@ -86,7 +87,8 @@ class PostgresqlSchemaExtractorIT {
                         + "CONSTRAINT fk_sucursal_region FOREIGN KEY (region_pais, region_codigo) "
                         + "REFERENCES " + ESQUEMA + ".regiones (pais, codigo))");
 
-        esquema = extractorPara(base.dataSource()).extraer(conexionInterna(BASE, ESQUEMA));
+        esquema = extractorPara(base.dataSource()).extraer(
+                conexionInterna(BASE, ESQUEMA, MotorBaseDatos.POSTGRESQL));
     }
 
     @AfterAll

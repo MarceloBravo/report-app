@@ -1,5 +1,6 @@
 package com.saas.report.onboarding.application.dto;
 
+import com.saas.report.shared.domain.valueobject.MotorBaseDatos;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Max;
@@ -66,7 +67,10 @@ public record OnboardingRequest(
             @NotBlank(message = "La contraseña de la base es requerida")
             String dbPassword,
 
-            String schemaName
+            String schemaName,
+
+            @NotNull(message = "El motor de base de datos es requerido")
+            MotorBaseDatos motorBd
     ) {
     }
 }

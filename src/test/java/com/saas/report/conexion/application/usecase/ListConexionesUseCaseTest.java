@@ -1,6 +1,7 @@
 package com.saas.report.conexion.application.usecase;
 
 import com.saas.report.conexion.application.dto.ConexionListResponse;
+import com.saas.report.shared.domain.valueobject.MotorBaseDatos;
 import com.saas.report.conexion.domain.connection.TenantDbConnection;
 import com.saas.report.conexion.domain.connection.TenantDbConnectionRepository;
 import com.saas.report.conexion.domain.connection.TipoConexion;
@@ -47,8 +48,10 @@ class ListConexionesUseCaseTest {
         assertThat(response.get(0).dbConnectionId()).isEqualTo(primera.getDbConnectionId().getValue());
         assertThat(response.get(0).dbName()).isEqualTo("ventas");
         assertThat(response.get(0).schemaName()).isEqualTo("public");
+        assertThat(response.get(0).motorBd()).isEqualTo("PostgreSQL");
         assertThat(response.get(1).dbName()).isEqualTo("finanzas");
         assertThat(response.get(1).schemaName()).isEqualTo("finanzas");
+        assertThat(response.get(1).motorBd()).isEqualTo("PostgreSQL");
         verify(connectionRepository).findAllByTenantId(TENANT_ID);
     }
 
@@ -63,6 +66,7 @@ class ListConexionesUseCaseTest {
 
     private TenantDbConnection conexion(String dbName, String schemaName) {
         return new TenantDbConnection(TenantDbConnectionUUID.generate(), TENANT_ID, "db.acme.com", 5432,
-                dbName, "report_app", "enc:clave", TipoConexion.EXTERNAL_DB, schemaName);
+                dbName, "report_app", "enc:clave", TipoConexion.EXTERNAL_DB, schemaName,
+                MotorBaseDatos.POSTGRESQL);
     }
 }

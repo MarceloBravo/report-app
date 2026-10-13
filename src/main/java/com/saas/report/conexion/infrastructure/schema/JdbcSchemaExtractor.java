@@ -1,6 +1,7 @@
 package com.saas.report.conexion.infrastructure.schema;
 
 import com.saas.report.conexion.domain.connection.CredentialCipher;
+import com.saas.report.shared.domain.valueobject.MotorBaseDatos;
 import com.saas.report.conexion.domain.connection.TenantDbConnection;
 import com.saas.report.conexion.domain.schema.ColumnaEsquema;
 import com.saas.report.conexion.domain.schema.EsquemaTenant;
@@ -40,12 +41,22 @@ public class JdbcSchemaExtractor implements SchemaExtractor {
     @Override
     public EsquemaTenant extraer(TenantDbConnection conexion) {
         try (Connection connection = abrirConexion(conexion)) {
-            String dbType = connection.getMetaData().getDatabaseProductName();
-            String schemaQuery = SchemaQueryFactory.getSchemaQuery(dbType);
+            MotorBaseDatos detectado = MotorBaseDatos.desdeProducto(
+                    connection.getMetaData().getDatabaseProductName());
+            validarMotor(conexion, detectado);
+            String schemaQuery = SchemaQueryFactory.getSchemaQuery(detectado);
             return consultar(connection, conexion, schemaQuery);
         } catch (SQLException | IllegalArgumentException e) {
             throw new IllegalStateException(
                     "No se pudo extraer el esquema de la BD del tenant '" + conexion.getDbName() + "'", e);
+        }
+    }
+
+    private void validarMotor(TenantDbConnection conexion, MotorBaseDatos detectado) {
+        if (!detectado.equals(conexion.getMotorBd())) {
+            throw new IllegalArgumentException("El motor de base de datos configurado ("
+                    + conexion.getMotorBd() + ") no coincide con el de la base conectada ("
+                    + detectado + ")");
         }
     }
 

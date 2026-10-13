@@ -25,6 +25,7 @@ public final class ConsultaHistorialMapper {
         entity.setDbConnectionId(consulta.getDbConnectionId() != null
                 ? consulta.getDbConnectionId().getValue() : null);
         entity.setConsultasEnPeriodo(consulta.getConsultasEnPeriodo());
+        entity.setMotorBd(consulta.getMotorBd());
         return entity;
     }
 
@@ -40,6 +41,7 @@ public final class ConsultaHistorialMapper {
                 entity.getRegistrosCount(),
                 entity.getDbConnectionId() != null
                         ? new TenantDbConnectionUUID(entity.getDbConnectionId()) : null,
-                entity.getConsultasEnPeriodo());
+                entity.getConsultasEnPeriodo(),
+                entity.getMotorBd());
     }
 }

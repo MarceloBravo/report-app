@@ -21,6 +21,7 @@ import com.saas.report.suscripcion.domain.Suscripcion;
 import com.saas.report.suscripcion.domain.SuscripcionEstado;
 import com.saas.report.suscripcion.domain.SuscripcionRepository;
 import com.saas.report.suscripcion.domain.valueobject.SuscripcionUUID;
+import com.saas.report.shared.domain.valueobject.MotorBaseDatos;
 import com.saas.report.conexion.domain.connection.TenantDbConnection;
 import com.saas.report.conexion.domain.connection.TenantDbConnectionRepository;
 import com.saas.report.conexion.domain.connection.TipoConexion;
@@ -105,7 +106,8 @@ class ConvertirConsultaUseCaseTest {
     private TenantDbConnection conexion(TenantUUID tenantId) {
         return new TenantDbConnection(
                 TenantDbConnectionUUID.generate(), tenantId, "db.acme.com", 5432,
-                "ventas", "report_ro", "CIFRADO:secreto", TipoConexion.EXTERNAL_DB, "public");
+                "ventas", "report_ro", "CIFRADO:secreto", TipoConexion.EXTERNAL_DB, "public",
+                MotorBaseDatos.POSTGRESQL);
     }
 
     private Plan planConLimite(Integer limite) {
@@ -148,9 +150,11 @@ class ConvertirConsultaUseCaseTest {
         assertThat(guardada.getQuerySqlGenerada()).isEqualTo("SELECT * FROM ventas");
         assertThat(guardada.getPreguntaUsuario()).isEqualTo(request.preguntaUsuario());
         assertThat(guardada.getConsultasEnPeriodo()).isEqualTo(5);
+        assertThat(guardada.getMotorBd()).isEqualTo(MotorBaseDatos.POSTGRESQL);
 
         assertThat(response.consultasEnPeriodo()).isEqualTo(5);
         assertThat(response.querySqlGenerada()).isEqualTo("SELECT * FROM ventas");
+        assertThat(response.motorBd()).isEqualTo("PostgreSQL");
     }
 
     @Test

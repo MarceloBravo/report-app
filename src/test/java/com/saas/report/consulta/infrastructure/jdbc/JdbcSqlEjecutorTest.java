@@ -2,6 +2,7 @@ package com.saas.report.consulta.infrastructure.jdbc;
 
 import com.saas.report.consulta.domain.exception.ErrorEjecucionSqlException;
 import com.saas.report.conexion.domain.connection.CredentialCipher;
+import com.saas.report.shared.domain.valueobject.MotorBaseDatos;
 import com.saas.report.conexion.domain.connection.TenantDbConnection;
 import com.saas.report.conexion.domain.connection.TipoConexion;
 import com.saas.report.conexion.domain.valueobject.TenantDbConnectionUUID;
@@ -108,7 +109,7 @@ class JdbcSqlEjecutorTest {
         TenantDbConnection externa = new TenantDbConnection(
                 TenantDbConnectionUUID.generate(), TenantUUID.generate(),
                 "localhost", 1, "report_db", "report_ro", "CIFRADO:secreto",
-                TipoConexion.EXTERNAL_DB, "public");
+                TipoConexion.EXTERNAL_DB, "public", MotorBaseDatos.POSTGRESQL);
         when(credentialCipher.descifrar("CIFRADO:secreto")).thenReturn("secreto");
 
         assertThatThrownBy(() -> executor().ejecutar(externa, "SELECT 1"))
@@ -141,6 +142,6 @@ class JdbcSqlEjecutorTest {
         return new TenantDbConnection(
                 TenantDbConnectionUUID.generate(), TenantUUID.generate(),
                 "localhost", 5432, "report_db", "report_ro", "CIFRADO:secreto",
-                tipo, "public");
+                tipo, "public", MotorBaseDatos.POSTGRESQL);
     }
 }

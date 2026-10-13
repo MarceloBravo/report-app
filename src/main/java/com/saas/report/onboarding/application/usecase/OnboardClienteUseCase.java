@@ -17,6 +17,7 @@ import com.saas.report.tenant.domain.Tenant;
 import com.saas.report.tenant.domain.TenantEstado;
 import com.saas.report.tenant.domain.TenantRepository;
 import com.saas.report.conexion.domain.connection.CredentialCipher;
+import com.saas.report.shared.domain.valueobject.MotorBaseDatos;
 import com.saas.report.conexion.domain.connection.TenantDbConnection;
 import com.saas.report.conexion.domain.connection.TenantDbConnectionRepository;
 import com.saas.report.conexion.domain.connection.TipoConexion;
@@ -149,7 +150,7 @@ public class OnboardClienteUseCase {
     private TenantDbConnection crearConexion(TenantUUID tenantId, OnboardingRequest.ConexionRequest request) {
         String passwordCifrada = credentialCipher.cifrar(request.dbPassword());
         String schema = request.schemaName() == null || request.schemaName().isBlank()
-                ? DEFAULT_SCHEMA : request.schemaName();
+                ? schemaPorDefecto(request.motorBd(), request.dbName()) : request.schemaName();
 
         return dbConnectionRepository.save(new TenantDbConnection(
                 TenantDbConnectionUUID.generate(),
@@ -160,6 +161,14 @@ public class OnboardClienteUseCase {
                 request.dbUser(),
                 passwordCifrada,
                 TipoConexion.EXTERNAL_DB,
-                schema));
+                schema,
+                request.motorBd()));
+    }
+
+    private String schemaPorDefecto(MotorBaseDatos motorBd, String dbName) {
+        if (MotorBaseDatos.MYSQL.equals(motorBd)) {
+            return dbName;
+        }
+        return DEFAULT_SCHEMA;
     }
 }

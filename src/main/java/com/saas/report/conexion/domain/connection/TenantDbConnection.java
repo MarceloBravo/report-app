@@ -2,6 +2,7 @@ package com.saas.report.conexion.domain.connection;
 
 import com.saas.report.shared.exception.InvalidIntegerValue;
 import com.saas.report.conexion.domain.valueobject.TenantDbConnectionUUID;
+import com.saas.report.shared.domain.valueobject.MotorBaseDatos;
 import com.saas.report.shared.domain.valueobject.TenantUUID;
 
 public class TenantDbConnection {
@@ -15,10 +16,11 @@ public class TenantDbConnection {
     private String dbPasswordEncrypted;
     private TipoConexion tipoConexion;
     private String schemaName;
+    private MotorBaseDatos motorBd;
 
     public TenantDbConnection(TenantDbConnectionUUID dbConnectionId, TenantUUID tenantId, String host, Integer puerto,
                               String dbName, String dbUser, String dbPasswordEncrypted,
-                              TipoConexion tipoConexion, String schemaName) {
+                              TipoConexion tipoConexion, String schemaName, MotorBaseDatos motorBd) {
         if (dbConnectionId == null) {
             throw new IllegalArgumentException("El ID de la conexión no puede ser nulo");
         }
@@ -40,6 +42,9 @@ public class TenantDbConnection {
         if (tipoConexion == null) {
             throw new IllegalArgumentException("El tipo de conexión no puede ser nulo");
         }
+        if (motorBd == null) {
+            throw new IllegalArgumentException("El motor de base de datos no puede ser nulo");
+        }
         this.dbConnectionId = dbConnectionId;
         this.tenantId = tenantId;
         this.host = host;
@@ -49,6 +54,7 @@ public class TenantDbConnection {
         this.dbPasswordEncrypted = dbPasswordEncrypted;
         this.tipoConexion = tipoConexion;
         this.schemaName = schemaName;
+        this.motorBd = motorBd;
     }
 
     public TenantDbConnectionUUID getDbConnectionId() {
@@ -87,12 +93,16 @@ public class TenantDbConnection {
         return schemaName;
     }
 
+    public MotorBaseDatos getMotorBd() {
+        return motorBd;
+    }
+
     public boolean esConexionExterna() {
         return this.tipoConexion == TipoConexion.EXTERNAL_DB;
     }
 
     public String getConnectionString() {
-        return "jdbc:postgresql://" + this.host + ":" + this.puerto + "/" + this.dbName;
+        return "jdbc:" + this.motorBd.getSubprotocoloJdbc() + "://" + this.host + ":" + this.puerto + "/" + this.dbName;
     }
 
     public void actualizarCredenciales(String user, String password) {

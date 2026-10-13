@@ -1,6 +1,7 @@
 package com.saas.report.consulta.application.dto;
 
 import com.saas.report.consulta.domain.ConsultaHistorial;
+import com.saas.report.shared.presentation.mapper.MotorBaseDatosPresenter;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -18,6 +19,7 @@ public record ConsultaResponse(
         Integer registrosCount,
         UUID dbConnectionId,
         Integer consultasEnPeriodo,
+        String motorBd,
         List<Map<String, Object>> data
 ) {
 
@@ -33,6 +35,7 @@ public record ConsultaResponse(
                 consulta.getRegistrosCount(),
                 consulta.getDbConnectionId() != null ? consulta.getDbConnectionId().getValue() : null,
                 consulta.getConsultasEnPeriodo(),
+                MotorBaseDatosPresenter.nombreAMostrar(consulta.getMotorBd()),
                 data
         );
     }

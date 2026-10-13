@@ -11,10 +11,12 @@ import java.util.UUID;
  * @param dbConnectionId identificador de la conexión
  * @param dbName nombre de la base de datos
  * @param schemaName esquema por defecto de la conexión
+ * @param motorBd motor de base de datos de la conexión
  */
 public record ConexionListResponse(
         UUID dbConnectionId,
         String dbName,
-        String schemaName
+        String schemaName,
+        String motorBd
 ) {
 }
